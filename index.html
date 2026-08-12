@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PREDICTORS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-fixed-variant": "#173bab",
+                      "inverse-on-surface": "#eaf1ff",
+                      "background-main": "#F8FAFC",
+                      "on-secondary-container": "#003c70",
+                      "outline": "#757684",
+                      "on-error-container": "#93000a",
+                      "inverse-surface": "#213145",
+                      "outline-variant": "#c4c5d5",
+                      "secondary": "#0060ac",
+                      "tertiary": "#323537",
+                      "primary-fixed": "#dde1ff",
+                      "surface-container-lowest": "#ffffff",
+                      "loss-red": "#EF4444",
+                      "surface-container-low": "#eff4ff",
+                      "primary": "#00288e",
+                      "on-primary": "#ffffff",
+                      "on-tertiary-container": "#b9bcbe",
+                      "secondary-fixed": "#d4e3ff",
+                      "on-background": "#0b1c30",
+                      "risk-bg": "#FEF2F2",
+                      "tertiary-container": "#484c4e",
+                      "surface-bright": "#f8f9ff",
+                      "on-tertiary-fixed": "#191c1e",
+                      "primary-container": "#1e40af",
+                      "surface-variant": "#d3e4fe",
+                      "on-surface": "#0b1c30",
+                      "inverse-primary": "#b8c4ff",
+                      "secondary-fixed-dim": "#a4c9ff",
+                      "primary-fixed-dim": "#b8c4ff",
+                      "surface-tint": "#3755c3",
+                      "on-error": "#ffffff",
+                      "tertiary-fixed": "#e0e3e5",
+                      "on-primary-container": "#a8b8ff",
+                      "secondary-container": "#64a8fe",
+                      "surface-container-highest": "#d3e4fe",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed": "#001453",
+                      "on-secondary-fixed": "#001c39",
+                      "error": "#ba1a1a",
+                      "error-container": "#ffdad6",
+                      "surface": "#f8f9ff",
+                      "surface-container": "#e5eeff",
+                      "background": "#f8f9ff",
+                      "surface-dim": "#cbdbf5",
+                      "tertiary-fixed-dim": "#c4c7c9",
+                      "card-bg": "#FFFFFF",
+                      "on-surface-variant": "#444653",
+                      "on-tertiary-fixed-variant": "#444749",
+                      "win-green": "#22C55E",
+                      "surface-container-high": "#dce9ff",
+                      "on-secondary-fixed-variant": "#004883"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "8px",
+                      "xl": "12px",
+                      "2xl": "16px",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter-card": "1rem",
+                      "stack-lg": "1.5rem",
+                      "margin-page": "1rem",
+                      "stack-md": "1rem",
+                      "stack-sm": "0.5rem"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "label-caps": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "odds-display": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                      "headline-lg-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "700" }],
+                      "headline-md": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                      "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                      "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                      "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                      "odds-display": ["18px", { "lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "700" }]
+              }
+            }
+          }
+        }
+      </script>
+<style>
+        body {
+            background-color: #F8FAFC;
+            color: theme('colors.on-background');
+        }
+        
+        .button {
+            position: relative;
+            background: linear-gradient(140deg, hsla(240, 40%, 50%, 1) 20%, hsla(240, 40%, 50%, 0.6) 100%);
+            color: #fff;
+            box-shadow: inset 0px -2px 0px 0px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, text-shadow 0.2s ease;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .button:hover {
+            transform: scale(1.03);
+            text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
+            box-shadow: inset 0px -2px 0px 0px rgba(0, 0, 0, 0.2), 0px 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .button:active {
+            transform: scale(0.98);
+        }
+
+        .button > span, .button > svg {
+            position: relative;
+            z-index: 1;
+        }
+
+        .button > svg {
+            fill: currentColor;
+            width: 20px;
+            height: 20px;
+            animation: pulse-lightning 2s infinite;
+        }
+
+        @keyframes pulse-lightning {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.2); filter: brightness(1.5); drop-shadow(0 0 5px rgba(255, 255, 255, 0.8)); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        .no-scrollbar::-webkit-scrollbar, .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .no-scrollbar, .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .custom-slider {
+            overflow-x: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 40, 142, 0.3) rgba(0, 0, 0, 0.04);
+            -webkit-overflow-scrolling: touch;
+            cursor: grab;
+            user-select: none;
+            scroll-behavior: smooth;
+        }
+        .custom-slider:active {
+            cursor: grabbing;
+        }
+        .custom-slider::-webkit-scrollbar {
+            height: 6px;
+        }
+        .custom-slider::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.04);
+            border-radius: 4px;
+            margin: 0 4px;
+        }
+        .custom-slider::-webkit-scrollbar-thumb {
+            background: rgba(0, 40, 142, 0.35);
+            border-radius: 4px;
+        }
+
+        .nav-item.active {
+            color: theme('colors.primary');
+            background-color: rgba(0, 40, 142, 0.08);
+            border-radius: 0.75rem;
+        }
+
+        .league-btn.active {
+            background-color: theme('colors.primary-container');
+            color: white;
+            border-color: theme('colors.primary-container');
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen pb-24">
+
+<!-- TopAppBar -->
+<header class="bg-surface shadow-sm fixed top-0 w-full z-50 max-w-[480px] mx-auto left-0 right-0">
+  <div class="flex justify-between items-center px-margin-page h-16">
+    <button onclick="switchTab('home')" class="text-primary hover:bg-surface-variant/20 active:scale-95 transition-transform p-2 rounded-full flex items-center justify-center">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+    <div class="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-tighter text-primary">PREDICTORS</div>
+    <button class="text-primary hover:bg-surface-variant/20 active:scale-95 transition-transform p-2 rounded-full flex items-center justify-center">
+      <span class="material-symbols-outlined">filter_list</span>
+    </button>
+  </div>
+</header>
+
+<!-- Main Content Container -->
+<main class="max-w-[480px] mx-auto pt-20 px-margin-page space-y-stack-lg">
+
+  <!-- Вкладка 1: Главная -->
+  <div id="tab-home" class="tab-content space-y-stack-lg">
+    <section class="bg-surface-container-low rounded-xl p-6 shadow-sm flex flex-col items-center text-center space-y-stack-md mt-4 border border-outline-variant/20">
+      <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Ваш надежный партнер в футбольной аналитике</h1>
+      <p class="font-body-lg text-body-lg text-on-surface-variant">Профессиональные прогнозы, глубокая аналитика матчей топ-лиг и честная статистика. Доступ предоставляется авторизованным пользователям через Telegram-бота.</p>
+      
+      <button onclick="switchTab('feed')" class="button mt-4 w-full py-3 rounded-xl font-headline-md text-headline-md flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-[20px]">analytics</span>
+        <span>Смотреть матчи и аналитику</span>
+      </button>
+    </section>
+
+    <section class="grid grid-cols-1 gap-stack-md">
+      <div class="bg-card-bg rounded-xl p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 flex gap-4 items-start">
+        <div class="bg-surface-container-high p-3 rounded-lg flex-shrink-0 text-primary">
+          <span class="material-symbols-outlined">monitoring</span>
+        </div>
+        <div>
+          <h3 class="font-headline-md text-headline-md text-on-surface mb-1">Глубокая аналитика</h3>
+          <p class="font-body-sm text-body-sm text-on-surface-variant">Детальный разбор футбольных матчей на основе продвинутых метрик.</p>
+        </div>
+      </div>
+      <div class="bg-card-bg rounded-xl p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 flex gap-4 items-start">
+        <div class="bg-surface-container-high p-3 rounded-lg flex-shrink-0 text-primary">
+          <span class="material-symbols-outlined">fact_check</span>
+        </div>
+        <div>
+          <h3 class="font-headline-md text-headline-md text-on-surface mb-1">Честная статистика</h3>
+          <p class="font-body-sm text-body-sm text-on-surface-variant">Полная прозрачность результатов и фиксация каждого прогноза.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Вкладка 2: Feed -->
+  <div id="tab-feed" class="tab-content hidden space-y-stack-md pt-2">
+    <div>
+      <span class="text-[11px] font-bold text-outline uppercase tracking-wider block mb-1">Футбольный турнир / Лига</span>
+      <div id="leaguesFilterContainer" class="custom-slider flex space-x-2 pb-2"></div>
+    </div>
+
+    <div class="bg-gradient-to-r from-primary to-primary-container rounded-lg p-4 text-on-primary flex items-center justify-between shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
+      <div>
+        <h3 class="font-headline-md text-headline-md mb-1">PRO Доступ</h3>
+        <p class="font-body-sm text-body-sm text-on-primary/80">Аналитика и прогнозы в реальном времени</p>
+      </div>
+      <div class="text-right">
+        <span class="material-symbols-outlined text-3xl">verified_user</span>
+      </div>
+    </div>
+
+    <div id="dynamicForecastsContainer" class="space-y-stack-md">
+      <div class="text-center text-outline py-8 font-body-sm animate-pulse">
+        Загрузка футбольных матчей...
+      </div>
+    </div>
+  </div>
+
+  <!-- Вкладка 3: Stats -->
+  <div id="tab-stats" class="tab-content hidden space-y-stack-md pt-2">
+    <div id="statsDefaultView" class="bg-card-bg rounded-2xl p-8 text-center border border-outline-variant/20 shadow-sm space-y-3 mt-4">
+      <span class="material-symbols-outlined text-primary text-[48px]">query_stats</span>
+      <h3 class="font-headline-md text-headline-md text-on-surface">Детальная аналитика матча</h3>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">
+        Выберите матч на вкладке <strong class="text-primary">Feed</strong> и нажмите кнопку <span class="text-primary font-semibold">«Статистика»</span>, чтобы открыть подробный 5-пунктный разбор и рекомендации.
+      </p>
+      <button onclick="switchTab('feed')" class="button mt-2 px-6 py-2.5 rounded-xl text-xs font-semibold">
+        Перейти к ленте матчей
+      </button>
+    </div>
+    <div id="statsMatchView" class="space-y-stack-md hidden"></div>
+  </div>
+
+  <!-- Вкладка 4: Профиль -->
+  <div id="tab-subscribe" class="tab-content hidden space-y-stack-lg">
+    <section class="bg-card-bg rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] p-gutter-card flex flex-col gap-stack-md border border-outline-variant/20">
+      <div class="flex items-center gap-4">
+        <div class="w-16 h-16 rounded-full bg-surface-variant flex items-center justify-center shrink-0 overflow-hidden relative border border-outline-variant/30">
+          <img class="w-full h-full object-cover" alt="Avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKjUr0g-UGwCebEu-PryrlnJnmVxWoRaq-0q60MJMTzRiBEwHAUJkCLsBNNCg7PpL6kHV5KrdBAORCYKpvezAGr4QxLVE_55E4kJpqq0YUnPetJ--8g8zz1nSHl7FV9gLbe4qi6jeVuLBoc9SSfUgDF394B-kP0D7tY_eB3N9TsiZyLxmOs4oMdBsono22rpfxMm-lbhmc5qzVn5CmERRF0vJM5GsMRfdyRo1pdqDSr-AWuY-wMisM"/>
+        </div>
+        <div class="flex-1">
+          <h2 class="font-headline-md text-headline-md text-on-surface">Stille</h2>
+          <p class="font-body-sm text-body-sm text-on-surface-variant">markony2104@mail.ru</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4 mt-2">
+        <div class="bg-surface-container-low rounded-2xl p-4 flex flex-col">
+          <span class="font-label-caps text-label-caps text-on-surface-variant mb-1">Статус доступа</span>
+          <span class="font-headline-md text-headline-md text-win-green flex items-center gap-1">
+            <span class="material-symbols-outlined text-[18px]">check_circle</span>
+            Активен
+          </span>
+        </div>
+        <div class="bg-surface-container-low rounded-2xl p-4 flex flex-col">
+          <span class="font-label-caps text-label-caps text-on-surface-variant mb-1">Авторизация</span>
+          <span class="font-headline-md text-headline-md text-primary">Telegram</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<nav class="bg-surface-container border-t border-outline-variant/30 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] fixed bottom-0 left-0 right-0 flex justify-around items-center px-2 py-3 max-w-[480px] mx-auto z-50">
+  <button id="nav-home" onclick="switchTab('home')" class="nav-item active flex flex-col items-center justify-center text-on-surface-variant px-3 py-1.5 active:scale-90 transition-all duration-200">
+    <span class="material-symbols-outlined mb-1">home</span>
+    <span class="font-label-caps text-label-caps">Главная</span>
+  </button>
+  <button id="nav-feed" onclick="switchTab('feed')" class="nav-item flex flex-col items-center justify-center text-on-surface-variant px-3 py-1.5 active:scale-90 transition-all duration-200">
+    <span class="material-symbols-outlined mb-1">analytics</span>
+    <span class="font-label-caps text-label-caps">Feed</span>
+  </button>
+  <button id="nav-stats" onclick="switchTab('stats')" class="nav-item flex flex-col items-center justify-center text-on-surface-variant px-3 py-1.5 active:scale-90 transition-all duration-200">
+    <span class="material-symbols-outlined mb-1">query_stats</span>
+    <span class="font-label-caps text-label-caps">Stats</span>
+  </button>
+  <button id="nav-subscribe" onclick="switchTab('subscribe')" class="button flex flex-col items-center justify-center rounded-xl px-3 py-1.5">
+    <svg class="mb-1 w-5 h-5" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.16-.28L11.5 2h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"></path></svg>
+    <span class="font-label-caps text-label-caps">Профиль</span>
+  </button>
+</nav>
+
+<script>
+  let currentSelectedLeague = "all";
+
+  function switchTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    
+    const targetTab = document.getElementById('tab-' + tabName);
+    if (targetTab) {
+      targetTab.classList.remove('hidden');
+    }
+
+    document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+    const activeNav = document.getElementById('nav-' + tabName);
+    if (activeNav && activeNav.classList.contains('nav-item')) {
+      activeNav.classList.add('active');
+    }
+    
+    if (tabName === 'feed' && !window.feedLoaded) {
+      initFeedLeaguesAndMatches();
+      window.feedLoaded = true;
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function initFeedLeaguesAndMatches() {
+    await loadLeaguesFilters();
+    setupDragScrollForSlider();
+  }
+
+  function setupDragScrollForSlider() {
+    const slider = document.getElementById('leaguesFilterContainer');
+    if (!slider) return;
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    slider.addEventListener('mousedown', (e) => {
+      isDown = true;
+      startX = e.pageX - slider.offsetLeft;
+      scrollLeft = slider.scrollLeft;
+    });
+    slider.addEventListener('mouseleave', () => { isDown = false; });
+    slider.addEventListener('mouseup', () => { isDown = false; });
+    slider.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - slider.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      slider.scrollLeft = scrollLeft - walk;
+    });
+  }
+
+  async function loadLeaguesFilters() {
+    const container = document.getElementById('leaguesFilterContainer');
+    const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
+
+    try {
+      const res = await fetch(`${API_BASE}/leagues`);
+      const data = await res.json();
+      const leagues = data.leagues || [];
+
+      container.innerHTML = "";
+      leagues.forEach((league, index) => {
+        const btn = document.createElement('button');
+        btn.className = `league-btn whitespace-nowrap px-3 py-1.5 bg-card-bg border border-outline-variant/30 text-on-surface rounded-lg font-label-caps text-label-caps transition-all ${index === 0 ? 'active' : ''}`;
+        btn.innerText = league.name;
+        btn.onclick = () => selectLeagueFilter(league.id, btn);
+        container.appendChild(btn);
+      });
+
+      loadTodayMatches("all");
+    } catch (err) {
+      console.error("Ошибка загрузки лиг", err);
+    }
+  }
+
+  function selectLeagueFilter(leagueId, btnElement) {
+    currentSelectedLeague = leagueId;
+    document.querySelectorAll('.league-btn').forEach(b => b.classList.remove('active'));
+    btnElement.classList.add('active');
+    loadTodayMatches(leagueId);
+  }
+
+  async function loadTodayMatches(leagueId = "all") {
+    const container = document.getElementById('dynamicForecastsContainer');
+    container.innerHTML = `
+      <div class="text-center text-outline py-8 font-body-sm animate-pulse">
+        Загрузка футбольных матчей...
+      </div>`;
+
+    const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
+
+    try {
+      const res = await fetch(`${API_BASE}/matches/today?league_id=${encodeURIComponent(leagueId)}`);
+      const data = await res.json();
+
+      if (!data.forecasts || data.forecasts.length === 0) {
+        container.innerHTML = `
+          <div class="bg-card-bg rounded-xl p-6 text-center border border-outline-variant/20 shadow-sm space-y-2">
+            <span class="material-symbols-outlined text-outline text-3xl">event_busy</span>
+            <p class="font-headline-md text-headline-md text-on-surface">На сегодня футбольных матчей нет</p>
+            <p class="text-xs text-outline">В выбранном турнире на сегодня по расписанию игр не запланировано.</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = "";
+      data.forecasts.forEach(post => {
+        container.appendChild(createForecastCardElement(post));
+      });
+
+    } catch (err) {
+      console.error(err);
+      container.innerHTML = `<div class="text-center text-loss-red py-8 font-body-sm">Не удалось загрузить матчи. Проверьте соединение.</div>`;
+    }
+  }
+
+  function createForecastCardElement(post) {
+    const card = document.createElement('div');
+    card.className = "bg-card-bg rounded-lg p-gutter-card shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 relative";
+
+    const matchTeams = post.step_1.match.split('—').map(t => t.trim());
+    let homeTeam = matchTeams[0] || "Команда 1";
+    let awayTeam = matchTeams[1] || "Команда 2";
+    
+    // Если в title матча идет LIVE счет (например "Команда1 1 : 0 Команда2")
+    if (post.is_live && post.step_1.match.includes(':')) {
+      const parts = post.step_1.match.split(/\d+\s*:\s*\d+/);
+      if (parts.length >= 2) {
+        homeTeam = parts[0].trim();
+        awayTeam = parts[1].trim();
+      }
+    }
+    
+    const homeBadge = post.home_badge;
+    const awayBadge = post.away_badge;
+
+    const liveBadgeHTML = post.is_live ? `
+      <div class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider shadow-sm animate-pulse">
+        <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+        LIVE
+      </div>
+    ` : '';
+
+    card.innerHTML = `
+      ${liveBadgeHTML}
+      <div class="flex justify-between items-center mb-stack-sm text-outline font-body-sm text-body-sm ${post.is_live ? 'pr-16' : ''}">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">sports_soccer</span>
+          <span class="font-semibold text-primary">${post.step_1.title}</span>
+        </div>
+        <span>${post.step_1.info}</span>
+      </div>
+      
+      <div class="flex justify-between items-center mb-stack-md gap-2">
+        <div class="flex items-center gap-2.5 flex-1 overflow-hidden">
+          <img src="${homeBadge}" class="w-8 h-8 object-contain shrink-0 rounded-full bg-surface-container p-0.5 border border-outline-variant/20 shadow-sm" alt="${homeTeam}" onerror="this.src='https://ui-avatars.com/api/?name=FC&background=00288e&color=fff'"/>
+          <h2 class="font-headline-md text-headline-md text-on-surface line-clamp-1">${post.step_1.match}</h2>
+          <img src="${awayBadge}" class="w-8 h-8 object-contain shrink-0 rounded-full bg-surface-container p-0.5 border border-outline-variant/20 shadow-sm" alt="${awayTeam}" onerror="this.src='https://ui-avatars.com/api/?name=FC&background=00288e&color=fff'"/>
+        </div>
+        <button onclick="openStatsForTeams('${homeTeam}', '${awayTeam}', '${homeBadge}', '${awayBadge}', ${post.is_live}, ${post.goals_home || 0}, ${post.goals_away || 0}, ${post.elapsed || 0})" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0">
+          <span class="material-symbols-outlined text-[16px]">query_stats</span>
+          Статистика
+        </button>
+      </div>
+
+      <button class="button w-full rounded-lg p-3 flex justify-between items-center mb-stack-md">
+        <span class="flex items-center font-body-lg text-body-lg font-semibold">
+          <svg class="w-4 h-4 mr-2" fill="currentColor" viewbox="0 0 24 24"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.16-.28L11.5 2h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"></path></svg>
+          ${post.step_2.forecast}
+        </span>
+        <span class="font-odds-display text-odds-display">${post.step_2.coefficient}</span>
+      </button>
+
+      <div class="bg-surface-container-low p-3 rounded-lg text-xs italic text-on-surface-variant mb-stack-md border border-outline-variant/20">
+        💡 ${post.step_2.explanation}
+      </div>
+
+      <ul class="space-y-2 mb-stack-md font-body-sm text-body-sm text-on-surface">
+        ${post.step_3.map(reason => `
+          <li class="flex items-start gap-2 bg-background-main p-2 rounded border border-outline-variant/20">
+            <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">check_circle</span>
+            <span>${reason}</span>
+          </li>
+        `).join('')}
+      </ul>
+
+      <div class="bg-risk-bg rounded-lg p-3 flex items-start gap-2 mb-stack-md border border-error-container">
+        <span class="material-symbols-outlined text-error text-[18px] mt-0.5 shrink-0">info</span>
+        <p class="font-body-sm text-body-sm text-on-surface">${post.step_4}</p>
+      </div>
+
+      <div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm border-t border-outline-variant/30 pt-3">
+        <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+        <span class="font-medium text-primary">${post.step_5}</span>
+      </div>
+    `;
+    return card;
+  }
+
+  async function openStatsForTeams(homeTeam, awayTeam, homeBadge = "", awayBadge = "", isLive = false, goalsHome = 0, goalsAway = 0, elapsed = 0) {
+    switchTab('stats');
+    const defaultView = document.getElementById('statsDefaultView');
+    const matchView = document.getElementById('statsMatchView');
+    
+    defaultView.classList.add('hidden');
+    matchView.classList.remove('hidden');
+
+    matchView.innerHTML = `
+      <div class="bg-card-bg rounded-xl p-6 text-center border border-outline-variant/20 shadow-sm space-y-3">
+        <button onclick="showStatsDefault()" class="text-xs text-primary font-semibold flex items-center gap-1 mb-2">
+          <span class="material-symbols-outlined text-[16px]">arrow_back</span> Назад к выбору матча
+        </button>
+        <div class="font-headline-md text-headline-md animate-pulse">Загрузка аналитики...</div>
+        <p class="text-xs text-outline">${homeTeam} vs ${awayTeam}</p>
+      </div>`;
+
+    const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
+
+    try {
+      const url = `${API_BASE}/stats/compare?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&home_badge=${encodeURIComponent(homeBadge)}&away_badge=${encodeURIComponent(awayBadge)}&is_live=${isLive}&goals_home=${goalsHome}&goals_away=${goalsAway}&elapsed=${elapsed}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const analysis = data.analysis_5_points;
+
+      matchView.innerHTML = `
+        <div class="space-y-stack-md pt-2">
+          <button onclick="showStatsDefault()" class="bg-surface-container hover:bg-surface-variant/30 text-primary px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all border border-outline-variant/20">
+            <span class="material-symbols-outlined text-[16px]">arrow_back</span> Назад к выбору матча
+          </button>
+
+          <!-- Шапка с эмблемами -->
+          <div class="bg-card-bg rounded-2xl p-gutter-card shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 relative">
+            ${isLive ? `<span class="absolute top-3 right-3 bg-red-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-full animate-pulse">LIVE ${elapsed}'</span>` : ''}
+            <h3 class="text-xs font-bold text-outline uppercase tracking-wider text-center mb-4">Детальный разбор матча</h3>
+            
+            <div class="flex justify-around items-center">
+              <div class="flex flex-col items-center text-center w-5/12">
+                <img src="${data.home.badge}" class="w-16 h-16 object-contain mb-2 rounded-full bg-surface-container p-1 border border-outline-variant/20 shadow-sm" alt="${data.home.name}"/>
+                <span class="font-headline-md text-headline-md text-on-surface line-clamp-1">${data.home.name}</span>
+                <span class="text-xs text-win-green font-bold mt-1">Винрейт: ${data.home.winrate}</span>
+              </div>
+
+              <div class="font-odds-display text-odds-display text-primary font-bold text-xl">${isLive ? `${goalsHome} : ${goalsAway}` : 'VS'}</div>
+
+              <div class="flex flex-col items-center text-center w-5/12">
+                <img src="${data.away.badge}" class="w-16 h-16 object-contain mb-2 rounded-full bg-surface-container p-1 border border-outline-variant/20 shadow-sm" alt="${data.away.name}"/>
+                <span class="font-headline-md text-headline-md text-on-surface line-clamp-1">${data.away.name}</span>
+                <span class="text-xs text-win-green font-bold mt-1">Винрейт: ${data.away.winrate}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Пункт 1: История очных встреч -->
+          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
+            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
+              <span class="material-symbols-outlined text-[18px]">history</span>
+              <h4>${analysis.point_1_h2h.title}</h4>
+            </div>
+            <p class="text-xs text-on-surface">${analysis.point_1_h2h.summary}</p>
+            <div class="bg-background-main rounded-lg p-2.5 space-y-1 text-xs text-on-surface-variant font-mono">
+              ${analysis.point_1_h2h.details.map(match => `<div>• ${match}</div>`).join('')}
+            </div>
+          </div>
+
+          <!-- Пункт 2: Текущая форма и статистика -->
+          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-3">
+            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
+              <span class="material-symbols-outlined text-[18px]">trending_up</span>
+              <h4>${analysis.point_2_form.title}</h4>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-2 text-center text-xs">
+              <div class="bg-surface-container-low p-2 rounded-lg">
+                <span class="font-semibold block mb-1">${data.home.name}</span>
+                <div class="flex justify-center gap-1 font-bold">
+                  ${analysis.point_2_form.home_form.map(r => `<span class="${r === 'W' ? 'text-win-green' : 'text-slate-500'}">${r}</span>`).join('')}
+                </div>
+              </div>
+              <div class="bg-surface-container-low p-2 rounded-lg">
+                <span class="font-semibold block mb-1">${data.away.name}</span>
+                <div class="flex justify-center gap-1 font-bold">
+                  ${analysis.point_2_form.away_form.map(r => `<span class="${r === 'W' ? 'text-win-green' : 'text-slate-500'}">${r}</span>`).join('')}
+                </div>
+              </div>
+            </div>
+
+            <p class="text-xs text-on-surface">${analysis.point_2_form.home_stats}</p>
+            <p class="text-xs text-on-surface">${analysis.point_2_form.away_stats}</p>
+          </div>
+
+          <!-- Пункт 3: Моральная составляющая -->
+          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
+            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
+              <span class="material-symbols-outlined text-[18px]">psychology</span>
+              <h4>${analysis.point_3_morale.title}</h4>
+            </div>
+            <p class="text-xs text-on-surface">${analysis.point_3_morale.text}</p>
+          </div>
+
+          <!-- Пункт 4: Травмы и кадровые новости -->
+          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
+            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
+              <span class="material-symbols-outlined text-[18px]">medical_services</span>
+              <h4>${analysis.point_4_squad.title}</h4>
+            </div>
+            <ul class="text-xs text-on-surface space-y-1">
+              <li class="flex items-center gap-1.5"><span class="text-primary">•</span> ${analysis.point_4_squad.home_news}</li>
+              <li class="flex items-center gap-1.5"><span class="text-primary">•</span> ${analysis.point_4_squad.away_news}</li>
+            </ul>
+          </div>
+
+          <!-- Пункт 5: Итоговый вердикт и рекомендация -->
+          <div class="bg-gradient-to-br from-primary/10 to-primary-container/20 rounded-2xl p-5 border-2 border-primary/30 shadow-md space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 text-primary font-bold text-sm">
+                <span class="material-symbols-outlined text-[20px]">verified</span>
+                <h4>${analysis.point_5_recommendation.title}</h4>
+              </div>
+              <span class="bg-primary text-white font-bold text-xs px-2.5 py-1 rounded-lg">Коэф. ${analysis.point_5_recommendation.coefficient}</span>
+            </div>
+
+            <div class="bg-card-bg rounded-xl p-3 border border-outline-variant/20">
+              <span class="text-xs text-outline block mb-1">Рекомендуемый тип ставки:</span>
+              <span class="font-headline-md text-headline-md text-primary font-bold block">${analysis.point_5_recommendation.recommended_bet}</span>
+              <span class="text-[11px] text-on-surface-variant italic mt-1 block">💡 ${analysis.point_5_recommendation.explanation}</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-1.5 text-center text-xs font-semibold">
+              <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
+                <span class="text-outline block text-[10px]">П1</span>
+                <span>${analysis.point_5_recommendation.all_odds.П1}</span>
+              </div>
+              <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
+                <span class="text-outline block text-[10px]">Ничья</span>
+                <span>${analysis.point_5_recommendation.all_odds["Ничья"]}</span>
+              </div>
+              <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
+                <span class="text-outline block text-[10px]">П2</span>
+                <span>${analysis.point_5_recommendation.all_odds.П2}</span>
+              </div>
+            </div>
+
+            <div class="text-xs font-medium text-primary">
+              💼 ${analysis.point_5_recommendation.bank_management}
+            </div>
+
+            <div class="text-xs text-on-surface bg-card-bg p-3 rounded-xl border border-outline-variant/20">
+              <span class="font-semibold block mb-1 text-primary">Финальное резюме:</span>
+              ${analysis.point_5_recommendation.final_conclusion}
+            </div>
+          </div>
+        </div>
+      `;
+
+    } catch (err) {
+      showStatsDefault();
+    }
+  }
+
+  function showStatsDefault() {
+    document.getElementById('statsMatchView').classList.add('hidden');
+    document.getElementById('statsDefaultView').classList.remove('hidden');
+  }
+</script>
+
+</body>
+</html>
