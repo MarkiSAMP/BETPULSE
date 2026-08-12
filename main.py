@@ -29,8 +29,17 @@ API_FOOTBALL_URL = "https://v3.football.api-sports.io/fixtures"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("[SERVER]: Инициализация базы данных...")
-    await init_db()
-    print("[SERVER]: Запуск фоновой службы Telegram-бота...")
+    try:
+        await init_db()
+    except Exception as e:
+        print(f"[SERVER DB Error]: {e}")
+        
+    print("[SERVER]: Сброс вебхуков и запуск фоновой службы Telegram-бота...")
+    try:
+        await bot.delete_webhook(drop_pending_updates=True)
+    except Exception as e:
+        print(f"[SERVER Webhook Error]: {e}")
+
     bot_task = asyncio.create_task(dp.start_polling(bot))
     print("[SERVER]: FastAPI и Telegram Bot успешно запущены и работают 24/7!")
     yield
