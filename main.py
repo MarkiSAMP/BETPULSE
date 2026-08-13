@@ -25,7 +25,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:npg_hKa5W3yr
 API_KEY = "504d57f6b4448f20a4789e6d4cfd7abe"
 API_FOOTBALL_URL = "https://v3.football.api-sports.io/fixtures"
 
-# Автозапуск бота вместе с сервером FastAPI
+# Автозапуск бота вместе с сервером FastAPI и сбросом вебхуков
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("[SERVER]: Инициализация базы данных...")
@@ -75,7 +75,7 @@ LEAGUES_DATA = [
 FORBIDDEN_WORDS = ["ЖБ", "верняк", "100%", "грузим хаты", "проход 100", "чуйка"]
 
 def sanitize_text(text: str) -> str:
-    """Фильтрация запрещенных словарей для модерации."""
+    """Фильтрация запрещенных слов для модерации."""
     for word in FORBIDDEN_WORDS:
         if word in text:
             text = text.replace(word, "[Аналитический тренд]")
@@ -119,12 +119,13 @@ async def check_user_access(init_data: str) -> int:
         return user_id
 
     try:
-        conn = await asyncpg.connect(DATABASE_URL)
+        clean_url = DATABASE_URL.split("?")[0] if "?" in DATABASE_URL else DATABASE_URL
+        conn = await asyncpg.connect(clean_url, ssl="require")
         row = await conn.fetchrow("SELECT is_paid, expires_at FROM users WHERE user_id = $1;", user_id)
         await conn.close()
     except Exception as e:
         print(f"[DB Auth Error]: {e}")
-        raise HTTPException(status_code=500, detail="Ошибка проверки доступа.")
+        raise HTTPException(status_code=500, detail="Ошибка проверки доступа к БД.")
 
     if not row or not row["is_paid"]:
         raise HTTPException(status_code=403, detail="Доступ ограничен: требуется оформление подписки.")
@@ -144,7 +145,7 @@ def generate_bet_market_for_match(
     goals_away: int = 0,
     elapsed: int = 0
 ) -> Dict[str, Any]:
-    """Генерация рекомендаций на основе математического хэширования матча."""
+    """Генерация аналитических рекомендаций на основе математического алгоритма."""
     hash_seed = zlib.crc32(f"{home_team}_{away_team}_{id_event}".encode('utf-8'))
 
     if is_live:
@@ -238,7 +239,7 @@ class AnalysisEngine:
         )
 
         match_display = f"{home_team} {goals_home} : {goals_away} {away_team}" if is_live else f"{home_team} — {away_team}"
-        info_prefix = f"LIVE ({elapsed}')" if is_live and elapsed else ("LIVE" if is_live else "Сегодня")
+        info_prefix = f"LIVE ({elapsed}')" if is_live and elapsed else ("LIVE" if is_live else "Ближайший матч")
 
         reasons = [
             f"1. Ход встречи: {home_team} контролирует инициативу." if is_live else f"1. Мотивация: {home_team} нацелена на победу на домашнем стадионе.",
@@ -303,14 +304,20 @@ async def get_today_matches(
             if res.status_code == 200:
                 data = res.json()
                 raw_fixtures = data.get("response", [])
+                
+            # Автоматический фоллбэк: если на "сегодня" нет матчей, подтягиваем игры на "завтра"
+            if not raw_fixtures:
+                tomorrow_dt = datetime.now(timezone.utc) + timedelta(days=1) + timedelta(hours=3)
+                tomorrow_str = tomorrow_dt.strftime("%Y-%m-%d")
+                params["date"] = tomorrow_str
+                res_next = await client.get(API_FOOTBALL_URL, headers=headers, params=params)
+                if res_next.status_code == 200:
+                    raw_fixtures = res_next.json().get("response", [])
     except Exception as e:
         print(f"[API-Football Error]: {e}")
 
     finished_statuses = ["FT", "AET", "PEN", "CANC", "ABD", "PST"]
     live_statuses = ["1H", "HT", "2H", "ET", "BT", "P", "LIVE"]
-
-    now_msk = datetime.now(timezone.utc) + timedelta(hours=3)
-    now_ts = now_msk.timestamp()
 
     for item in raw_fixtures:
         fixture = item.get("fixture", {})
@@ -320,12 +327,6 @@ async def get_today_matches(
             continue
 
         is_live = status_short in live_statuses
-
-        if not is_live:
-            fixture_ts = fixture.get("timestamp")
-            if fixture_ts and fixture_ts + 10800 < now_ts:
-                continue
-
         posts.append(AnalysisEngine.format_api_sports_match(item, is_live=is_live))
 
     return {"count": len(posts), "date": today_str, "forecasts": posts}
