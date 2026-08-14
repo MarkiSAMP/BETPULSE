@@ -224,11 +224,21 @@ async def get_today_matches(
     api_error = None
 
     headers = {"Authorization": f"Bearer {FOOTBALL_DATA_API_KEY}"}
-    url = f"{FOOTBALL_DATA_URL}/fixtures/today"
+
+    # Диапазон: сегодня и следующие 2 дня
+    msk_now = datetime.now(timezone.utc) + timedelta(hours=3)
+    today_str = msk_now.strftime("%Y-%m-%d")
+    future_str = (msk_now + timedelta(days=2)).strftime("%Y-%m-%d")
+
+    params = {"from_date": today_str, "to_date": future_str}
+    if league_id != "all":
+        params["league_id"] = league_id
+
+    url = f"{FOOTBALL_DATA_URL}/fixtures"
 
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
-            res = await client.get(url, headers=headers)
+            res = await client.get(url, headers=headers, params=params)
             print(f"[Footballdata.io] Статус: {res.status_code}")
 
             if res.status_code == 200:
@@ -242,10 +252,17 @@ async def get_today_matches(
                     else:
                         matches = []
 
-                    if matches and len(matches) > 0:
-                        print(f"[Footballdata.io] Пример матча: {json.dumps(matches[0], indent=2, ensure_ascii=False)[:500]}")
+                    print(f"[Footballdata.io] Получено матчей (всего): {len(matches)}")
 
-                    print(f"[Footballdata.io] Получено матчей: {len(matches)}")
+                    # Фильтруем: только запланированные или live
+                    filtered_matches = []
+                    for m in matches:
+                        status = m.get("status") or m.get("status_localized") or ""
+                        # Оставляем только SCHEDULED, LIVE, In Play и аналоги
+                        if status not in ["FT", "FINISHED", "POSTPONED", "CANCELLED"]:
+                            filtered_matches.append(m)
+                    matches = filtered_matches
+                    print(f"[Footballdata.io] Актуальных матчей (без завершённых): {len(matches)}")
                 else:
                     api_error = f"Ошибка API: {data.get('error', 'Unknown error')}"
                     print(f"[Footballdata.io] {api_error}")
@@ -260,68 +277,68 @@ async def get_today_matches(
         print(f"[Footballdata.io Error]: {e}")
         matches = []
 
+    # Теперь для каждого матча формируем вывод с правильной датой
     for match in matches:
-        # Извлекаем ID
         match_id = str(match.get("match_id") or match.get("id") or "")
 
-        # Лига
         league = match.get("league", {})
         competition = league.get("name") or "Турнир"
 
-        # Извлекаем команды (по структуре home_team / away_team)
         home_team = match.get("home_team", {}).get("team_name") or "Команда 1"
         away_team = match.get("away_team", {}).get("team_name") or "Команда 2"
 
-        # Статус (определяем live)
         status = match.get("status") or match.get("status_localized") or "SCHEDULED"
-        # Список статусов, которые означают, что матч в процессе
-        live_statuses = ["LIVE", "In Play", "1H", "2H", "HT", "ET", "BT", "P", "incomplete"]
-        # Но "incomplete" может быть и для ещё не начавшихся, проверим localised
-        status_localized = match.get("status_localized", "")
-        # Если статус_localized == "Scheduled" или время матча ещё не наступило, то не live
-        # Определим по времени
-        is_live = False
-        if status in live_statuses and status_localized != "Scheduled":
-            is_live = True
-        # Дополнительная проверка: если матч запланирован на будущее, но статус incomplete
-        # Можно сравнить с текущим временем, но для простоты пока так
+        live_statuses = ["LIVE", "In Play", "1H", "2H", "HT", "ET", "BT", "P"]
+        is_live = status in live_statuses
 
-        # Счёт
         score = match.get("score", {})
         goals_home = score.get("home") or 0
         goals_away = score.get("away") or 0
 
-        # Время начала
         match_date = match.get("match_date") or match.get("date") or ""
+        dt_utc = None
         if match_date:
             try:
-                dt = datetime.strptime(match_date, "%Y-%m-%d %H:%M:%S")
-                dt_msk = dt + timedelta(hours=3)
-                time_str = dt_msk.strftime("%H:%M") + " (МСК)"
+                dt_utc = datetime.strptime(match_date, "%Y-%m-%d %H:%M:%S")
             except:
-                time_str = "19:00 (МСК)"
+                pass
+
+        # Формируем дату и время по МСК
+        if dt_utc:
+            dt_msk = dt_utc + timedelta(hours=3)  # UTC+3 (Москва)
+            time_str = dt_msk.strftime("%H:%M") + " (МСК)"
+            # Определяем текстовое представление даты
+            today_msk = msk_now.date()
+            match_date_only = dt_msk.date()
+            if match_date_only == today_msk:
+                date_text = "Сегодня"
+            elif match_date_only == today_msk + timedelta(days=1):
+                date_text = "Завтра"
+            elif match_date_only == today_msk + timedelta(days=2):
+                date_text = "Послезавтра"
+            else:
+                date_text = dt_msk.strftime("%d.%m")
+            info_date = f"{date_text}, {time_str}"
         else:
             time_str = "19:00 (МСК)"
+            info_date = f"Ближайший матч, {time_str}"
 
-        # Стадион (если есть)
         venue = match.get("venue") or match.get("stadium") or {}
         if isinstance(venue, dict):
             venue_name = venue.get("name") or "Стадион"
         else:
             venue_name = "Стадион"
 
-        # Эмблемы
         home_badge = f"https://ui-avatars.com/api/?name={urllib.parse.quote(home_team[:3])}&background=00288e&color=fff"
         away_badge = f"https://ui-avatars.com/api/?name={urllib.parse.quote(away_team[:3])}&background=00288e&color=fff"
 
-        # Генерируем прогноз
         bet_data = generate_bet_market_for_match(
             home_team, away_team, match_id, is_live=is_live,
             goals_home=goals_home, goals_away=goals_away, elapsed=0
         )
 
         match_display = f"{home_team} {goals_home} : {goals_away} {away_team}" if is_live else f"{home_team} — {away_team}"
-        info_prefix = "LIVE" if is_live else "Ближайший матч"
+        info_prefix = "LIVE" if is_live else ""
 
         reasons = [
             f"1. Мотивация: {home_team} нацелена на победу на домашнем стадионе.",
@@ -342,7 +359,7 @@ async def get_today_matches(
             "step_1": {
                 "title": competition,
                 "match": match_display,
-                "info": f"{info_prefix}, {time_str} | Стадион: {venue_name}"
+                "info": f"{info_prefix} {info_date}".strip() if info_prefix else info_date
             },
             "step_2": {
                 "forecast": bet_data["type"],
@@ -355,6 +372,9 @@ async def get_today_matches(
             "disclaimer": "Аналитика сформирована на основе математической модели вероятностей."
         }
         posts.append(post)
+
+    # Сортируем по дате (по времени начала)
+    posts.sort(key=lambda x: x["step_1"]["info"])
 
     return {
         "count": len(posts),
