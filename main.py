@@ -222,24 +222,26 @@ async def get_today_matches(
     api_error = None
 
     try:
-        # Используем PromiedosClient – НЕ требует Playwright!
         client = PromiedosClient()
         print("[EasySoccerData-Promiedos] Запрос данных...")
         
-        # Получаем live-матчи
-        events = client.get_events(live=True)
-        is_live = True
-
-        if not events:
-            print("[EasySoccerData-Promiedos] LIVE-матчей нет, запрашиваем матчи на сегодня...")
-            events = client.get_events(date='today')
-            is_live = False
+        # Получаем матчи на сегодня
+        events = client.get_events(date='today')
+        is_live = False
+        
+        # Фильтруем live-матчи по статусу
+        live_statuses = ['LIVE', '1H', '2H', 'HT', 'ET', 'BT', 'P']
+        live_events = [e for e in events if hasattr(e, 'status') and e.status in live_statuses]
+        if live_events:
+            events = live_events
+            is_live = True
+            print(f"[EasySoccerData-Promiedos] Найдено {len(events)} live-матчей")
+        else:
+            print(f"[EasySoccerData-Promiedos] Найдено {len(events)} матчей на сегодня (live нет)")
 
         if not events:
             print("[EasySoccerData-Promiedos] Матчей на сегодня нет.")
             api_error = "На сегодня матчей не найдено."
-        else:
-            print(f"[EasySoccerData-Promiedos] Успешно, получено {len(events)} матчей")
 
     except Exception as e:
         api_error = f"Ошибка при запросе к EasySoccerData-Promiedos: {str(e)}"
