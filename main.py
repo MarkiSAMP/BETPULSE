@@ -66,8 +66,8 @@ app.add_middleware(
 
 LEAGUES_DATA = [
     {"id": "all", "name": "Все лиги"},
+    {"id": "46", "name": "Лига Европы"}, # Добавил ID из вашей структуры
     {"id": "2", "name": "Лига Чемпионов"},
-    {"id": "3", "name": "Лига Европы"},
     {"id": "848", "name": "Лига Конференций"},
     {"id": "39", "name": "АПЛ (Англия)"},
     {"id": "140", "name": "Ла Лига (Испания)"},
@@ -242,9 +242,8 @@ async def get_today_matches(
                     else:
                         matches = []
 
-                    # Отладочный вывод: покажем структуру первого матча
                     if matches and len(matches) > 0:
-                        print(f"[Footballdata.io] Пример структуры матча: {json.dumps(matches[0], indent=2, ensure_ascii=False)[:500]}")
+                        print(f"[Footballdata.io] Пример структуры матча: {json.dumps(matches[0], indent=2, ensure_ascii=False)[:800]}")
 
                     print(f"[Footballdata.io] Получено матчей: {len(matches)}")
                 else:
@@ -262,90 +261,60 @@ async def get_today_matches(
         matches = []
 
     for match in matches:
-        # --- Гибкий парсинг ---
-        # Пытаемся извлечь ID из разных полей
-        match_id = match.get("id") or match.get("fixture_id") or match.get("event_id")
-        if match_id is None:
-            match_id = str(match.get("id", ""))
-        else:
-            match_id = str(match_id)
+        # Извлекаем ID
+        match_id = str(match.get("match_id") or match.get("id") or "")
+
+        # Извлекаем лигу
+        league = match.get("league", {})
+        competition = league.get("name") or "Турнир"
 
         # Извлекаем команды
         home_team = None
         away_team = None
 
-        # Вариант 1: вложенные объекты
-        if "home_team" in match and isinstance(match["home_team"], dict):
-            home_team = match["home_team"].get("name")
-        elif "homeTeam" in match and isinstance(match["homeTeam"], dict):
-            home_team = match["homeTeam"].get("name")
-        elif "team_home" in match and isinstance(match["team_home"], dict):
-            home_team = match["team_home"].get("name")
-        elif "teams" in match and isinstance(match["teams"], list) and len(match["teams"]) >= 2:
-            # Если есть массив команд, берем первую как home, вторую как away
-            home_team = match["teams"][0].get("name")
-            away_team = match["teams"][1].get("name")
-        else:
-            # Если ничего не нашли, пробуем поля напрямую
+        # Проверяем наличие полей home и away (как в структуре)
+        if "home" in match and isinstance(match["home"], dict):
+            home_team = match["home"].get("name")
+        if "away" in match and isinstance(match["away"], dict):
+            away_team = match["away"].get("name")
+
+        # Если не нашлось, пробуем другие варианты
+        if not home_team:
             home_team = match.get("home_team") or match.get("homeTeam") or match.get("team_home")
+            if isinstance(home_team, dict):
+                home_team = home_team.get("name")
+        if not away_team:
             away_team = match.get("away_team") or match.get("awayTeam") or match.get("team_away")
+            if isinstance(away_team, dict):
+                away_team = away_team.get("name")
 
-        # Если home_team или away_team - словарь, извлекаем name
-        if isinstance(home_team, dict):
-            home_team = home_team.get("name")
-        if isinstance(away_team, dict):
-            away_team = away_team.get("name")
-
-        # Если всё еще None, ставим заглушки
+        # Заглушки, если не нашли
         if not home_team:
             home_team = "Команда 1"
         if not away_team:
             away_team = "Команда 2"
 
-        # Лига
-        league = match.get("league") or match.get("competition") or {}
-        if isinstance(league, dict):
-            competition = league.get("name") or "Турнир"
-        else:
-            competition = str(league) if league else "Турнир"
-
         # Статус
-        status = match.get("status") or match.get("fixture_status") or "SCHEDULED"
-        is_live = status in ["LIVE", "IN_PLAY", "1H", "2H", "HT", "ET", "BT", "P"]
+        status = match.get("status") or match.get("status_localized") or "SCHEDULED"
+        # Если статус "Scheduled" - это не live
+        is_live = status in ["LIVE", "IN_PLAY", "1H", "2H", "HT", "ET", "BT", "P", "incomplete"] and status != "Scheduled"
 
-        # Счёт
-        goals_home = 0
-        goals_away = 0
-        if is_live:
-            # Пробуем разные варианты
-            score = match.get("score") or match.get("scores") or {}
-            if isinstance(score, dict):
-                goals_home = score.get("home") or score.get("home_score") or 0
-                goals_away = score.get("away") or score.get("away_score") or 0
-            else:
-                goals_home = match.get("home_score", 0)
-                goals_away = match.get("away_score", 0)
-        else:
-            goals_home = match.get("home_score", 0)
-            goals_away = match.get("away_score", 0)
-
-        elapsed = match.get("minute") or match.get("elapsed") or 0
-        if isinstance(elapsed, str):
-            try:
-                elapsed = int(elapsed)
-            except:
-                elapsed = 0
+        # Счёт (если есть)
+        goals_home = match.get("home_score") or match.get("homeGoals") or 0
+        goals_away = match.get("away_score") or match.get("awayGoals") or 0
 
         # Время
-        time_str = match.get("time") or match.get("start_time") or "19:00 (МСК)"
-        if time_str and ":" not in time_str and time_str != "19:00 (МСК)":
-            # Возможно, пришла дата, попробуем извлечь время
+        match_date = match.get("match_date") or match.get("date") or ""
+        if match_date:
             try:
-                dt = datetime.fromisoformat(time_str.replace("Z", "+00:00"))
-                dt_msk = dt + timedelta(hours=3)
+                # Пробуем парсить дату в формате "2026-08-14 18:00:00"
+                dt = datetime.strptime(match_date, "%Y-%m-%d %H:%M:%S")
+                dt_msk = dt + timedelta(hours=3)  # предполагаем, что время в UTC
                 time_str = dt_msk.strftime("%H:%M") + " (МСК)"
             except:
                 time_str = "19:00 (МСК)"
+        else:
+            time_str = "19:00 (МСК)"
 
         # Стадион
         venue = match.get("venue") or match.get("stadium") or {}
@@ -354,13 +323,14 @@ async def get_today_matches(
         else:
             venue_name = "Стадион"
 
-        # Эмблемы (из первых букв)
+        # Эмблемы
         home_badge = f"https://ui-avatars.com/api/?name={urllib.parse.quote(home_team[:3])}&background=00288e&color=fff"
         away_badge = f"https://ui-avatars.com/api/?name={urllib.parse.quote(away_team[:3])}&background=00288e&color=fff"
 
+        # Генерируем прогноз
         bet_data = generate_bet_market_for_match(
             home_team, away_team, match_id, is_live=is_live,
-            goals_home=goals_home, goals_away=goals_away, elapsed=elapsed
+            goals_home=goals_home, goals_away=goals_away, elapsed=0
         )
 
         match_display = f"{home_team} {goals_home} : {goals_away} {away_team}" if is_live else f"{home_team} — {away_team}"
@@ -374,12 +344,12 @@ async def get_today_matches(
 
         post = {
             "event_id": match_id,
-            "league_id": str(league.get("id", "")) if isinstance(league, dict) else "",
+            "league_id": str(league.get("league_id") if isinstance(league, dict) else ""),
             "sport": "Футбол",
             "is_live": is_live,
             "goals_home": int(goals_home),
             "goals_away": int(goals_away),
-            "elapsed": int(elapsed),
+            "elapsed": 0,
             "home_badge": home_badge,
             "away_badge": away_badge,
             "step_1": {
