@@ -64,19 +64,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# === Реальные ID лиг из ответа footballdata.io ===
+# Реальные ID лиг из ответа footballdata.io
 LEAGUES_DATA = [
     {"id": "all", "name": "Все лиги"},
     {"id": "15", "name": "АПЛ (Англия)"},
     {"id": "10", "name": "Ла Лига (Испания)"},
     {"id": "45", "name": "Лига Чемпионов"},
     {"id": "46", "name": "Лига Европы"},
-    # Можно добавить другие ID по мере необходимости
-    # {"id": "848", "name": "Лига Конференций"},  # ID может отличаться
-    # {"id": "39", "name": "Серия А (Италия)"},   # ID может отличаться
-    # {"id": "78", "name": "Бундеслига (Германия)"},
-    # {"id": "61", "name": "Лига 1 (Франция)"},
-    # {"id": "235", "name": "РПЛ (Россия)"},
 ]
 
 FORBIDDEN_WORDS = ["ЖБ", "верняк", "100%", "грузим хаты", "проход 100", "чуйка"]
@@ -226,9 +220,8 @@ async def get_today_matches(
 
     headers = {"Authorization": f"Bearer {FOOTBALL_DATA_API_KEY}"}
 
-    # Используем эндпоинт /fixtures/upcoming (предстоящие матчи)
     url = f"{FOOTBALL_DATA_URL}/fixtures/upcoming"
-    params = {"page": 1, "limit": 100}  # берём до 100 матчей
+    params = {"page": 1, "limit": 100}
 
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
@@ -248,7 +241,6 @@ async def get_today_matches(
 
                     print(f"[Footballdata.io] Получено матчей (всего): {len(matches)}")
 
-                    # Фильтрация по лиге, если выбрана не "all"
                     if league_id != "all":
                         filtered_matches = []
                         for m in matches:
@@ -258,7 +250,6 @@ async def get_today_matches(
                         matches = filtered_matches
                         print(f"[Footballdata.io] После фильтрации по лиге: {len(matches)}")
 
-                    # Дополнительная фильтрация: только запланированные (не завершённые)
                     filtered = []
                     for m in matches:
                         status = m.get("status") or m.get("status_localized") or ""
@@ -286,8 +277,18 @@ async def get_today_matches(
         league = match.get("league", {})
         competition = league.get("name") or "Турнир"
 
-        home_team = match.get("home_team", {}).get("team_name") or "Команда 1"
-        away_team = match.get("away_team", {}).get("team_name") or "Команда 2"
+        home_team = match.get("home_team", {})
+        away_team = match.get("away_team", {})
+        home_name = home_team.get("team_name") or "Команда 1"
+        away_name = away_team.get("team_name") or "Команда 2"
+
+        # === ЛОГОТИПЫ ===
+        home_logo = home_team.get("team_logo")
+        away_logo = away_team.get("team_logo")
+        if not home_logo:
+            home_logo = f"https://ui-avatars.com/api/?name={urllib.parse.quote(home_name[:3])}&background=00288e&color=fff"
+        if not away_logo:
+            away_logo = f"https://ui-avatars.com/api/?name={urllib.parse.quote(away_name[:3])}&background=00288e&color=fff"
 
         status = match.get("status") or match.get("status_localized") or "SCHEDULED"
         live_statuses = ["LIVE", "In Play", "1H", "2H", "HT", "ET", "BT", "P"]
@@ -297,7 +298,6 @@ async def get_today_matches(
         goals_home = score.get("home") or 0
         goals_away = score.get("away") or 0
 
-        # Дата и время (в UTC, конвертируем в МСК)
         match_date = match.get("match_date") or match.get("date") or ""
         dt_utc = None
         if match_date:
@@ -326,24 +326,20 @@ async def get_today_matches(
             time_str = "19:00 (МСК)"
             info_date = f"Ближайший матч, {time_str}"
 
-        # Стадион
         venue = match.get("venue", {})
         venue_name = venue.get("stadium_name") or "Стадион"
 
-        home_badge = f"https://ui-avatars.com/api/?name={urllib.parse.quote(home_team[:3])}&background=00288e&color=fff"
-        away_badge = f"https://ui-avatars.com/api/?name={urllib.parse.quote(away_team[:3])}&background=00288e&color=fff"
-
         bet_data = generate_bet_market_for_match(
-            home_team, away_team, match_id, is_live=is_live,
+            home_name, away_name, match_id, is_live=is_live,
             goals_home=goals_home, goals_away=goals_away, elapsed=0
         )
 
-        match_display = f"{home_team} {goals_home} : {goals_away} {away_team}" if is_live else f"{home_team} — {away_team}"
+        match_display = f"{home_name} {goals_home} : {goals_away} {away_name}" if is_live else f"{home_name} — {away_name}"
         info_prefix = "LIVE" if is_live else ""
 
         reasons = [
-            f"1. Мотивация: {home_team} нацелена на победу на домашнем стадионе.",
-            f"2. Форма: {away_team} демонстрирует высокую результативность в атаке.",
+            f"1. Мотивация: {home_name} нацелена на победу на домашнем стадионе.",
+            f"2. Форма: {away_name} демонстрирует высокую результативность в атаке.",
             bet_data["reason_3"]
         ]
 
@@ -355,8 +351,8 @@ async def get_today_matches(
             "goals_home": int(goals_home),
             "goals_away": int(goals_away),
             "elapsed": 0,
-            "home_badge": home_badge,
-            "away_badge": away_badge,
+            "home_badge": home_logo,
+            "away_badge": away_logo,
             "step_1": {
                 "title": competition,
                 "match": match_display,
