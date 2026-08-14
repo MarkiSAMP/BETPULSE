@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 
 import asyncpg
 import httpx
-# Прямой импорт нужного клиента, без лишних зависимостей
+# Прямой импорт нужного клиента, без загрузки неиспользуемых модулей
 from esd.promiedos import PromiedosClient
 from fastapi import FastAPI, HTTPException, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
