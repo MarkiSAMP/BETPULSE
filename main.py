@@ -30,6 +30,7 @@ if not DATABASE_URL:
 if not FOOTBALL_DATA_API_KEY:
     raise RuntimeError("FOOTBALL_DATA_API_KEY не задан")
 
+# === Правильный базовый URL из документации ===
 FOOTBALL_DATA_URL = "https://footballdata.io/api/v1"
 
 @asynccontextmanager
@@ -64,8 +65,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Список лиг (ID из документации или реальные ID, которые вы получите от /leagues)
 LEAGUES_DATA = [
     {"id": "all", "name": "Все лиги"},
+    # Здесь нужно будет заменить ID на реальные из ответа /leagues
     {"id": "46", "name": "Лига Европы"},
     {"id": "2", "name": "Лига Чемпионов"},
     {"id": "848", "name": "Лига Конференций"},
@@ -217,7 +220,7 @@ async def get_today_matches(
     league_id: str = Query("all"),
     x_telegram_init_data: str = Header(None, alias="X-Telegram-Init-Data")
 ):
-    # ВРЕМЕННО ОТКЛЮЧАЕМ ПРОВЕРКУ ПОДПИСКИ ДЛЯ ДИАГНОСТИКИ
+    # ВРЕМЕННО ОТКЛЮЧАЕМ ПРОВЕРКУ ПОДПИСКИ
     # if x_telegram_init_data:
     #     await check_user_access(x_telegram_init_data)
 
@@ -226,16 +229,13 @@ async def get_today_matches(
 
     headers = {"Authorization": f"Bearer {FOOTBALL_DATA_API_KEY}"}
 
-    # Диапазон: сегодня и следующие 2 дня
-    msk_now = datetime.now(timezone.utc) + timedelta(hours=3)
-    today_str = msk_now.strftime("%Y-%m-%d")
-    future_str = (msk_now + timedelta(days=2)).strftime("%Y-%m-%d")
-
-    params = {"from_date": today_str, "to_date": future_str}
-    if league_id != "all":
-        params["league_id"] = league_id
-
-    url = f"{FOOTBALL_DATA_URL}/fixtures"
+    # Используем эндпоинт /fixtures/today согласно документации
+    url = f"{FOOTBALL_DATA_URL}/fixtures/today"
+    
+    # Добавляем пагинацию (опционально)
+    params = {"page": 1, "limit": 50}
+    # Если выбрана конкретная лига, фильтруем на стороне бэкенда
+    # (прямой параметр league_id не описан для этого эндпоинта, но можно попробовать)
 
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
@@ -255,16 +255,27 @@ async def get_today_matches(
 
                     print(f"[Footballdata.io] Получено матчей (всего): {len(matches)}")
 
-                    # Фильтруем только запланированные или live
-                    filtered_matches = []
+                    # Фильтрация по лиге, если выбрана не "all"
+                    if league_id != "all":
+                        filtered_matches = []
+                        for m in matches:
+                            # Проверяем, что league_id совпадает
+                            match_league = m.get("league", {})
+                            if str(match_league.get("league_id")) == str(league_id):
+                                filtered_matches.append(m)
+                        matches = filtered_matches
+                        print(f"[Footballdata.io] После фильтрации по лиге: {len(matches)}")
+
+                    # Дополнительная фильтрация: только запланированные или live
+                    filtered = []
                     for m in matches:
                         status = m.get("status") or m.get("status_localized") or ""
                         if status not in ["FT", "FINISHED", "POSTPONED", "CANCELLED"]:
-                            filtered_matches.append(m)
-                    matches = filtered_matches
+                            filtered.append(m)
+                    matches = filtered
                     print(f"[Footballdata.io] Актуальных матчей (без завершённых): {len(matches)}")
                 else:
-                    api_error = f"Ошибка API: {data.get('error', 'Unknown error')}"
+                    api_error = f"Ошибка API: {data.get('error', {}).get('message', 'Unknown error')}"
                     print(f"[Footballdata.io] {api_error}")
                     matches = []
             else:
@@ -294,6 +305,7 @@ async def get_today_matches(
         goals_home = score.get("home") or 0
         goals_away = score.get("away") or 0
 
+        # Время начала (если есть)
         match_date = match.get("match_date") or match.get("date") or ""
         dt_utc = None
         if match_date:
@@ -305,6 +317,8 @@ async def get_today_matches(
         if dt_utc:
             dt_msk = dt_utc + timedelta(hours=3)
             time_str = dt_msk.strftime("%H:%M") + " (МСК)"
+            # Определяем текстовое представление даты
+            msk_now = datetime.now(timezone.utc) + timedelta(hours=3)
             today_msk = msk_now.date()
             match_date_only = dt_msk.date()
             if match_date_only == today_msk:
@@ -370,7 +384,6 @@ async def get_today_matches(
         }
         posts.append(post)
 
-    # Сортируем по дате
     posts.sort(key=lambda x: x["step_1"]["info"])
 
     return {
@@ -392,7 +405,7 @@ async def compare_teams(
     elapsed: int = 0,
     x_telegram_init_data: str = Header(None, alias="X-Telegram-Init-Data")
 ):
-    # ВРЕМЕННО ОТКЛЮЧАЕМ ПРОВЕРКУ И ДЛЯ СТАТИСТИКИ
+    # ВРЕМЕННО ОТКЛЮЧАЕМ ПРОВЕРКУ
     # if x_telegram_init_data:
     #     await check_user_access(x_telegram_init_data)
 
