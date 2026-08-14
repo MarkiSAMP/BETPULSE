@@ -217,8 +217,9 @@ async def get_today_matches(
     league_id: str = Query("all"),
     x_telegram_init_data: str = Header(None, alias="X-Telegram-Init-Data")
 ):
-    if x_telegram_init_data:
-        await check_user_access(x_telegram_init_data)
+    # ВРЕМЕННО ОТКЛЮЧАЕМ ПРОВЕРКУ ПОДПИСКИ ДЛЯ ДИАГНОСТИКИ
+    # if x_telegram_init_data:
+    #     await check_user_access(x_telegram_init_data)
 
     posts = []
     api_error = None
@@ -254,11 +255,10 @@ async def get_today_matches(
 
                     print(f"[Footballdata.io] Получено матчей (всего): {len(matches)}")
 
-                    # Фильтруем: только запланированные или live
+                    # Фильтруем только запланированные или live
                     filtered_matches = []
                     for m in matches:
                         status = m.get("status") or m.get("status_localized") or ""
-                        # Оставляем только SCHEDULED, LIVE, In Play и аналоги
                         if status not in ["FT", "FINISHED", "POSTPONED", "CANCELLED"]:
                             filtered_matches.append(m)
                     matches = filtered_matches
@@ -277,7 +277,6 @@ async def get_today_matches(
         print(f"[Footballdata.io Error]: {e}")
         matches = []
 
-    # Теперь для каждого матча формируем вывод с правильной датой
     for match in matches:
         match_id = str(match.get("match_id") or match.get("id") or "")
 
@@ -303,11 +302,9 @@ async def get_today_matches(
             except:
                 pass
 
-        # Формируем дату и время по МСК
         if dt_utc:
-            dt_msk = dt_utc + timedelta(hours=3)  # UTC+3 (Москва)
+            dt_msk = dt_utc + timedelta(hours=3)
             time_str = dt_msk.strftime("%H:%M") + " (МСК)"
-            # Определяем текстовое представление даты
             today_msk = msk_now.date()
             match_date_only = dt_msk.date()
             if match_date_only == today_msk:
@@ -373,7 +370,7 @@ async def get_today_matches(
         }
         posts.append(post)
 
-    # Сортируем по дате (по времени начала)
+    # Сортируем по дате
     posts.sort(key=lambda x: x["step_1"]["info"])
 
     return {
@@ -395,8 +392,9 @@ async def compare_teams(
     elapsed: int = 0,
     x_telegram_init_data: str = Header(None, alias="X-Telegram-Init-Data")
 ):
-    if x_telegram_init_data:
-        await check_user_access(x_telegram_init_data)
+    # ВРЕМЕННО ОТКЛЮЧАЕМ ПРОВЕРКУ И ДЛЯ СТАТИСТИКИ
+    # if x_telegram_init_data:
+    #     await check_user_access(x_telegram_init_data)
 
     home_badge = home_badge or f"https://ui-avatars.com/api/?name={urllib.parse.quote(home[:3])}&background=00288e&color=fff"
     away_badge = away_badge or f"https://ui-avatars.com/api/?name={urllib.parse.quote(away[:3])}&background=00288e&color=fff"
