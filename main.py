@@ -12,20 +12,23 @@ from contextlib import asynccontextmanager
 
 import asyncpg
 import httpx
+import esd  # <-- НОВАЯ БИБЛИОТЕКА
 from fastapi import FastAPI, HTTPException, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-# Импортируем экземпляры бота и функцию инициализации из bot.py
 from bot import bot, dp, init_db
 
-# Конфигурация переменная окружения
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8958459929:AAEnq2FWercdCYQoSUjA_n37nrY1PNIYo4E")
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:npg_hKa5W3yrsevu@ep-polished-cloud-b19g2r39-pooler.c-5.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require")
-API_KEY = "504d57f6b4448f20a4789e6d4cfd7abe"
-API_FOOTBALL_URL = "https://v3.football.api-sports.io/fixtures"
+# === Переменные окружения ===
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+DATABASE_URL = os.getenv("DATABASE_URL")
+# API_KEY больше не нужен, убираем
 
-# Автозапуск бота вместе с сервером FastAPI и сбросом вебхуков
+if not BOT_TOKEN:
+    raise RuntimeError("BOT_TOKEN не задан в переменных окружения")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL не задан в переменных окружения")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("[SERVER]: Инициализация базы данных...")
@@ -41,14 +44,13 @@ async def lifespan(app: FastAPI):
         print(f"[SERVER Webhook Error]: {e}")
 
     bot_task = asyncio.create_task(dp.start_polling(bot))
-    print("[SERVER]: FastAPI и Telegram Bot успешно запущены и работают 24/7!")
+    print("[SERVER]: FastAPI и Telegram Bot успешно запущены!")
     yield
     print("[SERVER]: Остановка службы бота...")
     bot_task.cancel()
 
 app = FastAPI(title="BETPULSE Mini App API", lifespan=lifespan)
 
-# Настройка CORS для работы Mini App
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -75,7 +77,6 @@ LEAGUES_DATA = [
 FORBIDDEN_WORDS = ["ЖБ", "верняк", "100%", "грузим хаты", "проход 100", "чуйка"]
 
 def sanitize_text(text: str) -> str:
-    """Фильтрация запрещенных слов для модерации."""
     for word in FORBIDDEN_WORDS:
         if word in text:
             text = text.replace(word, "[Аналитический тренд]")
@@ -86,7 +87,6 @@ def get_msk_today_str() -> str:
     return msk_now.strftime("%Y-%m-%d")
 
 def verify_telegram_init_data(init_data_raw: str) -> dict | None:
-    """Проверка HMAC подписи Telegram WebApp."""
     try:
         parsed_data = parse_qs(init_data_raw)
         hash_from_telegram = parsed_data.get('hash', [''])[0]
@@ -109,7 +109,6 @@ def verify_telegram_init_data(init_data_raw: str) -> dict | None:
         return None
 
 async def check_user_access(init_data: str) -> int:
-    """Проверка наличия оплаченной подписки у пользователя."""
     user = verify_telegram_init_data(init_data)
     if not user:
         raise HTTPException(status_code=401, detail="Запуск разрешен только через Telegram-бота.")
@@ -145,7 +144,6 @@ def generate_bet_market_for_match(
     goals_away: int = 0,
     elapsed: int = 0
 ) -> Dict[str, Any]:
-    """Генерация аналитических рекомендаций на основе математического алгоритма."""
     hash_seed = zlib.crc32(f"{home_team}_{away_team}_{id_event}".encode('utf-8'))
 
     if is_live:
@@ -204,74 +202,8 @@ def generate_bet_market_for_match(
 class AnalysisEngine:
     @staticmethod
     def format_api_sports_match(item: Dict[str, Any], is_live: bool = False) -> Dict[str, Any]:
-        fixture = item.get("fixture", {})
-        league = item.get("league", {})
-        teams = item.get("teams", {})
-        status = fixture.get("status", {})
-        goals = item.get("goals", {})
-
-        home_team = teams.get("home", {}).get("name") or "Команда 1"
-        away_team = teams.get("away", {}).get("name") or "Команда 2"
-        competition = league.get("name") or "Турнир"
-
-        goals_home = goals.get("home") if goals.get("home") is not None else 0
-        goals_away = goals.get("away") if goals.get("away") is not None else 0
-        elapsed = status.get("elapsed") or 0
-
-        home_badge = teams.get("home", {}).get("logo") or f"https://ui-avatars.com/api/?name={urllib.parse.quote(home_team[:3])}&background=00288e&color=fff"
-        away_badge = teams.get("away", {}).get("logo") or f"https://ui-avatars.com/api/?name={urllib.parse.quote(away_team[:3])}&background=00288e&color=fff"
-
-        date_str = fixture.get("date")
-        time_str = "19:00 (МСК)"
-        if date_str:
-            try:
-                dt = datetime.fromisoformat(date_str)
-                time_str = f"{dt.strftime('%H:%M')} (МСК)"
-            except Exception:
-                pass
-
-        venue = fixture.get("venue", {}).get("name") or "Главная арена"
-        id_ev = str(fixture.get("id") or f"{home_team}_{away_team}")
-        
-        bet_data = generate_bet_market_for_match(
-            home_team, away_team, id_ev, is_live=is_live,
-            goals_home=goals_home, goals_away=goals_away, elapsed=elapsed
-        )
-
-        match_display = f"{home_team} {goals_home} : {goals_away} {away_team}" if is_live else f"{home_team} — {away_team}"
-        info_prefix = f"LIVE ({elapsed}')" if is_live and elapsed else ("LIVE" if is_live else "Ближайший матч")
-
-        reasons = [
-            f"1. Ход встречи: {home_team} контролирует инициативу." if is_live else f"1. Мотивация: {home_team} нацелена на победу на домашнем стадионе.",
-            f"2. Динамика: {away_team} перестраивает тактическую схему." if is_live else f"2. Форма: {away_team} демонстрирует высокую результативность в атаке.",
-            bet_data["reason_3"]
-        ]
-
-        return {
-            "event_id": id_ev,
-            "league_id": str(league.get("id", "")),
-            "sport": "Футбол",
-            "is_live": is_live,
-            "goals_home": goals_home,
-            "goals_away": goals_away,
-            "elapsed": elapsed,
-            "home_badge": home_badge,
-            "away_badge": away_badge,
-            "step_1": {
-                "title": competition,
-                "match": match_display,
-                "info": f"{info_prefix}, {time_str} | Стадион: {venue}"
-            },
-            "step_2": {
-                "forecast": bet_data["type"],
-                "coefficient": bet_data["coef"],
-                "explanation": bet_data["exp"]
-            },
-            "step_3": reasons,
-            "step_4": sanitize_text(bet_data["risk"]),
-            "step_5": f"Рекомендуемый размер подрасчета: {bet_data['bank']} от банка.",
-            "disclaimer": "Аналитика сформирована на основе математической модели вероятностей."
-        }
+        # Этот метод больше не используется, но оставим для совместимости
+        pass
 
 @app.get("/")
 async def serve_frontend():
@@ -289,47 +221,131 @@ async def get_today_matches(
     if x_telegram_init_data:
         await check_user_access(x_telegram_init_data)
 
-    today_str = get_msk_today_str()
     posts = []
-    raw_fixtures = []
+    api_error = None
 
-    headers = {"x-apisports-key": API_KEY}
-    params = {"date": today_str, "timezone": "Europe/Moscow"}
-    if league_id != "all":
-        params["league"] = league_id
-
+    # === НОВАЯ ЛОГИКА С EasySoccerData ===
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            res = await client.get(API_FOOTBALL_URL, headers=headers, params=params)
-            if res.status_code == 200:
-                data = res.json()
-                raw_fixtures = data.get("response", [])
-                
-            # Автоматический фоллбэк: если на "сегодня" нет матчей, подтягиваем игры на "завтра"
-            if not raw_fixtures:
-                tomorrow_dt = datetime.now(timezone.utc) + timedelta(days=1) + timedelta(hours=3)
-                tomorrow_str = tomorrow_dt.strftime("%Y-%m-%d")
-                params["date"] = tomorrow_str
-                res_next = await client.get(API_FOOTBALL_URL, headers=headers, params=params)
-                if res_next.status_code == 200:
-                    raw_fixtures = res_next.json().get("response", [])
+        client = esd.SofascoreClient()
+        print("[EasySoccerData] Запрос данных...")
+        
+        # Сначала пробуем получить live-матчи
+        events = client.get_events(live=True)
+        is_live = True
+
+        if not events:
+            # Если live нет, берём матчи на сегодня
+            print("[EasySoccerData] LIVE-матчей нет, запрашиваем матчи на сегодня...")
+            events = client.get_events(date='today')
+            is_live = False
+
+        if not events:
+            print("[EasySoccerData] Матчей на сегодня нет.")
+            api_error = "На сегодня матчей не найдено."
+        else:
+            print(f"[EasySoccerData] Успешно, получено {len(events)} матчей")
+
     except Exception as e:
-        print(f"[API-Football Error]: {e}")
+        api_error = f"Ошибка при запросе к EasySoccerData: {str(e)}"
+        print(f"[EasySoccerData Error]: {e}")
+        events = []
 
-    finished_statuses = ["FT", "AET", "PEN", "CANC", "ABD", "PST"]
-    live_statuses = ["1H", "HT", "2H", "ET", "BT", "P", "LIVE"]
-
-    for item in raw_fixtures:
-        fixture = item.get("fixture", {})
-        status_short = fixture.get("status", {}).get("short", "")
-
-        if status_short in finished_statuses:
+    # === Обработка событий ===
+    for event in events:
+        # Фильтруем завершённые матчи (если есть)
+        if hasattr(event, 'status') and event.status in ['FT', 'AET', 'PEN', 'CANC', 'ABD', 'PST']:
             continue
 
-        is_live = status_short in live_statuses
-        posts.append(AnalysisEngine.format_api_sports_match(item, is_live=is_live))
+        # Извлекаем данные (структура может отличаться, адаптируйте под实际情况)
+        home_team = event.home_team.name if hasattr(event, 'home_team') else "Команда 1"
+        away_team = event.away_team.name if hasattr(event, 'away_team') else "Команда 2"
+        
+        # Логотипы (если есть)
+        home_badge = getattr(event.home_team, 'logo', None) if hasattr(event, 'home_team') else None
+        away_badge = getattr(event.away_team, 'logo', None) if hasattr(event, 'away_team') else None
+        if not home_badge:
+            home_badge = f"https://ui-avatars.com/api/?name={urllib.parse.quote(home_team[:3])}&background=00288e&color=fff"
+        if not away_badge:
+            away_badge = f"https://ui-avatars.com/api/?name={urllib.parse.quote(away_team[:3])}&background=00288e&color=fff"
 
-    return {"count": len(posts), "date": today_str, "forecasts": posts}
+        # Счёт и время
+        if is_live:
+            goals_home = getattr(event.home_score, 'current', 0) if hasattr(event, 'home_score') else 0
+            goals_away = getattr(event.away_score, 'current', 0) if hasattr(event, 'away_score') else 0
+            elapsed = getattr(event, 'time', 0) or 0
+        else:
+            goals_home = 0
+            goals_away = 0
+            elapsed = 0
+
+        # Название турнира
+        tournament = getattr(event, 'tournament', None)
+        competition = tournament.name if tournament else "Турнир"
+
+        # Время начала (для отображения)
+        start_timestamp = getattr(event, 'start_timestamp', None)
+        if start_timestamp:
+            try:
+                dt = datetime.fromtimestamp(start_timestamp, tz=timezone.utc) + timedelta(hours=3)
+                time_str = dt.strftime("%H:%M") + " (МСК)"
+            except:
+                time_str = "19:00 (МСК)"
+        else:
+            time_str = "19:00 (МСК)"
+
+        # Стадион
+        venue = getattr(event, 'venue', None)
+        venue_name = venue.name if venue else "Главная арена"
+
+        # Генерируем прогноз
+        id_ev = str(getattr(event, 'id', f"{home_team}_{away_team}"))
+        bet_data = generate_bet_market_for_match(
+            home_team, away_team, id_ev, is_live=is_live,
+            goals_home=goals_home, goals_away=goals_away, elapsed=elapsed
+        )
+
+        match_display = f"{home_team} {goals_home} : {goals_away} {away_team}" if is_live else f"{home_team} — {away_team}"
+        info_prefix = f"LIVE ({elapsed}')" if is_live and elapsed else ("LIVE" if is_live else "Ближайший матч")
+
+        reasons = [
+            f"1. Ход встречи: {home_team} контролирует инициативу." if is_live else f"1. Мотивация: {home_team} нацелена на победу на домашнем стадионе.",
+            f"2. Динамика: {away_team} перестраивает тактическую схему." if is_live else f"2. Форма: {away_team} демонстрирует высокую результативность в атаке.",
+            bet_data["reason_3"]
+        ]
+
+        post = {
+            "event_id": id_ev,
+            "league_id": str(getattr(tournament, 'id', '')),
+            "sport": "Футбол",
+            "is_live": is_live,
+            "goals_home": goals_home,
+            "goals_away": goals_away,
+            "elapsed": elapsed,
+            "home_badge": home_badge,
+            "away_badge": away_badge,
+            "step_1": {
+                "title": competition,
+                "match": match_display,
+                "info": f"{info_prefix}, {time_str} | Стадион: {venue_name}"
+            },
+            "step_2": {
+                "forecast": bet_data["type"],
+                "coefficient": bet_data["coef"],
+                "explanation": bet_data["exp"]
+            },
+            "step_3": reasons,
+            "step_4": sanitize_text(bet_data["risk"]),
+            "step_5": f"Рекомендуемый размер подрасчета: {bet_data['bank']} от банка.",
+            "disclaimer": "Аналитика сформирована на основе математической модели вероятностей."
+        }
+        posts.append(post)
+
+    return {
+        "count": len(posts),
+        "date": get_msk_today_str(),
+        "forecasts": posts,
+        "api_error": api_error
+    }
 
 @app.get("/api/stats/compare")
 async def compare_teams(
