@@ -30,7 +30,6 @@ if not DATABASE_URL:
 if not FOOTBALL_DATA_API_KEY:
     raise RuntimeError("FOOTBALL_DATA_API_KEY не задан")
 
-# === Правильный базовый URL из документации ===
 FOOTBALL_DATA_URL = "https://footballdata.io/api/v1"
 
 @asynccontextmanager
@@ -65,21 +64,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Список лиг (ID из документации или реальные ID, которые вы получите от /leagues)
+# === Реальные ID лиг из ответа footballdata.io ===
 LEAGUES_DATA = [
     {"id": "all", "name": "Все лиги"},
-    # Здесь нужно будет заменить ID на реальные из ответа /leagues
+    {"id": "15", "name": "АПЛ (Англия)"},
+    {"id": "10", "name": "Ла Лига (Испания)"},
+    {"id": "45", "name": "Лига Чемпионов"},
     {"id": "46", "name": "Лига Европы"},
-    {"id": "2", "name": "Лига Чемпионов"},
-    {"id": "848", "name": "Лига Конференций"},
-    {"id": "39", "name": "АПЛ (Англия)"},
-    {"id": "140", "name": "Ла Лига (Испания)"},
-    {"id": "135", "name": "Серия А (Италия)"},
-    {"id": "78", "name": "Бундеслига (Германия)"},
-    {"id": "61", "name": "Лига 1 (Франция)"},
-    {"id": "235", "name": "РПЛ (Россия)"},
-    {"id": "667", "name": "Товарищеские (клубы)"},
-    {"id": "10", "name": "Товарищеские (сборные)"}
+    # Можно добавить другие ID по мере необходимости
+    # {"id": "848", "name": "Лига Конференций"},  # ID может отличаться
+    # {"id": "39", "name": "Серия А (Италия)"},   # ID может отличаться
+    # {"id": "78", "name": "Бундеслига (Германия)"},
+    # {"id": "61", "name": "Лига 1 (Франция)"},
+    # {"id": "235", "name": "РПЛ (Россия)"},
 ]
 
 FORBIDDEN_WORDS = ["ЖБ", "верняк", "100%", "грузим хаты", "проход 100", "чуйка"]
@@ -229,13 +226,9 @@ async def get_today_matches(
 
     headers = {"Authorization": f"Bearer {FOOTBALL_DATA_API_KEY}"}
 
-    # Используем эндпоинт /fixtures/today согласно документации
-    url = f"{FOOTBALL_DATA_URL}/fixtures/today"
-    
-    # Добавляем пагинацию (опционально)
-    params = {"page": 1, "limit": 50}
-    # Если выбрана конкретная лига, фильтруем на стороне бэкенда
-    # (прямой параметр league_id не описан для этого эндпоинта, но можно попробовать)
+    # Используем эндпоинт /fixtures/upcoming (предстоящие матчи)
+    url = f"{FOOTBALL_DATA_URL}/fixtures/upcoming"
+    params = {"page": 1, "limit": 100}  # берём до 100 матчей
 
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
@@ -259,14 +252,13 @@ async def get_today_matches(
                     if league_id != "all":
                         filtered_matches = []
                         for m in matches:
-                            # Проверяем, что league_id совпадает
                             match_league = m.get("league", {})
                             if str(match_league.get("league_id")) == str(league_id):
                                 filtered_matches.append(m)
                         matches = filtered_matches
                         print(f"[Footballdata.io] После фильтрации по лиге: {len(matches)}")
 
-                    # Дополнительная фильтрация: только запланированные или live
+                    # Дополнительная фильтрация: только запланированные (не завершённые)
                     filtered = []
                     for m in matches:
                         status = m.get("status") or m.get("status_localized") or ""
@@ -305,7 +297,7 @@ async def get_today_matches(
         goals_home = score.get("home") or 0
         goals_away = score.get("away") or 0
 
-        # Время начала (если есть)
+        # Дата и время (в UTC, конвертируем в МСК)
         match_date = match.get("match_date") or match.get("date") or ""
         dt_utc = None
         if match_date:
@@ -334,11 +326,9 @@ async def get_today_matches(
             time_str = "19:00 (МСК)"
             info_date = f"Ближайший матч, {time_str}"
 
-        venue = match.get("venue") or match.get("stadium") or {}
-        if isinstance(venue, dict):
-            venue_name = venue.get("name") or "Стадион"
-        else:
-            venue_name = "Стадион"
+        # Стадион
+        venue = match.get("venue", {})
+        venue_name = venue.get("stadium_name") or "Стадион"
 
         home_badge = f"https://ui-avatars.com/api/?name={urllib.parse.quote(home_team[:3])}&background=00288e&color=fff"
         away_badge = f"https://ui-avatars.com/api/?name={urllib.parse.quote(away_team[:3])}&background=00288e&color=fff"
