@@ -5,3 +5,4 @@ asyncpg>=0.29.0
 aiogram>=3.7.0
 pydantic>=2.7.0
 EasySoccerData
+playwright
