@@ -333,48 +333,42 @@
 
     if (window.Telegram && window.Telegram.WebApp) {
       const webApp = window.Telegram.WebApp;
-      webApp.ready(); // сообщаем, что приложение готово
+      webApp.ready();
 
       const user = webApp.initDataUnsafe?.user;
       if (user) {
-        // Имя
         let displayName = user.first_name || '';
         if (user.last_name) displayName += ' ' + user.last_name;
         if (!displayName.trim() && user.username) displayName = user.username;
         if (!displayName.trim()) displayName = 'Пользователь';
         nameEl.textContent = displayName;
 
-        // Юзернейм
         if (user.username) {
           usernameEl.textContent = '@' + user.username;
         } else {
           usernameEl.textContent = 'Пользователь Telegram';
         }
 
-        // Аватар
         if (user.photo_url) {
           avatar.src = user.photo_url;
         } else {
-          // Генерируем через ui-avatars
           const initials = (user.first_name ? user.first_name[0] : '') + (user.last_name ? user.last_name[0] : '');
           const fallback = initials || 'U';
           avatar.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(fallback) + '&background=00288e&color=fff&size=64';
         }
       } else {
-        // Если пользователь не получен (например, открыто в браузере вне Telegram)
         nameEl.textContent = 'Гость';
         usernameEl.textContent = 'Авторизуйтесь в Telegram';
         avatar.src = 'https://ui-avatars.com/api/?name=U&background=00288e&color=fff&size=64';
       }
     } else {
-      // Не в Telegram WebApp – заглушка
       nameEl.textContent = 'Гость';
       usernameEl.textContent = 'Откройте через Telegram';
       avatar.src = 'https://ui-avatars.com/api/?name=U&background=00288e&color=fff&size=64';
     }
   }
 
-  // ========== ОСТАЛЬНАЯ ЛОГИКА ==========
+  // ========== ОСТАЛЬНАЯ ЛОГИКА С РАСШИРЕННЫМ ЛОГИРОВАНИЕМ ==========
   let currentSelectedLeague = "all";
 
   function getTelegramInitData() {
@@ -475,15 +469,48 @@
       </div>`;
 
     const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
+    const url = `${API_BASE}/matches/today?league_id=${encodeURIComponent(leagueId)}`;
+    
+    console.log('🔍 [DEBUG] Запрос к:', url);
+    console.log('🔍 [DEBUG] API_BASE:', API_BASE);
+    console.log('🔍 [DEBUG] Протокол:', window.location.protocol);
 
     try {
-      const res = await fetch(`${API_BASE}/matches/today?league_id=${encodeURIComponent(leagueId)}`, {
+      const res = await fetch(url, {
         headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
       });
-      const data = await res.json();
+      
+      console.log('📡 [DEBUG] Статус ответа:', res.status);
+      console.log('📡 [DEBUG] Статус текст:', res.statusText);
 
-      // Показываем ошибку, если она пришла
+      if (!res.ok) {
+        // Если ответ не OK, показываем детали
+        const errorText = await res.text();
+        console.error('❌ [DEBUG] Ошибка ответа:', res.status, errorText);
+        container.innerHTML = `
+          <div class="bg-risk-bg rounded-xl p-6 text-center border border-error-container shadow-sm space-y-2">
+            <span class="material-symbols-outlined text-error text-3xl">error</span>
+            <p class="font-headline-md text-headline-md text-on-surface">Ошибка загрузки матчей</p>
+            <p class="text-xs text-on-surface">HTTP ${res.status}: ${res.statusText}</p>
+            <p class="text-xs text-outline break-all">${errorText.substring(0, 200)}</p>
+            <details class="text-left text-xs">
+              <summary class="text-primary cursor-pointer">Подробности запроса</summary>
+              <p class="mt-2 text-outline">URL: ${url}</p>
+              <p class="text-outline">Метод: GET</p>
+            </details>
+          </div>`;
+        return;
+      }
+
+      const data = await res.json();
+      console.log('📦 [DEBUG] Ответ от сервера:', data);
+      console.log('📦 [DEBUG] Тип data:', typeof data);
+      console.log('📦 [DEBUG] forecasts:', data.forecasts);
+      console.log('📦 [DEBUG] api_error:', data.api_error);
+      console.log('📦 [DEBUG] count:', data.count);
+
       if (data.api_error) {
+        console.error('⚠️ [DEBUG] Ошибка от сервера:', data.api_error);
         container.innerHTML = `
           <div class="bg-risk-bg rounded-xl p-6 text-center border border-error-container shadow-sm space-y-2">
             <span class="material-symbols-outlined text-error text-3xl">error</span>
@@ -495,23 +522,44 @@
       }
 
       if (!data.forecasts || data.forecasts.length === 0) {
+        console.warn('⚠️ [DEBUG] Матчей нет, forecasts пуст или отсутствует');
         container.innerHTML = `
           <div class="bg-card-bg rounded-xl p-6 text-center border border-outline-variant/20 shadow-sm space-y-2">
             <span class="material-symbols-outlined text-outline text-3xl">event_busy</span>
             <p class="font-headline-md text-headline-md text-on-surface">На сегодня футбольных матчей нет</p>
             <p class="text-xs text-outline">В выбранном турнире на сегодня по расписанию игр не запланировано.</p>
+            <details class="text-left text-xs">
+              <summary class="text-primary cursor-pointer">Показать сырые данные</summary>
+              <pre class="mt-2 p-2 bg-surface-container-low rounded overflow-auto max-h-40">${JSON.stringify(data, null, 2)}</pre>
+            </details>
           </div>`;
         return;
       }
 
+      console.log(`✅ [DEBUG] Количество матчей: ${data.forecasts.length}`);
+      
       container.innerHTML = "";
-      data.forecasts.forEach(post => {
-        container.appendChild(createForecastCardElement(post));
+      data.forecasts.forEach((post, index) => {
+        console.log(`📊 [DEBUG] Матч #${index + 1}:`, post.step_1?.match);
+        try {
+          container.appendChild(createForecastCardElement(post));
+        } catch (err) {
+          console.error(`❌ [DEBUG] Ошибка рендеринга матча #${index + 1}:`, err);
+        }
       });
 
     } catch (err) {
-      console.error(err);
-      container.innerHTML = `<div class="text-center text-loss-red py-8 font-body-sm">Не удалось загрузить матчи. Проверьте соединение.</div>`;
+      console.error('💥 [DEBUG] Ошибка при загрузке:', err);
+      container.innerHTML = `
+        <div class="bg-risk-bg rounded-xl p-6 text-center border border-error-container shadow-sm space-y-2">
+          <span class="material-symbols-outlined text-error text-3xl">error</span>
+          <p class="font-headline-md text-headline-md text-on-surface">Не удалось загрузить матчи</p>
+          <p class="text-xs text-on-surface">${err.message}</p>
+          <details class="text-left text-xs">
+            <summary class="text-primary cursor-pointer">Подробности ошибки</summary>
+            <pre class="mt-2 p-2 bg-surface-container-low rounded overflow-auto max-h-40">${err.stack || err.message}</pre>
+          </details>
+        </div>`;
     }
   }
 
@@ -630,7 +678,6 @@
             <span class="material-symbols-outlined text-[16px]">arrow_back</span> Назад к выбору матча
           </button>
 
-          <!-- Шапка с эмблемами -->
           <div class="bg-card-bg rounded-2xl p-gutter-card shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 relative">
             ${isLive ? `<span class="absolute top-3 right-3 bg-red-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-full animate-pulse">LIVE ${elapsed}'</span>` : ''}
             <h3 class="text-xs font-bold text-outline uppercase tracking-wider text-center mb-4">Детальный разбор матча</h3>
@@ -652,7 +699,6 @@
             </div>
           </div>
 
-          <!-- Пункт 1: История очных встреч -->
           <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
             <div class="flex items-center gap-2 text-primary font-semibold text-sm">
               <span class="material-symbols-outlined text-[18px]">history</span>
@@ -664,7 +710,6 @@
             </div>
           </div>
 
-          <!-- Пункт 2: Текущая форма и статистика -->
           <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-3">
             <div class="flex items-center gap-2 text-primary font-semibold text-sm">
               <span class="material-symbols-outlined text-[18px]">trending_up</span>
@@ -690,7 +735,6 @@
             <p class="text-xs text-on-surface">${analysis.point_2_form.away_stats}</p>
           </div>
 
-          <!-- Пункт 3: Моральная составляющая -->
           <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
             <div class="flex items-center gap-2 text-primary font-semibold text-sm">
               <span class="material-symbols-outlined text-[18px]">psychology</span>
@@ -699,7 +743,6 @@
             <p class="text-xs text-on-surface">${analysis.point_3_morale.text}</p>
           </div>
 
-          <!-- Пункт 4: Травмы и кадровые новости -->
           <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
             <div class="flex items-center gap-2 text-primary font-semibold text-sm">
               <span class="material-symbols-outlined text-[18px]">medical_services</span>
@@ -711,7 +754,6 @@
             </ul>
           </div>
 
-          <!-- Пункт 5: Итоговый вердикт и рекомендация -->
           <div class="bg-gradient-to-br from-primary/10 to-primary-container/20 rounded-2xl p-5 border-2 border-primary/30 shadow-md space-y-3">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2 text-primary font-bold text-sm">
