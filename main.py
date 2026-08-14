@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 
 import asyncpg
 import httpx
-import esd  # <-- EasySoccerData
+import esd  # EasySoccerData
 from fastapi import FastAPI, HTTPException, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -24,9 +24,9 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not BOT_TOKEN:
-    raise RuntimeError("BOT_TOKEN не задан в переменных окружения")
+    raise RuntimeError("BOT_TOKEN не задан")
 if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL не задан в переменных окружения")
+    raise RuntimeError("DATABASE_URL не задан")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -41,6 +41,9 @@ async def lifespan(app: FastAPI):
         await bot.delete_webhook(drop_pending_updates=True)
     except Exception as e:
         print(f"[SERVER Webhook Error]: {e}")
+
+    # Небольшая задержка для предотвращения конфликтов бота
+    await asyncio.sleep(2)
 
     bot_task = asyncio.create_task(dp.start_polling(bot))
     print("[SERVER]: FastAPI и Telegram Bot успешно запущены!")
@@ -218,33 +221,32 @@ async def get_today_matches(
     api_error = None
 
     try:
-        # Инициализируем клиент EasySoccerData (Sofascore)
-        client = esd.SofascoreClient()
-        print("[EasySoccerData] Запрос данных...")
+        # Используем PromiedosClient – НЕ требует Playwright!
+        client = esd.PromiedosClient()
+        print("[EasySoccerData-Promiedos] Запрос данных...")
         
-        # Сначала пробуем получить live-матчи
+        # Получаем live-матчи
         events = client.get_events(live=True)
         is_live = True
 
         if not events:
-            print("[EasySoccerData] LIVE-матчей нет, запрашиваем матчи на сегодня...")
+            print("[EasySoccerData-Promiedos] LIVE-матчей нет, запрашиваем матчи на сегодня...")
             events = client.get_events(date='today')
             is_live = False
 
         if not events:
-            print("[EasySoccerData] Матчей на сегодня нет.")
+            print("[EasySoccerData-Promiedos] Матчей на сегодня нет.")
             api_error = "На сегодня матчей не найдено."
         else:
-            print(f"[EasySoccerData] Успешно, получено {len(events)} матчей")
+            print(f"[EasySoccerData-Promiedos] Успешно, получено {len(events)} матчей")
 
     except Exception as e:
-        api_error = f"Ошибка при запросе к EasySoccerData: {str(e)}"
-        print(f"[EasySoccerData Error]: {e}")
+        api_error = f"Ошибка при запросе к EasySoccerData-Promiedos: {str(e)}"
+        print(f"[EasySoccerData-Promiedos Error]: {e}")
         events = []
 
-    # Обработка событий
     for event in events:
-        # Фильтр завершённых
+        # Пропускаем завершённые
         if hasattr(event, 'status') and event.status in ['FT', 'AET', 'PEN', 'CANC', 'ABD', 'PST']:
             continue
 
@@ -252,7 +254,6 @@ async def get_today_matches(
         home_team = getattr(event.home_team, 'name', 'Команда 1') if hasattr(event, 'home_team') else 'Команда 1'
         away_team = getattr(event.away_team, 'name', 'Команда 2') if hasattr(event, 'away_team') else 'Команда 2'
 
-        # Логотипы (если есть)
         home_badge = getattr(event.home_team, 'logo', None) if hasattr(event, 'home_team') else None
         away_badge = getattr(event.away_team, 'logo', None) if hasattr(event, 'away_team') else None
         if not home_badge:
@@ -270,11 +271,9 @@ async def get_today_matches(
             goals_away = 0
             elapsed = 0
 
-        # Турнир
         tournament = getattr(event, 'tournament', None)
         competition = getattr(tournament, 'name', 'Турнир') if tournament else 'Турнир'
 
-        # Время начала
         start_timestamp = getattr(event, 'start_timestamp', None)
         if start_timestamp:
             try:
@@ -285,11 +284,9 @@ async def get_today_matches(
         else:
             time_str = "19:00 (МСК)"
 
-        # Стадион
         venue = getattr(event, 'venue', None)
         venue_name = getattr(venue, 'name', 'Главная арена') if venue else 'Главная арена'
 
-        # Генерация прогноза
         id_ev = str(getattr(event, 'id', f"{home_team}_{away_team}"))
         bet_data = generate_bet_market_for_match(
             home_team, away_team, id_ev, is_live=is_live,
