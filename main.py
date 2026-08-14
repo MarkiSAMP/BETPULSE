@@ -66,7 +66,7 @@ app.add_middleware(
 
 LEAGUES_DATA = [
     {"id": "all", "name": "Все лиги"},
-    {"id": "46", "name": "Лига Европы"}, # Добавил ID из вашей структуры
+    {"id": "46", "name": "Лига Европы"},
     {"id": "2", "name": "Лига Чемпионов"},
     {"id": "848", "name": "Лига Конференций"},
     {"id": "39", "name": "АПЛ (Англия)"},
@@ -243,7 +243,7 @@ async def get_today_matches(
                         matches = []
 
                     if matches and len(matches) > 0:
-                        print(f"[Footballdata.io] Пример структуры матча: {json.dumps(matches[0], indent=2, ensure_ascii=False)[:800]}")
+                        print(f"[Footballdata.io] Пример матча: {json.dumps(matches[0], indent=2, ensure_ascii=False)[:500]}")
 
                     print(f"[Footballdata.io] Получено матчей: {len(matches)}")
                 else:
@@ -264,59 +264,46 @@ async def get_today_matches(
         # Извлекаем ID
         match_id = str(match.get("match_id") or match.get("id") or "")
 
-        # Извлекаем лигу
+        # Лига
         league = match.get("league", {})
         competition = league.get("name") or "Турнир"
 
-        # Извлекаем команды
-        home_team = None
-        away_team = None
+        # Извлекаем команды (по структуре home_team / away_team)
+        home_team = match.get("home_team", {}).get("team_name") or "Команда 1"
+        away_team = match.get("away_team", {}).get("team_name") or "Команда 2"
 
-        # Проверяем наличие полей home и away (как в структуре)
-        if "home" in match and isinstance(match["home"], dict):
-            home_team = match["home"].get("name")
-        if "away" in match and isinstance(match["away"], dict):
-            away_team = match["away"].get("name")
-
-        # Если не нашлось, пробуем другие варианты
-        if not home_team:
-            home_team = match.get("home_team") or match.get("homeTeam") or match.get("team_home")
-            if isinstance(home_team, dict):
-                home_team = home_team.get("name")
-        if not away_team:
-            away_team = match.get("away_team") or match.get("awayTeam") or match.get("team_away")
-            if isinstance(away_team, dict):
-                away_team = away_team.get("name")
-
-        # Заглушки, если не нашли
-        if not home_team:
-            home_team = "Команда 1"
-        if not away_team:
-            away_team = "Команда 2"
-
-        # Статус
+        # Статус (определяем live)
         status = match.get("status") or match.get("status_localized") or "SCHEDULED"
-        # Если статус "Scheduled" - это не live
-        is_live = status in ["LIVE", "IN_PLAY", "1H", "2H", "HT", "ET", "BT", "P", "incomplete"] and status != "Scheduled"
+        # Список статусов, которые означают, что матч в процессе
+        live_statuses = ["LIVE", "In Play", "1H", "2H", "HT", "ET", "BT", "P", "incomplete"]
+        # Но "incomplete" может быть и для ещё не начавшихся, проверим localised
+        status_localized = match.get("status_localized", "")
+        # Если статус_localized == "Scheduled" или время матча ещё не наступило, то не live
+        # Определим по времени
+        is_live = False
+        if status in live_statuses and status_localized != "Scheduled":
+            is_live = True
+        # Дополнительная проверка: если матч запланирован на будущее, но статус incomplete
+        # Можно сравнить с текущим временем, но для простоты пока так
 
-        # Счёт (если есть)
-        goals_home = match.get("home_score") or match.get("homeGoals") or 0
-        goals_away = match.get("away_score") or match.get("awayGoals") or 0
+        # Счёт
+        score = match.get("score", {})
+        goals_home = score.get("home") or 0
+        goals_away = score.get("away") or 0
 
-        # Время
+        # Время начала
         match_date = match.get("match_date") or match.get("date") or ""
         if match_date:
             try:
-                # Пробуем парсить дату в формате "2026-08-14 18:00:00"
                 dt = datetime.strptime(match_date, "%Y-%m-%d %H:%M:%S")
-                dt_msk = dt + timedelta(hours=3)  # предполагаем, что время в UTC
+                dt_msk = dt + timedelta(hours=3)
                 time_str = dt_msk.strftime("%H:%M") + " (МСК)"
             except:
                 time_str = "19:00 (МСК)"
         else:
             time_str = "19:00 (МСК)"
 
-        # Стадион
+        # Стадион (если есть)
         venue = match.get("venue") or match.get("stadium") or {}
         if isinstance(venue, dict):
             venue_name = venue.get("name") or "Стадион"
