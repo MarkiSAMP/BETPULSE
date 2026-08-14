@@ -280,11 +280,11 @@
     <section class="bg-card-bg rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] p-gutter-card flex flex-col gap-stack-md border border-outline-variant/20">
       <div class="flex items-center gap-4">
         <div class="w-16 h-16 rounded-full bg-surface-variant flex items-center justify-center shrink-0 overflow-hidden relative border border-outline-variant/30">
-          <img class="w-full h-full object-cover" alt="Avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKjUr0g-UGwCebEu-PryrlnJnmVxWoRaq-0q60MJMTzRiBEwHAUJkCLsBNNCg7PpL6kHV5KrdBAORCYKpvezAGr4QxLVE_55E4kJpqq0YUnPetJ--8g8zz1nSHl7FV9gLbe4qi6jeVuLBoc9SSfUgDF394B-kP0D7tY_eB3N9TsiZyLxmOs4oMdBsono22rpfxMm-lbhmc5qzVn5CmERRF0vJM5GsMRfdyRo1pdqDSr-AWuY-wMisM"/>
+          <img id="userAvatar" class="w-full h-full object-cover" alt="Avatar" src=""/>
         </div>
         <div class="flex-1">
-          <h2 class="font-headline-md text-headline-md text-on-surface">Stille</h2>
-          <p class="font-body-sm text-body-sm text-on-surface-variant">markony2104@mail.ru</p>
+          <h2 id="userName" class="font-headline-md text-headline-md text-on-surface">Загрузка...</h2>
+          <p id="userUsername" class="font-body-sm text-body-sm text-on-surface-variant">@username</p>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-4 mt-2">
@@ -325,7 +325,64 @@
 </nav>
 
 <script>
+  // ========== ПОЛУЧЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ ИЗ TELEGRAM ==========
+  function initTelegramUser() {
+    const avatar = document.getElementById('userAvatar');
+    const nameEl = document.getElementById('userName');
+    const usernameEl = document.getElementById('userUsername');
+
+    if (window.Telegram && window.Telegram.WebApp) {
+      const webApp = window.Telegram.WebApp;
+      webApp.ready(); // сообщаем, что приложение готово
+
+      const user = webApp.initDataUnsafe?.user;
+      if (user) {
+        // Имя
+        let displayName = user.first_name || '';
+        if (user.last_name) displayName += ' ' + user.last_name;
+        if (!displayName.trim() && user.username) displayName = user.username;
+        if (!displayName.trim()) displayName = 'Пользователь';
+        nameEl.textContent = displayName;
+
+        // Юзернейм
+        if (user.username) {
+          usernameEl.textContent = '@' + user.username;
+        } else {
+          usernameEl.textContent = 'Пользователь Telegram';
+        }
+
+        // Аватар
+        if (user.photo_url) {
+          avatar.src = user.photo_url;
+        } else {
+          // Генерируем через ui-avatars
+          const initials = (user.first_name ? user.first_name[0] : '') + (user.last_name ? user.last_name[0] : '');
+          const fallback = initials || 'U';
+          avatar.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(fallback) + '&background=00288e&color=fff&size=64';
+        }
+      } else {
+        // Если пользователь не получен (например, открыто в браузере вне Telegram)
+        nameEl.textContent = 'Гость';
+        usernameEl.textContent = 'Авторизуйтесь в Telegram';
+        avatar.src = 'https://ui-avatars.com/api/?name=U&background=00288e&color=fff&size=64';
+      }
+    } else {
+      // Не в Telegram WebApp – заглушка
+      nameEl.textContent = 'Гость';
+      usernameEl.textContent = 'Откройте через Telegram';
+      avatar.src = 'https://ui-avatars.com/api/?name=U&background=00288e&color=fff&size=64';
+    }
+  }
+
+  // ========== ОСТАЛЬНАЯ ЛОГИКА ==========
   let currentSelectedLeague = "all";
+
+  function getTelegramInitData() {
+    if (window.Telegram && window.Telegram.WebApp) {
+      return window.Telegram.WebApp.initData || '';
+    }
+    return '';
+  }
 
   function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -382,7 +439,9 @@
     const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
 
     try {
-      const res = await fetch(`${API_BASE}/leagues`);
+      const res = await fetch(`${API_BASE}/leagues`, {
+        headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
+      });
       const data = await res.json();
       const leagues = data.leagues || [];
 
@@ -418,8 +477,22 @@
     const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
 
     try {
-      const res = await fetch(`${API_BASE}/matches/today?league_id=${encodeURIComponent(leagueId)}`);
+      const res = await fetch(`${API_BASE}/matches/today?league_id=${encodeURIComponent(leagueId)}`, {
+        headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
+      });
       const data = await res.json();
+
+      // Показываем ошибку, если она пришла
+      if (data.api_error) {
+        container.innerHTML = `
+          <div class="bg-risk-bg rounded-xl p-6 text-center border border-error-container shadow-sm space-y-2">
+            <span class="material-symbols-outlined text-error text-3xl">error</span>
+            <p class="font-headline-md text-headline-md text-on-surface">Ошибка загрузки матчей</p>
+            <p class="text-xs text-on-surface">${data.api_error}</p>
+            <p class="text-xs text-outline">Проверьте логи сервера для диагностики.</p>
+          </div>`;
+        return;
+      }
 
       if (!data.forecasts || data.forecasts.length === 0) {
         container.innerHTML = `
@@ -450,7 +523,6 @@
     let homeTeam = matchTeams[0] || "Команда 1";
     let awayTeam = matchTeams[1] || "Команда 2";
     
-    // Если в title матча идет LIVE счет (например "Команда1 1 : 0 Команда2")
     if (post.is_live && post.step_1.match.includes(':')) {
       const parts = post.step_1.match.split(/\d+\s*:\s*\d+/);
       if (parts.length >= 2) {
@@ -546,7 +618,9 @@
 
     try {
       const url = `${API_BASE}/stats/compare?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&home_badge=${encodeURIComponent(homeBadge)}&away_badge=${encodeURIComponent(awayBadge)}&is_live=${isLive}&goals_home=${goalsHome}&goals_away=${goalsAway}&elapsed=${elapsed}`;
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
+      });
       const data = await res.json();
       const analysis = data.analysis_5_points;
 
@@ -689,6 +763,11 @@
     document.getElementById('statsMatchView').classList.add('hidden');
     document.getElementById('statsDefaultView').classList.remove('hidden');
   }
+
+  // ========== ИНИЦИАЛИЗАЦИЯ ==========
+  document.addEventListener('DOMContentLoaded', function() {
+    initTelegramUser();
+  });
 </script>
 
 </body>
