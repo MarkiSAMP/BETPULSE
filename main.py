@@ -12,7 +12,8 @@ from contextlib import asynccontextmanager
 
 import asyncpg
 import httpx
-import esd  # EasySoccerData
+# Прямой импорт нужного клиента, без лишних зависимостей
+from esd.promiedos import PromiedosClient
 from fastapi import FastAPI, HTTPException, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -222,7 +223,7 @@ async def get_today_matches(
 
     try:
         # Используем PromiedosClient – НЕ требует Playwright!
-        client = esd.PromiedosClient()
+        client = PromiedosClient()
         print("[EasySoccerData-Promiedos] Запрос данных...")
         
         # Получаем live-матчи
