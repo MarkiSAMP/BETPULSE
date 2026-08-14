@@ -12,8 +12,8 @@ from contextlib import asynccontextmanager
 
 import asyncpg
 import httpx
-# Используем PromiedosClient
-from esd.promiedos import PromiedosClient
+# Используем SofascoreClient
+from esd.sofascore import SofascoreClient
 from fastapi import FastAPI, HTTPException, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -221,31 +221,28 @@ async def get_today_matches(
     api_error = None
 
     try:
-        # Используем PromiedosClient
-        client = PromiedosClient()
-        print("[EasySoccerData-Promiedos] Запрос данных...")
+        # Используем SofascoreClient
+        client = SofascoreClient()
+        print("[EasySoccerData-Sofascore] Запрос данных...")
         
-        # Получаем все матчи на сегодня (без аргумента live)
-        events = client.get_events()  # <-- без параметров
-        is_live = False
-        
-        # Фильтруем live-матчи по статусу (если есть)
-        live_statuses = ['LIVE', '1H', '2H', 'HT', 'ET', 'BT', 'P']
-        live_events = [e for e in events if hasattr(e, 'status') and e.status in live_statuses]
-        if live_events:
-            events = live_events
-            is_live = True
-            print(f"[EasySoccerData-Promiedos] Найдено {len(events)} live-матчей")
-        else:
-            print(f"[EasySoccerData-Promiedos] Найдено {len(events)} матчей на сегодня (live нет)")
+        # Пробуем получить live-матчи
+        events = client.get_events(live=True)
+        is_live = True
 
         if not events:
-            print("[EasySoccerData-Promiedos] Матчей на сегодня нет.")
+            print("[EasySoccerData-Sofascore] LIVE-матчей нет, запрашиваем матчи на сегодня...")
+            events = client.get_events(date='today')
+            is_live = False
+
+        if not events:
+            print("[EasySoccerData-Sofascore] Матчей на сегодня нет.")
             api_error = "На сегодня матчей не найдено."
+        else:
+            print(f"[EasySoccerData-Sofascore] Успешно, получено {len(events)} матчей")
 
     except Exception as e:
-        api_error = f"Ошибка при запросе к EasySoccerData-Promiedos: {str(e)}"
-        print(f"[EasySoccerData-Promiedos Error]: {e}")
+        api_error = f"Ошибка при запросе к EasySoccerData-Sofascore: {str(e)}"
+        print(f"[EasySoccerData-Sofascore Error]: {e}")
         events = []
 
     for event in events:
