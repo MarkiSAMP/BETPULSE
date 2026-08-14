@@ -6,9 +6,11 @@ import urllib.parse
 import zlib
 import asyncio
 from datetime import datetime, timezone, timedelta
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from urllib.parse import parse_qs
 from contextlib import asynccontextmanager
+from functools import lru_cache
+from time import time
 
 import asyncpg
 import httpx
@@ -31,6 +33,10 @@ if not FOOTBALL_DATA_API_KEY:
     raise RuntimeError("FOOTBALL_DATA_API_KEY не задан")
 
 FOOTBALL_DATA_URL = "https://footballdata.io/api/v1"
+
+# Кэш для списка лиг (обновляется раз в час)
+_LEAGUES_CACHE = {"data": None, "timestamp": 0}
+_CACHE_TTL = 3600  # 1 час
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -64,8 +70,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Реальные ID лиг из ответа footballdata.io
-LEAGUES_DATA = [
+# Запасной список лиг (если API не ответит)
+FALLBACK_LEAGUES = [
     {"id": "all", "name": "Все лиги"},
     {"id": "15", "name": "АПЛ (Англия)"},
     {"id": "10", "name": "Ла Лига (Испания)"},
@@ -198,13 +204,52 @@ def generate_bet_market_for_match(
     ]
     return markets[market_index]
 
+async def fetch_leagues_from_api() -> List[Dict]:
+    """Запрос списка лиг из API с кэшированием"""
+    global _LEAGUES_CACHE
+    now = time()
+    if _LEAGUES_CACHE["data"] and (now - _LEAGUES_CACHE["timestamp"] < _CACHE_TTL):
+        return _LEAGUES_CACHE["data"]
+
+    headers = {"Authorization": f"Bearer {FOOTBALL_DATA_API_KEY}"}
+    url = f"{FOOTBALL_DATA_URL}/leagues"
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            res = await client.get(url, headers=headers)
+            if res.status_code == 200:
+                data = res.json()
+                if data.get("success"):
+                    leagues_data = data.get("data", [])
+                    # Преобразуем в нужный формат
+                    leagues = [{"id": "all", "name": "Все лиги"}]
+                    for league in leagues_data:
+                        leagues.append({
+                            "id": str(league.get("league_id")),
+                            "name": league.get("name", "Неизвестная лига")
+                        })
+                    _LEAGUES_CACHE["data"] = leagues
+                    _LEAGUES_CACHE["timestamp"] = now
+                    print(f"[Footballdata.io] Загружено лиг: {len(leagues)}")
+                    return leagues
+                else:
+                    print(f"[Footballdata.io] Ошибка при получении лиг: {data}")
+                    return FALLBACK_LEAGUES
+            else:
+                print(f"[Footballdata.io] Ошибка HTTP при получении лиг: {res.status_code}")
+                return FALLBACK_LEAGUES
+    except Exception as e:
+        print(f"[Footballdata.io] Исключение при получении лиг: {e}")
+        return FALLBACK_LEAGUES
+
 @app.get("/")
 async def serve_frontend():
     return FileResponse("index.html")
 
 @app.get("/api/leagues")
 async def get_leagues():
-    return {"leagues": LEAGUES_DATA}
+    leagues = await fetch_leagues_from_api()
+    return {"leagues": leagues}
 
 @app.get("/api/matches/today")
 async def get_today_matches(
@@ -220,8 +265,9 @@ async def get_today_matches(
 
     headers = {"Authorization": f"Bearer {FOOTBALL_DATA_API_KEY}"}
 
+    # Запрашиваем предстоящие матчи с большим лимитом
     url = f"{FOOTBALL_DATA_URL}/fixtures/upcoming"
-    params = {"page": 1, "limit": 100}
+    params = {"page": 1, "limit": 200}  # Увеличили до 200
 
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
@@ -241,6 +287,7 @@ async def get_today_matches(
 
                     print(f"[Footballdata.io] Получено матчей (всего): {len(matches)}")
 
+                    # Если выбрана конкретная лига — фильтруем
                     if league_id != "all":
                         filtered_matches = []
                         for m in matches:
@@ -249,7 +296,10 @@ async def get_today_matches(
                                 filtered_matches.append(m)
                         matches = filtered_matches
                         print(f"[Footballdata.io] После фильтрации по лиге: {len(matches)}")
+                    else:
+                        print(f"[Footballdata.io] Показываем все матчи (без фильтрации)")
 
+                    # Убираем завершённые и отменённые
                     filtered = []
                     for m in matches:
                         status = m.get("status") or m.get("status_localized") or ""
@@ -282,7 +332,6 @@ async def get_today_matches(
         home_name = home_team.get("team_name") or "Команда 1"
         away_name = away_team.get("team_name") or "Команда 2"
 
-        # === ЛОГОТИПЫ ===
         home_logo = home_team.get("team_logo")
         away_logo = away_team.get("team_logo")
         if not home_logo:
@@ -309,7 +358,6 @@ async def get_today_matches(
         if dt_utc:
             dt_msk = dt_utc + timedelta(hours=3)
             time_str = dt_msk.strftime("%H:%M") + " (МСК)"
-            # Определяем текстовое представление даты
             msk_now = datetime.now(timezone.utc) + timedelta(hours=3)
             today_msk = msk_now.date()
             match_date_only = dt_msk.date()
