@@ -12,8 +12,8 @@ from contextlib import asynccontextmanager
 
 import asyncpg
 import httpx
-# Прямой импорт нужного клиента, без загрузки неиспользуемых модулей
-from esd.promiedos import PromiedosClient
+# Прямой импорт ESPNClient
+from esd.espn import ESPNClient
 from fastapi import FastAPI, HTTPException, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -43,7 +43,6 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"[SERVER Webhook Error]: {e}")
 
-    # Небольшая задержка для предотвращения конфликтов бота
     await asyncio.sleep(2)
 
     bot_task = asyncio.create_task(dp.start_polling(bot))
@@ -222,35 +221,36 @@ async def get_today_matches(
     api_error = None
 
     try:
-        client = PromiedosClient()
-        print("[EasySoccerData-Promiedos] Запрос данных...")
+        # Используем ESPNClient – не требует Playwright
+        client = ESPNClient()
+        print("[EasySoccerData-ESPN] Запрос данных...")
         
         # Получаем матчи на сегодня
         events = client.get_events(date='today')
         is_live = False
         
-        # Фильтруем live-матчи по статусу
-        live_statuses = ['LIVE', '1H', '2H', 'HT', 'ET', 'BT', 'P']
+        # Фильтруем live-матчи по статусу (у ESPN статусы могут отличаться)
+        live_statuses = ['LIVE', 'IN_PROGRESS', '1H', '2H', 'HT', 'ET', 'PEN']
         live_events = [e for e in events if hasattr(e, 'status') and e.status in live_statuses]
         if live_events:
             events = live_events
             is_live = True
-            print(f"[EasySoccerData-Promiedos] Найдено {len(events)} live-матчей")
+            print(f"[EasySoccerData-ESPN] Найдено {len(events)} live-матчей")
         else:
-            print(f"[EasySoccerData-Promiedos] Найдено {len(events)} матчей на сегодня (live нет)")
+            print(f"[EasySoccerData-ESPN] Найдено {len(events)} матчей на сегодня (live нет)")
 
         if not events:
-            print("[EasySoccerData-Promiedos] Матчей на сегодня нет.")
+            print("[EasySoccerData-ESPN] Матчей на сегодня нет.")
             api_error = "На сегодня матчей не найдено."
 
     except Exception as e:
-        api_error = f"Ошибка при запросе к EasySoccerData-Promiedos: {str(e)}"
-        print(f"[EasySoccerData-Promiedos Error]: {e}")
+        api_error = f"Ошибка при запросе к EasySoccerData-ESPN: {str(e)}"
+        print(f"[EasySoccerData-ESPN Error]: {e}")
         events = []
 
     for event in events:
         # Пропускаем завершённые
-        if hasattr(event, 'status') and event.status in ['FT', 'AET', 'PEN', 'CANC', 'ABD', 'PST']:
+        if hasattr(event, 'status') and event.status in ['FT', 'FINAL', 'AET', 'PEN', 'CANC', 'ABD', 'PST']:
             continue
 
         # Извлечение данных (защита от отсутствия атрибутов)
