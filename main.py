@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 
 import asyncpg
 import httpx
-import esd  # <-- НОВАЯ БИБЛИОТЕКА
+import esd  # <-- EasySoccerData
 from fastapi import FastAPI, HTTPException, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -22,7 +22,6 @@ from bot import bot, dp, init_db
 # === Переменные окружения ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
-# API_KEY больше не нужен, убираем
 
 if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN не задан в переменных окружения")
@@ -199,12 +198,6 @@ def generate_bet_market_for_match(
     ]
     return markets[market_index]
 
-class AnalysisEngine:
-    @staticmethod
-    def format_api_sports_match(item: Dict[str, Any], is_live: bool = False) -> Dict[str, Any]:
-        # Этот метод больше не используется, но оставим для совместимости
-        pass
-
 @app.get("/")
 async def serve_frontend():
     return FileResponse("index.html")
@@ -224,8 +217,8 @@ async def get_today_matches(
     posts = []
     api_error = None
 
-    # === НОВАЯ ЛОГИКА С EasySoccerData ===
     try:
+        # Инициализируем клиент EasySoccerData (Sofascore)
         client = esd.SofascoreClient()
         print("[EasySoccerData] Запрос данных...")
         
@@ -234,7 +227,6 @@ async def get_today_matches(
         is_live = True
 
         if not events:
-            # Если live нет, берём матчи на сегодня
             print("[EasySoccerData] LIVE-матчей нет, запрашиваем матчи на сегодня...")
             events = client.get_events(date='today')
             is_live = False
@@ -250,16 +242,16 @@ async def get_today_matches(
         print(f"[EasySoccerData Error]: {e}")
         events = []
 
-    # === Обработка событий ===
+    # Обработка событий
     for event in events:
-        # Фильтруем завершённые матчи (если есть)
+        # Фильтр завершённых
         if hasattr(event, 'status') and event.status in ['FT', 'AET', 'PEN', 'CANC', 'ABD', 'PST']:
             continue
 
-        # Извлекаем данные (структура может отличаться, адаптируйте под实际情况)
-        home_team = event.home_team.name if hasattr(event, 'home_team') else "Команда 1"
-        away_team = event.away_team.name if hasattr(event, 'away_team') else "Команда 2"
-        
+        # Извлечение данных (защита от отсутствия атрибутов)
+        home_team = getattr(event.home_team, 'name', 'Команда 1') if hasattr(event, 'home_team') else 'Команда 1'
+        away_team = getattr(event.away_team, 'name', 'Команда 2') if hasattr(event, 'away_team') else 'Команда 2'
+
         # Логотипы (если есть)
         home_badge = getattr(event.home_team, 'logo', None) if hasattr(event, 'home_team') else None
         away_badge = getattr(event.away_team, 'logo', None) if hasattr(event, 'away_team') else None
@@ -278,11 +270,11 @@ async def get_today_matches(
             goals_away = 0
             elapsed = 0
 
-        # Название турнира
+        # Турнир
         tournament = getattr(event, 'tournament', None)
-        competition = tournament.name if tournament else "Турнир"
+        competition = getattr(tournament, 'name', 'Турнир') if tournament else 'Турнир'
 
-        # Время начала (для отображения)
+        # Время начала
         start_timestamp = getattr(event, 'start_timestamp', None)
         if start_timestamp:
             try:
@@ -295,9 +287,9 @@ async def get_today_matches(
 
         # Стадион
         venue = getattr(event, 'venue', None)
-        venue_name = venue.name if venue else "Главная арена"
+        venue_name = getattr(venue, 'name', 'Главная арена') if venue else 'Главная арена'
 
-        # Генерируем прогноз
+        # Генерация прогноза
         id_ev = str(getattr(event, 'id', f"{home_team}_{away_team}"))
         bet_data = generate_bet_market_for_match(
             home_team, away_team, id_ev, is_live=is_live,
