@@ -34,10 +34,30 @@ if not FOOTBALL_DATA_API_KEY:
 
 FOOTBALL_DATA_URL = "https://footballdata.io/api/v1"
 
-# Кэш для списка лиг (обновляется раз в час)
-_LEAGUES_CACHE = {"data": None, "timestamp": 0}
-_CACHE_TTL = 3600  # 1 час
+# ===== КЕШИРОВАНИЕ =====
+CACHE_TTL = int(os.getenv("CACHE_TTL", 300))  # 5 минут по умолчанию
+cache = {}
 
+def get_cache_key(league_id: str) -> str:
+    """Формирует ключ для кеша на основе параметров запроса."""
+    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return f"matches_{league_id}_{today_str}"
+
+def get_from_cache(key: str) -> Optional[Dict]:
+    """Возвращает данные из кеша, если они есть и не истекли."""
+    if key in cache:
+        data, timestamp = cache[key]
+        if time() - timestamp < CACHE_TTL:
+            return data
+        else:
+            del cache[key]
+    return None
+
+def set_to_cache(key: str, data: Dict):
+    """Сохраняет данные в кеш с текущим временем."""
+    cache[key] = (data, time())
+
+# ===== Lifespan =====
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("[SERVER]: Инициализация базы данных...")
@@ -70,8 +90,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Запасной список лиг (если API не ответит)
-FALLBACK_LEAGUES = [
+# Список лиг (запасной, но динамический будет переопределён)
+LEAGUES_DATA = [
     {"id": "all", "name": "Все лиги"},
     {"id": "15", "name": "АПЛ (Англия)"},
     {"id": "10", "name": "Ла Лига (Испания)"},
@@ -204,11 +224,15 @@ def generate_bet_market_for_match(
     ]
     return markets[market_index]
 
+# ===== Кешируемый список лиг (обновляется раз в час) =====
+_LEAGUES_CACHE = {"data": None, "timestamp": 0}
+_LEAGUES_TTL = 3600
+
 async def fetch_leagues_from_api() -> List[Dict]:
-    """Запрос списка лиг из API с кэшированием"""
+    """Запрос списка лиг из API с кэшированием."""
     global _LEAGUES_CACHE
     now = time()
-    if _LEAGUES_CACHE["data"] and (now - _LEAGUES_CACHE["timestamp"] < _CACHE_TTL):
+    if _LEAGUES_CACHE["data"] and (now - _LEAGUES_CACHE["timestamp"] < _LEAGUES_TTL):
         return _LEAGUES_CACHE["data"]
 
     headers = {"Authorization": f"Bearer {FOOTBALL_DATA_API_KEY}"}
@@ -221,7 +245,6 @@ async def fetch_leagues_from_api() -> List[Dict]:
                 data = res.json()
                 if data.get("success"):
                     leagues_data = data.get("data", [])
-                    # Преобразуем в нужный формат
                     leagues = [{"id": "all", "name": "Все лиги"}]
                     for league in leagues_data:
                         leagues.append({
@@ -234,13 +257,13 @@ async def fetch_leagues_from_api() -> List[Dict]:
                     return leagues
                 else:
                     print(f"[Footballdata.io] Ошибка при получении лиг: {data}")
-                    return FALLBACK_LEAGUES
+                    return LEAGUES_DATA
             else:
                 print(f"[Footballdata.io] Ошибка HTTP при получении лиг: {res.status_code}")
-                return FALLBACK_LEAGUES
+                return LEAGUES_DATA
     except Exception as e:
         print(f"[Footballdata.io] Исключение при получении лиг: {e}")
-        return FALLBACK_LEAGUES
+        return LEAGUES_DATA
 
 @app.get("/")
 async def serve_frontend():
@@ -260,6 +283,13 @@ async def get_today_matches(
     # if x_telegram_init_data:
     #     await check_user_access(x_telegram_init_data)
 
+    # Проверяем кеш
+    cache_key = get_cache_key(league_id)
+    cached_data = get_from_cache(cache_key)
+    if cached_data is not None:
+        print(f"[Cache] Возвращены данные из кеша для league_id={league_id}")
+        return cached_data
+
     posts = []
     api_error = None
 
@@ -267,7 +297,7 @@ async def get_today_matches(
 
     # Запрашиваем предстоящие матчи с большим лимитом
     url = f"{FOOTBALL_DATA_URL}/fixtures/upcoming"
-    params = {"page": 1, "limit": 200}  # Увеличили до 200
+    params = {"page": 1, "limit": 200}
 
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
@@ -321,6 +351,7 @@ async def get_today_matches(
         print(f"[Footballdata.io Error]: {e}")
         matches = []
 
+    # Формируем ответ
     for match in matches:
         match_id = str(match.get("match_id") or match.get("id") or "")
 
@@ -420,12 +451,19 @@ async def get_today_matches(
 
     posts.sort(key=lambda x: x["step_1"]["info"])
 
-    return {
+    response = {
         "count": len(posts),
         "date": get_msk_today_str(),
         "forecasts": posts,
         "api_error": api_error
     }
+
+    # Сохраняем в кеш только при успешном ответе (без ошибок)
+    if not api_error:
+        set_to_cache(cache_key, response)
+        print(f"[Cache] Данные сохранены в кеш для league_id={league_id}")
+
+    return response
 
 @app.get("/api/stats/compare")
 async def compare_teams(
