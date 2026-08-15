@@ -2,19 +2,23 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
 <title>BETPULSE</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <style>
+        /* ===== СБРОС ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
+        html, body {
+            height: 100%;
             font-family: 'Inter', sans-serif;
             background: #f8f9ff;
             color: #0b1c30;
+            overflow: hidden;
         }
 
+        /* ===== ОВЕРЛЕЙ ОФЕРТЫ ===== */
         #offerOverlay {
             position: fixed;
             top: 0;
@@ -197,7 +201,6 @@
             cursor: not-allowed;
             box-shadow: none;
         }
-
         .accept-btn .sparkle {
             display: inline-block;
             margin-right: 8px;
@@ -248,8 +251,93 @@
             color: #001f6b;
         }
 
-        .button {
+        /* ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== */
+        .app-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 480px;
+            margin: 0 auto;
             position: relative;
+            background: #f8f9ff;
+            overflow: hidden;
+        }
+
+        .app-header {
+            flex-shrink: 0;
+            height: 64px;
+            background: #ffffff;
+            border-bottom: 1px solid #e5edf5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 16px;
+            position: relative;
+            z-index: 20;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .app-header .logo {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #00288e;
+            text-transform: uppercase;
+        }
+
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px 16px 80px 16px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .app-nav {
+            flex-shrink: 0;
+            height: 72px;
+            background: #ffffff;
+            border-top: 1px solid #e5edf5;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 8px;
+            position: relative;
+            z-index: 20;
+            box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 12px;
+            border-radius: 12px;
+            color: #717182;
+            transition: color 0.2s, background 0.2s;
+            cursor: pointer;
+            min-width: 56px;
+            text-decoration: none;
+        }
+        .nav-item:hover {
+            color: #00288e;
+        }
+        .nav-item.active {
+            color: #00288e;
+            background: rgba(0, 40, 142, 0.08);
+        }
+        .nav-item .material-symbols-outlined {
+            font-size: 24px;
+            margin-bottom: 2px;
+        }
+        .nav-item .nav-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .button {
             background: linear-gradient(140deg, hsla(240, 40%, 50%, 1) 20%, hsla(240, 40%, 50%, 0.6) 100%);
             color: #fff;
             box-shadow: inset 0px -2px 0px 0px rgba(0, 0, 0, 0.2);
@@ -259,6 +347,8 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            border: none;
+            cursor: pointer;
         }
         .button:hover {
             transform: scale(1.03);
@@ -267,8 +357,15 @@
         .button:active {
             transform: scale(0.98);
         }
-        .no-scrollbar::-webkit-scrollbar, .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .no-scrollbar, .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Вкладки */
+        .tab-content {
+            display: block;
+        }
+        .tab-content.hidden {
+            display: none;
+        }
+
         .custom-slider {
             overflow-x: auto;
             scrollbar-width: thin;
@@ -278,24 +375,98 @@
             user-select: none;
             scroll-behavior: smooth;
         }
-        .custom-slider:active { cursor: grabbing; }
-        .custom-slider::-webkit-scrollbar { height: 6px; }
-        .custom-slider::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.04); border-radius: 4px; }
-        .custom-slider::-webkit-scrollbar-thumb { background: rgba(0, 40, 142, 0.35); border-radius: 4px; }
-        .nav-item.active {
-            color: #00288e;
-            background-color: rgba(0, 40, 142, 0.08);
-            border-radius: 0.75rem;
+        .custom-slider:active {
+            cursor: grabbing;
+        }
+        .custom-slider::-webkit-scrollbar {
+            height: 6px;
+        }
+        .custom-slider::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.04);
+            border-radius: 4px;
+            margin: 0 4px;
+        }
+        .custom-slider::-webkit-scrollbar-thumb {
+            background: rgba(0, 40, 142, 0.35);
+            border-radius: 4px;
+        }
+
+        .league-btn {
+            white-space: nowrap;
+            padding: 6px 16px;
+            background: #ffffff;
+            border: 1px solid #dce1ea;
+            color: #0b1c30;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            transition: all 0.15s;
+            cursor: pointer;
         }
         .league-btn.active {
-            background-color: #1e40af;
+            background: #00288e;
             color: white;
-            border-color: #1e40af;
+            border-color: #00288e;
+        }
+        .league-btn:hover:not(.active) {
+            border-color: #00288e;
+            color: #00288e;
+        }
+
+        .bg-surface-container-low {
+            background: #f1f5f9;
+        }
+        .bg-card-bg {
+            background: #ffffff;
+        }
+        .bg-risk-bg {
+            background: #fef2f2;
+        }
+        .text-primary {
+            color: #00288e;
+        }
+        .text-on-surface {
+            color: #0b1c30;
+        }
+        .text-on-surface-variant {
+            color: #444653;
+        }
+        .text-outline {
+            color: #757684;
+        }
+        .text-error {
+            color: #ba1a1a;
+        }
+        .text-win-green {
+            color: #22c55e;
+        }
+        .border-outline-variant {
+            border-color: #c4c5d5;
+        }
+        .border-error-container {
+            border-color: #ffdad6;
+        }
+        .from-primary {
+            --tw-gradient-from: #00288e;
+        }
+        .to-primary-container {
+            --tw-gradient-to: #1e40af;
+        }
+
+        /* Дополнительно */
+        .line-clamp-1 {
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
         }
     </style>
 </head>
 <body>
 
+<!-- ===== ОВЕРЛЕЙ ОФЕРТЫ ===== -->
 <div id="offerOverlay">
   <div class="offer-modal" id="offerModal">
     <div id="offerContent">
@@ -348,126 +519,133 @@
   </div>
 </div>
 
-<header class="bg-surface shadow-sm fixed top-0 w-full z-50 max-w-[480px] mx-auto left-0 right-0 border-b border-outline-variant/20">
-  <div class="flex justify-center items-center px-margin-page h-16">
-    <div class="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-wider text-primary uppercase">BETPULSE</div>
-  </div>
-</header>
+<!-- ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== -->
+<div class="app-wrapper">
 
-<main class="max-w-[480px] mx-auto pt-20 px-margin-page space-y-stack-lg">
+  <header class="app-header">
+    <div class="logo">BETPULSE</div>
+  </header>
 
-  <div id="tab-home" class="tab-content space-y-stack-lg">
-    <section class="bg-surface-container-low rounded-xl p-6 shadow-sm flex flex-col items-center text-center space-y-stack-md mt-4 border border-outline-variant/20">
-      <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Ваш надежный партнер в футбольной аналитике</h1>
-      <p class="font-body-lg text-body-lg text-on-surface-variant">Профессиональные прогнозы, глубокая аналитика матчей топ-лиг и честная статистика. Доступ предоставляется авторизованным пользователям через Telegram-бота.</p>
-      <button onclick="switchTab('feed')" class="button mt-4 w-full py-3 rounded-xl font-headline-md text-headline-md flex items-center justify-center gap-2">
-        <span class="material-symbols-outlined text-[20px]">analytics</span>
-        <span>Смотреть матчи и аналитику</span>
-      </button>
-    </section>
+  <main class="app-content" id="appContent">
 
-    <section class="grid grid-cols-1 gap-stack-md">
-      <div class="bg-card-bg rounded-xl p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 flex gap-4 items-start">
-        <div class="bg-surface-container-high p-3 rounded-lg flex-shrink-0 text-primary">
-          <span class="material-symbols-outlined">monitoring</span>
-        </div>
-        <div>
-          <h3 class="font-headline-md text-headline-md text-on-surface mb-1">Глубокая аналитика</h3>
-          <p class="font-body-sm text-body-sm text-on-surface-variant">Детальный разбор футбольных матчей на основе продвинутых метрик.</p>
-        </div>
-      </div>
-      <div class="bg-card-bg rounded-xl p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 flex gap-4 items-start">
-        <div class="bg-surface-container-high p-3 rounded-lg flex-shrink-0 text-primary">
-          <span class="material-symbols-outlined">fact_check</span>
-        </div>
-        <div>
-          <h3 class="font-headline-md text-headline-md text-on-surface mb-1">Честная статистика</h3>
-          <p class="font-body-sm text-body-sm text-on-surface-variant">Полная прозрачность результатов и фиксация каждого прогноза.</p>
-        </div>
-      </div>
-    </section>
-  </div>
+    <!-- Вкладка 1: Главная -->
+    <div id="tab-home" class="tab-content space-y-4">
+      <section class="bg-surface-container-low rounded-xl p-6 shadow-sm flex flex-col items-center text-center space-y-4 mt-1 border border-outline-variant/20">
+        <h1 class="text-xl font-bold text-on-surface">Ваш надежный партнер в футбольной аналитике</h1>
+        <p class="text-sm text-on-surface-variant">Профессиональные прогнозы, глубокая аналитика матчей топ-лиг и честная статистика. Доступ предоставляется авторизованным пользователям через Telegram-бота.</p>
+        <button onclick="switchTab('feed')" class="button w-full py-3 rounded-xl font-semibold text-base flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-[20px]">analytics</span>
+          <span>Смотреть матчи и аналитику</span>
+        </button>
+      </section>
 
-  <div id="tab-feed" class="tab-content hidden space-y-stack-md pt-2">
-    <div>
-      <span class="text-[11px] font-bold text-outline uppercase tracking-wider block mb-1">Футбольный турнир / Лига</span>
-      <div id="leaguesFilterContainer" class="custom-slider flex space-x-2 pb-2"></div>
+      <section class="grid grid-cols-1 gap-4">
+        <div class="bg-card-bg rounded-xl p-5 shadow-sm border border-outline-variant/20 flex gap-4 items-start">
+          <div class="bg-surface-container-high p-3 rounded-lg flex-shrink-0 text-primary">
+            <span class="material-symbols-outlined">monitoring</span>
+          </div>
+          <div>
+            <h3 class="font-semibold text-base text-on-surface mb-1">Глубокая аналитика</h3>
+            <p class="text-sm text-on-surface-variant">Детальный разбор футбольных матчей на основе продвинутых метрик.</p>
+          </div>
+        </div>
+        <div class="bg-card-bg rounded-xl p-5 shadow-sm border border-outline-variant/20 flex gap-4 items-start">
+          <div class="bg-surface-container-high p-3 rounded-lg flex-shrink-0 text-primary">
+            <span class="material-symbols-outlined">fact_check</span>
+          </div>
+          <div>
+            <h3 class="font-semibold text-base text-on-surface mb-1">Честная статистика</h3>
+            <p class="text-sm text-on-surface-variant">Полная прозрачность результатов и фиксация каждого прогноза.</p>
+          </div>
+        </div>
+      </section>
     </div>
 
-    <div class="bg-gradient-to-r from-primary to-primary-container rounded-lg p-4 text-on-primary flex items-center justify-between shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
+    <!-- Вкладка 2: Feed -->
+    <div id="tab-feed" class="tab-content hidden space-y-4">
       <div>
-        <h3 class="font-headline-md text-headline-md mb-1">PRO Доступ</h3>
-        <p class="font-body-sm text-body-sm text-on-primary/80">Аналитика и прогнозы в реальном времени</p>
+        <span class="text-[11px] font-bold text-outline uppercase tracking-wider block mb-1">Футбольный турнир / Лига</span>
+        <div id="leaguesFilterContainer" class="custom-slider flex space-x-2 pb-2"></div>
       </div>
-      <div class="text-right">
-        <span class="material-symbols-outlined text-3xl">verified_user</span>
+
+      <div class="bg-gradient-to-r from-primary to-primary-container rounded-lg p-4 text-white flex items-center justify-between shadow-sm">
+        <div>
+          <h3 class="font-semibold text-base mb-1">PRO Доступ</h3>
+          <p class="text-sm text-white/80">Аналитика и прогнозы в реальном времени</p>
+        </div>
+        <div class="text-right">
+          <span class="material-symbols-outlined text-3xl">verified_user</span>
+        </div>
+      </div>
+
+      <div id="dynamicForecastsContainer" class="space-y-4">
+        <div class="text-center text-outline py-8 text-sm animate-pulse">Загрузка футбольных матчей...</div>
       </div>
     </div>
 
-    <div id="dynamicForecastsContainer" class="space-y-stack-md">
-      <div class="text-center text-outline py-8 font-body-sm animate-pulse">Загрузка футбольных матчей...</div>
-    </div>
-  </div>
-
-  <div id="tab-stats" class="tab-content hidden space-y-stack-md pt-2">
-    <div id="statsDefaultView" class="bg-card-bg rounded-2xl p-8 text-center border border-outline-variant/20 shadow-sm space-y-3 mt-4">
-      <span class="material-symbols-outlined text-primary text-[48px]">query_stats</span>
-      <h3 class="font-headline-md text-headline-md text-on-surface">Детальная аналитика матча</h3>
-      <p class="font-body-sm text-body-sm text-on-surface-variant">
-        Выберите матч на вкладке <strong class="text-primary">Feed</strong> и нажмите кнопку <span class="text-primary font-semibold">«Статистика»</span>, чтобы открыть подробный 5-пунктный разбор и рекомендации.
-      </p>
-      <button onclick="switchTab('feed')" class="button mt-2 px-6 py-2.5 rounded-xl text-xs font-semibold">Перейти к ленте матчей</button>
-    </div>
-    <div id="statsMatchView" class="space-y-stack-md hidden"></div>
-  </div>
-
-  <div id="tab-subscribe" class="tab-content hidden space-y-stack-lg">
-    <section class="bg-card-bg rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] p-gutter-card flex flex-col gap-stack-md border border-outline-variant/20">
-      <div class="flex items-center gap-4">
-        <div class="w-16 h-16 rounded-full bg-surface-variant flex items-center justify-center shrink-0 overflow-hidden relative border border-outline-variant/30">
-          <img id="userAvatar" class="w-full h-full object-cover" alt="Avatar" src=""/>
-        </div>
-        <div class="flex-1">
-          <h2 id="userName" class="font-headline-md text-headline-md text-on-surface">Загрузка...</h2>
-          <p id="userUsername" class="font-body-sm text-body-sm text-on-surface-variant">@username</p>
-        </div>
+    <!-- Вкладка 3: Stats -->
+    <div id="tab-stats" class="tab-content hidden space-y-4">
+      <div id="statsDefaultView" class="bg-card-bg rounded-2xl p-8 text-center border border-outline-variant/20 shadow-sm space-y-3 mt-1">
+        <span class="material-symbols-outlined text-primary text-5xl">query_stats</span>
+        <h3 class="font-semibold text-lg text-on-surface">Детальная аналитика матча</h3>
+        <p class="text-sm text-on-surface-variant">
+          Выберите матч на вкладке <strong class="text-primary">Feed</strong> и нажмите кнопку <span class="text-primary font-semibold">«Статистика»</span>, чтобы открыть подробный 5-пунктный разбор и рекомендации.
+        </p>
+        <button onclick="switchTab('feed')" class="button mt-2 px-6 py-2.5 rounded-xl text-xs font-semibold">Перейти к ленте матчей</button>
       </div>
-      <div class="grid grid-cols-2 gap-4 mt-2">
-        <div class="bg-surface-container-low rounded-2xl p-4 flex flex-col">
-          <span class="font-label-caps text-label-caps text-on-surface-variant mb-1">Статус доступа</span>
-          <span class="font-headline-md text-headline-md text-win-green flex items-center gap-1">
-            <span class="material-symbols-outlined text-[18px]">check_circle</span>
-            Активен
-          </span>
-        </div>
-        <div class="bg-surface-container-low rounded-2xl p-4 flex flex-col">
-          <span class="font-label-caps text-label-caps text-on-surface-variant mb-1">Авторизация</span>
-          <span class="font-headline-md text-headline-md text-primary">Telegram</span>
-        </div>
-      </div>
-    </section>
-  </div>
+      <div id="statsMatchView" class="space-y-4 hidden"></div>
+    </div>
 
-</main>
+    <!-- Вкладка 4: Профиль -->
+    <div id="tab-subscribe" class="tab-content hidden space-y-4">
+      <section class="bg-card-bg rounded-2xl shadow-sm p-4 flex flex-col gap-4 border border-outline-variant/20">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-full bg-surface-variant flex items-center justify-center shrink-0 overflow-hidden border border-outline-variant/30">
+            <img id="userAvatar" class="w-full h-full object-cover" alt="Avatar" src=""/>
+          </div>
+          <div class="flex-1">
+            <h2 id="userName" class="font-semibold text-lg text-on-surface">Загрузка...</h2>
+            <p id="userUsername" class="text-sm text-on-surface-variant">@username</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mt-2">
+          <div class="bg-surface-container-low rounded-2xl p-4 flex flex-col">
+            <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Статус доступа</span>
+            <span class="font-semibold text-base text-win-green flex items-center gap-1">
+              <span class="material-symbols-outlined text-[18px]">check_circle</span>
+              Активен
+            </span>
+          </div>
+          <div class="bg-surface-container-low rounded-2xl p-4 flex flex-col">
+            <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Авторизация</span>
+            <span class="font-semibold text-base text-primary">Telegram</span>
+          </div>
+        </div>
+      </section>
+    </div>
 
-<nav class="bg-surface-container border-t border-outline-variant/30 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] fixed bottom-0 left-0 right-0 flex justify-around items-center px-2 py-3 max-w-[480px] mx-auto z-50">
-  <button id="nav-home" onclick="switchTab('home')" class="nav-item active flex flex-col items-center justify-center text-on-surface-variant px-3 py-1.5 active:scale-90 transition-all duration-200">
-    <span class="material-symbols-outlined mb-1">home</span>
-    <span class="font-label-caps text-label-caps">Главная</span>
-  </button>
-  <button id="nav-feed" onclick="switchTab('feed')" class="nav-item flex flex-col items-center justify-center text-on-surface-variant px-3 py-1.5 active:scale-90 transition-all duration-200">
-    <span class="material-symbols-outlined mb-1">analytics</span>
-    <span class="font-label-caps text-label-caps">Feed</span>
-  </button>
-  <button id="nav-stats" onclick="switchTab('stats')" class="nav-item flex flex-col items-center justify-center text-on-surface-variant px-3 py-1.5 active:scale-90 transition-all duration-200">
-    <span class="material-symbols-outlined mb-1">query_stats</span>
-    <span class="font-label-caps text-label-caps">Stats</span>
-  </button>
-  <button id="nav-subscribe" onclick="switchTab('subscribe')" class="button flex flex-col items-center justify-center rounded-xl px-3 py-1.5">
-    <svg class="mb-1 w-5 h-5" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.16-.28L11.5 2h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"></path></svg>
-    <span class="font-label-caps text-label-caps">Профиль</span>
-  </button>
-</nav>
+  </main>
+
+  <nav class="app-nav">
+    <button id="nav-home" onclick="switchTab('home')" class="nav-item active">
+      <span class="material-symbols-outlined">home</span>
+      <span class="nav-label">Главная</span>
+    </button>
+    <button id="nav-feed" onclick="switchTab('feed')" class="nav-item">
+      <span class="material-symbols-outlined">analytics</span>
+      <span class="nav-label">Feed</span>
+    </button>
+    <button id="nav-stats" onclick="switchTab('stats')" class="nav-item">
+      <span class="material-symbols-outlined">query_stats</span>
+      <span class="nav-label">Stats</span>
+    </button>
+    <button id="nav-subscribe" onclick="switchTab('subscribe')" class="button flex flex-col items-center justify-center rounded-xl px-3 py-1.5 min-w-[56px]">
+      <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="currentColor"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.16-.28L11.5 2h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"/></svg>
+      <span class="nav-label">Профиль</span>
+    </button>
+  </nav>
+
+</div>
 
 <script>
   // ======== ГЛОБАЛЬНЫЕ ДАННЫЕ ========
@@ -530,14 +708,15 @@
     }
     document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
     const activeNav = document.getElementById('nav-' + tabName);
-    if (activeNav && activeNav.classList.contains('nav-item')) {
+    if (activeNav) {
       activeNav.classList.add('active');
     }
     if (tabName === 'feed' && !feedLoaded) {
       initFeedLeaguesAndMatches();
       feedLoaded = true;
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const content = document.getElementById('appContent');
+    if (content) content.scrollTop = 0;
   }
 
   // ======== FEED ========
@@ -587,7 +766,7 @@
       container.innerHTML = "";
       leagues.forEach((league, index) => {
         const btn = document.createElement('button');
-        btn.className = `league-btn whitespace-nowrap px-3 py-1.5 bg-card-bg border border-outline-variant/30 text-on-surface rounded-lg font-label-caps text-label-caps transition-all ${index === 0 ? 'active' : ''}`;
+        btn.className = `league-btn ${index === 0 ? 'active' : ''}`;
         btn.innerText = league.name;
         btn.onclick = () => selectLeagueFilter(league.id, btn);
         container.appendChild(btn);
@@ -607,7 +786,7 @@
 
   async function loadTodayMatches(leagueId = "all") {
     const container = document.getElementById('dynamicForecastsContainer');
-    container.innerHTML = `<div class="text-center text-outline py-8 font-body-sm animate-pulse">Загрузка футбольных матчей...</div>`;
+    container.innerHTML = `<div class="text-center text-outline py-8 text-sm animate-pulse">Загрузка футбольных матчей...</div>`;
     const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
     const url = `${API_BASE}/matches/today?league_id=${encodeURIComponent(leagueId)}`;
     try {
@@ -619,8 +798,8 @@
         container.innerHTML = `
           <div class="bg-risk-bg rounded-xl p-6 text-center border border-error-container shadow-sm space-y-2">
             <span class="material-symbols-outlined text-error text-3xl">error</span>
-            <p class="font-headline-md text-headline-md text-on-surface">Ошибка загрузки матчей</p>
-            <p class="text-xs text-on-surface">HTTP ${res.status}: ${res.statusText}</p>
+            <p class="font-semibold text-base text-on-surface">Ошибка загрузки матчей</p>
+            <p class="text-sm text-on-surface">HTTP ${res.status}: ${res.statusText}</p>
             <p class="text-xs text-outline break-all">${errorText.substring(0, 200)}</p>
           </div>`;
         return;
@@ -630,8 +809,8 @@
         container.innerHTML = `
           <div class="bg-risk-bg rounded-xl p-6 text-center border border-error-container shadow-sm space-y-2">
             <span class="material-symbols-outlined text-error text-3xl">error</span>
-            <p class="font-headline-md text-headline-md text-on-surface">Ошибка загрузки матчей</p>
-            <p class="text-xs text-on-surface">${data.api_error}</p>
+            <p class="font-semibold text-base text-on-surface">Ошибка загрузки матчей</p>
+            <p class="text-sm text-on-surface">${data.api_error}</p>
             <p class="text-xs text-outline">Проверьте логи сервера для диагностики.</p>
           </div>`;
         return;
@@ -640,8 +819,8 @@
         container.innerHTML = `
           <div class="bg-card-bg rounded-xl p-6 text-center border border-outline-variant/20 shadow-sm space-y-2">
             <span class="material-symbols-outlined text-outline text-3xl">event_busy</span>
-            <p class="font-headline-md text-headline-md text-on-surface">На сегодня футбольных матчей нет</p>
-            <p class="text-xs text-outline">В выбранном турнире на сегодня по расписанию игр не запланировано.</p>
+            <p class="font-semibold text-base text-on-surface">На сегодня футбольных матчей нет</p>
+            <p class="text-sm text-outline">В выбранном турнире на сегодня по расписанию игр не запланировано.</p>
             <details class="text-left text-xs">
               <summary class="text-primary cursor-pointer">Показать сырые данные</summary>
               <pre class="mt-2 p-2 bg-surface-container-low rounded overflow-auto max-h-40">${JSON.stringify(data, null, 2)}</pre>
@@ -661,8 +840,8 @@
       container.innerHTML = `
         <div class="bg-risk-bg rounded-xl p-6 text-center border border-error-container shadow-sm space-y-2">
           <span class="material-symbols-outlined text-error text-3xl">error</span>
-          <p class="font-headline-md text-headline-md text-on-surface">Не удалось загрузить матчи</p>
-          <p class="text-xs text-on-surface">${err.message}</p>
+          <p class="font-semibold text-base text-on-surface">Не удалось загрузить матчи</p>
+          <p class="text-sm text-on-surface">${err.message}</p>
           <details class="text-left text-xs">
             <summary class="text-primary cursor-pointer">Подробности ошибки</summary>
             <pre class="mt-2 p-2 bg-surface-container-low rounded overflow-auto max-h-40">${err.stack || err.message}</pre>
@@ -673,7 +852,8 @@
 
   function createForecastCardElement(post) {
     const card = document.createElement('div');
-    card.className = "bg-card-bg rounded-lg p-gutter-card shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 relative";
+    card.className = "bg-card-bg rounded-xl p-4 shadow-sm border border-outline-variant/20 relative";
+
     const matchTeams = post.step_1.match.split('—').map(t => t.trim());
     let homeTeam = matchTeams[0] || "Команда 1";
     let awayTeam = matchTeams[1] || "Команда 2";
@@ -692,37 +872,38 @@
         LIVE
       </div>
     ` : '';
+
     card.innerHTML = `
       ${liveBadgeHTML}
-      <div class="flex justify-between items-center mb-stack-sm text-outline font-body-sm text-body-sm ${post.is_live ? 'pr-16' : ''}">
+      <div class="flex justify-between items-center mb-2 text-outline text-sm ${post.is_live ? 'pr-16' : ''}">
         <div class="flex items-center gap-2">
           <span class="material-symbols-outlined text-[18px]">sports_soccer</span>
           <span class="font-semibold text-primary">${post.step_1.title}</span>
         </div>
         <span>${post.step_1.info}</span>
       </div>
-      <div class="flex justify-between items-center mb-stack-md gap-2">
+      <div class="flex justify-between items-center mb-3 gap-2">
         <div class="flex items-center gap-2.5 flex-1 overflow-hidden">
           <img src="${homeBadge}" class="w-8 h-8 object-contain shrink-0 rounded-full bg-surface-container p-0.5 border border-outline-variant/20 shadow-sm" alt="${homeTeam}" onerror="this.src='https://ui-avatars.com/api/?name=FC&background=00288e&color=fff'"/>
-          <h2 class="font-headline-md text-headline-md text-on-surface line-clamp-1">${post.step_1.match}</h2>
+          <h2 class="font-semibold text-base text-on-surface line-clamp-1">${post.step_1.match}</h2>
           <img src="${awayBadge}" class="w-8 h-8 object-contain shrink-0 rounded-full bg-surface-container p-0.5 border border-outline-variant/20 shadow-sm" alt="${awayTeam}" onerror="this.src='https://ui-avatars.com/api/?name=FC&background=00288e&color=fff'"/>
         </div>
-        <button onclick="openStatsForTeams('${homeTeam}', '${awayTeam}', '${homeBadge}', '${awayBadge}', ${post.is_live}, ${post.goals_home || 0}, ${post.goals_away || 0}, ${post.elapsed || 0})" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0">
+        <button onclick="openStatsForTeams('${homeTeam}', '${awayTeam}', '${homeBadge}', '${awayBadge}', ${post.is_live}, ${post.goals_home || 0}, ${post.goals_away || 0}, ${post.elapsed || 0})" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0 border border-primary/20">
           <span class="material-symbols-outlined text-[16px]">query_stats</span>
           Статистика
         </button>
       </div>
-      <button class="button w-full rounded-lg p-3 flex justify-between items-center mb-stack-md">
-        <span class="flex items-center font-body-lg text-body-lg font-semibold">
-          <svg class="w-4 h-4 mr-2" fill="currentColor" viewbox="0 0 24 24"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.16-.28L11.5 2h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"></path></svg>
+      <button class="button w-full rounded-xl p-3 flex justify-between items-center mb-3">
+        <span class="flex items-center text-sm font-semibold">
+          <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.16-.28L11.5 2h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"/></svg>
           ${post.step_2.forecast}
         </span>
-        <span class="font-odds-display text-odds-display">${post.step_2.coefficient}</span>
+        <span class="font-bold text-lg">${post.step_2.coefficient}</span>
       </button>
-      <div class="bg-surface-container-low p-3 rounded-lg text-xs italic text-on-surface-variant mb-stack-md border border-outline-variant/20">
+      <div class="bg-surface-container-low p-3 rounded-lg text-xs italic text-on-surface-variant mb-3 border border-outline-variant/20">
         💡 ${post.step_2.explanation}
       </div>
-      <ul class="space-y-2 mb-stack-md font-body-sm text-body-sm text-on-surface">
+      <ul class="space-y-2 mb-3 text-sm text-on-surface">
         ${post.step_3.map(reason => `
           <li class="flex items-start gap-2 bg-background-main p-2 rounded border border-outline-variant/20">
             <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">check_circle</span>
@@ -730,11 +911,11 @@
           </li>
         `).join('')}
       </ul>
-      <div class="bg-risk-bg rounded-lg p-3 flex items-start gap-2 mb-stack-md border border-error-container">
+      <div class="bg-risk-bg rounded-xl p-3 flex items-start gap-2 mb-3 border border-error-container">
         <span class="material-symbols-outlined text-error text-[18px] mt-0.5 shrink-0">info</span>
-        <p class="font-body-sm text-body-sm text-on-surface">${post.step_4}</p>
+        <p class="text-sm text-on-surface">${post.step_4}</p>
       </div>
-      <div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm border-t border-outline-variant/30 pt-3">
+      <div class="flex items-center gap-2 text-on-surface-variant text-sm border-t border-outline-variant/30 pt-3">
         <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
         <span class="font-medium text-primary">${post.step_5}</span>
       </div>
@@ -754,7 +935,7 @@
         <button onclick="showStatsDefault()" class="text-xs text-primary font-semibold flex items-center gap-1 mb-2">
           <span class="material-symbols-outlined text-[16px]">arrow_back</span> Назад к выбору матча
         </button>
-        <div class="font-headline-md text-headline-md animate-pulse">Загрузка аналитики...</div>
+        <div class="font-semibold text-base animate-pulse">Загрузка аналитики...</div>
         <p class="text-xs text-outline">${homeTeam} vs ${awayTeam}</p>
       </div>`;
     const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
@@ -766,23 +947,23 @@
       const data = await res.json();
       const analysis = data.analysis_5_points;
       matchView.innerHTML = `
-        <div class="space-y-stack-md pt-2">
+        <div class="space-y-4">
           <button onclick="showStatsDefault()" class="bg-surface-container hover:bg-surface-variant/30 text-primary px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all border border-outline-variant/20">
             <span class="material-symbols-outlined text-[16px]">arrow_back</span> Назад к выбору матча
           </button>
-          <div class="bg-card-bg rounded-2xl p-gutter-card shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 relative">
+          <div class="bg-card-bg rounded-2xl p-4 shadow-sm border border-outline-variant/20 relative">
             ${isLive ? `<span class="absolute top-3 right-3 bg-red-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-full animate-pulse">LIVE ${elapsed}'</span>` : ''}
             <h3 class="text-xs font-bold text-outline uppercase tracking-wider text-center mb-4">Детальный разбор матча</h3>
             <div class="flex justify-around items-center">
               <div class="flex flex-col items-center text-center w-5/12">
                 <img src="${data.home.badge}" class="w-16 h-16 object-contain mb-2 rounded-full bg-surface-container p-1 border border-outline-variant/20 shadow-sm" alt="${data.home.name}"/>
-                <span class="font-headline-md text-headline-md text-on-surface line-clamp-1">${data.home.name}</span>
+                <span class="font-semibold text-base text-on-surface line-clamp-1">${data.home.name}</span>
                 <span class="text-xs text-win-green font-bold mt-1">Винрейт: ${data.home.winrate}</span>
               </div>
-              <div class="font-odds-display text-odds-display text-primary font-bold text-xl">${isLive ? `${goalsHome} : ${goalsAway}` : 'VS'}</div>
+              <div class="font-bold text-xl text-primary">${isLive ? `${goalsHome} : ${goalsAway}` : 'VS'}</div>
               <div class="flex flex-col items-center text-center w-5/12">
                 <img src="${data.away.badge}" class="w-16 h-16 object-contain mb-2 rounded-full bg-surface-container p-1 border border-outline-variant/20 shadow-sm" alt="${data.away.name}"/>
-                <span class="font-headline-md text-headline-md text-on-surface line-clamp-1">${data.away.name}</span>
+                <span class="font-semibold text-base text-on-surface line-clamp-1">${data.away.name}</span>
                 <span class="text-xs text-win-green font-bold mt-1">Винрейт: ${data.away.winrate}</span>
               </div>
             </div>
@@ -846,7 +1027,7 @@
             </div>
             <div class="bg-card-bg rounded-xl p-3 border border-outline-variant/20">
               <span class="text-xs text-outline block mb-1">Рекомендуемый тип ставки:</span>
-              <span class="font-headline-md text-headline-md text-primary font-bold block">${analysis.point_5_recommendation.recommended_bet}</span>
+              <span class="font-semibold text-base text-primary block">${analysis.point_5_recommendation.recommended_bet}</span>
               <span class="text-[11px] text-on-surface-variant italic mt-1 block">💡 ${analysis.point_5_recommendation.explanation}</span>
             </div>
             <div class="grid grid-cols-3 gap-1.5 text-center text-xs font-semibold">
