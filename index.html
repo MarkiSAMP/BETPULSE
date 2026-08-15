@@ -5,14 +5,13 @@
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
   <title>BETPULSE</title>
 
-  <!-- ========== ГЛАВНОЕ: ПОДКЛЮЧАЕМ TELEGRAM WEBAPP ========== -->
+  <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js?63"></script>
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
   <style>
-    /* ===== СБРОС ===== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
       height: 100%;
@@ -362,60 +361,23 @@
       transform: scale(0.98);
     }
 
-    /* Вкладки */
-    .tab-content {
-      display: block;
-    }
-    .tab-content.hidden {
-      display: none;
-    }
+    .tab-content { display: block; }
+    .tab-content.hidden { display: none; }
 
-    .bg-surface-container-low {
-      background: #f1f5f9;
-    }
-    .bg-card-bg {
-      background: #ffffff;
-    }
-    .bg-risk-bg {
-      background: #fef2f2;
-    }
-    .text-primary {
-      color: #00288e;
-    }
-    .text-on-surface {
-      color: #0b1c30;
-    }
-    .text-on-surface-variant {
-      color: #444653;
-    }
-    .text-outline {
-      color: #757684;
-    }
-    .text-error {
-      color: #ba1a1a;
-    }
-    .text-win-green {
-      color: #22c55e;
-    }
-    .border-outline-variant {
-      border-color: #c4c5d5;
-    }
-    .border-error-container {
-      border-color: #ffdad6;
-    }
-    .from-primary {
-      --tw-gradient-from: #00288e;
-    }
-    .to-primary-container {
-      --tw-gradient-to: #1e40af;
-    }
-
-    .line-clamp-1 {
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 1;
-      -webkit-box-orient: vertical;
-    }
+    .bg-surface-container-low { background: #f1f5f9; }
+    .bg-card-bg { background: #ffffff; }
+    .bg-risk-bg { background: #fef2f2; }
+    .text-primary { color: #00288e; }
+    .text-on-surface { color: #0b1c30; }
+    .text-on-surface-variant { color: #444653; }
+    .text-outline { color: #757684; }
+    .text-error { color: #ba1a1a; }
+    .text-win-green { color: #22c55e; }
+    .border-outline-variant { border-color: #c4c5d5; }
+    .border-error-container { border-color: #ffdad6; }
+    .from-primary { --tw-gradient-from: #00288e; }
+    .to-primary-container { --tw-gradient-to: #1e40af; }
+    .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
   </style>
 </head>
 <body>
@@ -515,7 +477,7 @@
       </section>
     </div>
 
-    <!-- Вкладка 2: Feed (без выбора лиг) -->
+    <!-- Вкладка 2: Feed -->
     <div id="tab-feed" class="tab-content hidden space-y-4">
       <div class="bg-gradient-to-r from-primary to-primary-container rounded-lg p-4 text-white flex items-center justify-between shadow-sm">
         <div>
@@ -550,7 +512,7 @@
       <section class="bg-card-bg rounded-2xl shadow-sm p-4 flex flex-col gap-4 border border-outline-variant/20">
         <div class="flex items-center gap-4">
           <div class="w-16 h-16 rounded-full bg-surface-variant flex items-center justify-center shrink-0 overflow-hidden border border-outline-variant/30">
-            <img id="userAvatar" class="w-full h-full object-cover" alt="Avatar" src=""/>
+            <img id="userAvatar" class="w-full h-full object-cover" alt="Аватар" src=""/>
           </div>
           <div class="flex-1">
             <h2 id="userName" class="font-semibold text-lg text-on-surface">Загрузка...</h2>
@@ -597,15 +559,15 @@
 </div>
 
 <script>
-  // ======== ГЛОБАЛЬНЫЕ ДАННЫЕ ========
+  // ===== ГЛОБАЛЬНЫЕ ДАННЫЕ =====
   let telegramUser = null;
   let feedLoaded = false;
 
-  // ======== ИНИЦИАЛИЗАЦИЯ TELEGRAM (теперь работает!) ========
+  // ===== ИНИЦИАЛИЗАЦИЯ TELEGRAM =====
   function initTelegram() {
     if (window.Telegram && window.Telegram.WebApp) {
       const webApp = window.Telegram.WebApp;
-      webApp.ready(); // сигнализируем, что приложение готово
+      webApp.ready();
       const user = webApp.initDataUnsafe?.user;
       if (user) {
         telegramUser = user;
@@ -619,8 +581,8 @@
   }
   initTelegram();
 
-  // ======== ФУНКЦИИ ДЛЯ ПРОФИЛЯ ========
-  function initTelegramUser() {
+  // ===== ОТОБРАЖЕНИЕ ПРОФИЛЯ =====
+  function renderProfile() {
     const avatar = document.getElementById('userAvatar');
     const nameEl = document.getElementById('userName');
     const usernameEl = document.getElementById('userUsername');
@@ -638,7 +600,6 @@
         usernameEl.textContent = 'Пользователь Telegram';
       }
 
-      // Фото профиля – если есть, используем, иначе генерируем из инициалов
       if (telegramUser.photo_url) {
         avatar.src = telegramUser.photo_url;
       } else {
@@ -653,255 +614,252 @@
     }
   }
 
-  // ======== ВКЛАДКИ ========
+  // ===== ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК =====
   function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     const targetTab = document.getElementById('tab-' + tabName);
-    if (targetTab) {
-      targetTab.classList.remove('hidden');
-    }
+    if (targetTab) targetTab.classList.remove('hidden');
     document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
     const activeNav = document.getElementById('nav-' + tabName);
-    if (activeNav) {
-      activeNav.classList.add('active');
-    }
+    if (activeNav) activeNav.classList.add('active');
+
     if (tabName === 'feed' && !feedLoaded) {
       loadTodayMatches();
       feedLoaded = true;
     }
-    const content = document.getElementById('appContent');
-    if (content) content.scrollTop = 0;
+    if (tabName === 'subscribe') {
+      renderProfile();
+    }
+    document.getElementById('appContent').scrollTop = 0;
   }
 
-  // ======== FEED (без фильтра лиг) ========
+  // ===== FEED (ЗАГРУЗКА МАТЧЕЙ) =====
   function getTelegramInitData() {
-    if (window.Telegram && window.Telegram.WebApp) {
-      return window.Telegram.WebApp.initData || '';
-    }
-    return '';
+    return window.Telegram?.WebApp?.initData || '';
   }
 
   async function loadTodayMatches() {
     const container = document.getElementById('dynamicForecastsContainer');
-    container.innerHTML = `<div class="text-center text-outline py-8 text-sm animate-pulse">Загрузка футбольных матчей...</div>`;
+    container.innerHTML = `<div class="text-center text-outline py-8 text-sm animate-pulse">Загрузка...</div>`;
     const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
     const url = `${API_BASE}/matches/today?league_id=all`;
     try {
       const res = await fetch(url, {
         headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
       });
-      if (!res.ok) {
-        const errorText = await res.text();
-        container.innerHTML = `
-          <div class="bg-risk-bg rounded-xl p-6 text-center border border-error-container shadow-sm space-y-2">
-            <span class="material-symbols-outlined text-error text-3xl">error</span>
-            <p class="font-semibold text-base text-on-surface">Ошибка загрузки матчей</p>
-            <p class="text-sm text-on-surface">HTTP ${res.status}: ${res.statusText}</p>
-            <p class="text-xs text-outline break-all">${errorText.substring(0, 200)}</p>
-          </div>`;
-        return;
-      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data.api_error) {
-        container.innerHTML = `
-          <div class="bg-risk-bg rounded-xl p-6 text-center border border-error-container shadow-sm space-y-2">
-            <span class="material-symbols-outlined text-error text-3xl">error</span>
-            <p class="font-semibold text-base text-on-surface">Ошибка загрузки матчей</p>
-            <p class="text-sm text-on-surface">${data.api_error}</p>
-            <p class="text-xs text-outline">Проверьте логи сервера для диагностики.</p>
-          </div>`;
+        container.innerHTML = `<div class="text-center text-error py-4">${data.api_error}</div>`;
         return;
       }
       if (!data.forecasts || data.forecasts.length === 0) {
-        container.innerHTML = `
-          <div class="bg-card-bg rounded-xl p-6 text-center border border-outline-variant/20 shadow-sm space-y-2">
-            <span class="material-symbols-outlined text-outline text-3xl">event_busy</span>
-            <p class="font-semibold text-base text-on-surface">На сегодня футбольных матчей нет</p>
-            <p class="text-sm text-outline">В выбранном турнире на сегодня по расписанию игр не запланировано.</p>
-            <details class="text-left text-xs">
-              <summary class="text-primary cursor-pointer">Показать сырые данные</summary>
-              <pre class="mt-2 p-2 bg-surface-container-low rounded overflow-auto max-h-40">${JSON.stringify(data, null, 2)}</pre>
-            </details>
-          </div>`;
+        container.innerHTML = `<div class="text-center text-outline py-4">На сегодня матчей нет</div>`;
         return;
       }
-      container.innerHTML = "";
-      data.forecasts.forEach((post) => {
-        try {
-          container.appendChild(createForecastCardElement(post));
-        } catch (err) {
-          console.error(err);
-        }
-      });
-    } catch (err) {
-      container.innerHTML = `
-        <div class="bg-risk-bg rounded-xl p-6 text-center border border-error-container shadow-sm space-y-2">
-          <span class="material-symbols-outlined text-error text-3xl">error</span>
-          <p class="font-semibold text-base text-on-surface">Не удалось загрузить матчи</p>
-          <p class="text-sm text-on-surface">${err.message}</p>
-          <details class="text-left text-xs">
-            <summary class="text-primary cursor-pointer">Подробности ошибки</summary>
-            <pre class="mt-2 p-2 bg-surface-container-low rounded overflow-auto max-h-40">${err.stack || err.message}</pre>
-          </details>
-        </div>`;
-    }
-  }
-
-  function createForecastCardElement(post) {
-    const card = document.createElement('div');
-    card.className = "bg-card-bg rounded-xl p-4 shadow-sm border border-outline-variant/20 relative";
-    // ... (остальной код карточки без изменений, он такой же как в предыдущей версии)
-    // Для краткости я не дублирую его здесь, но вы можете скопировать из предыдущего файла.
-    // Он работает корректно.
-    return card;
-  }
-
-  // ======== СТАТИСТИКА ========
-  async function openStatsForTeams(homeTeam, awayTeam, homeBadge = "", awayBadge = "", isLive = false, goalsHome = 0, goalsAway = 0, elapsed = 0) {
-    switchTab('stats');
-    const defaultView = document.getElementById('statsDefaultView');
-    const matchView = document.getElementById('statsMatchView');
-    defaultView.classList.add('hidden');
-    matchView.classList.remove('hidden');
-    matchView.innerHTML = `
-      <div class="bg-card-bg rounded-xl p-6 text-center border border-outline-variant/20 shadow-sm space-y-3">
-        <button onclick="showStatsDefault()" class="text-xs text-primary font-semibold flex items-center gap-1 mb-2">
-          <span class="material-symbols-outlined text-[16px]">arrow_back</span> Назад к выбору матча
-        </button>
-        <div class="font-semibold text-base animate-pulse">Загрузка аналитики...</div>
-        <p class="text-xs text-outline">${homeTeam} vs ${awayTeam}</p>
-      </div>`;
-    const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
-    try {
-      const url = `${API_BASE}/stats/compare?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&home_badge=${encodeURIComponent(homeBadge)}&away_badge=${encodeURIComponent(awayBadge)}&is_live=${isLive}&goals_home=${goalsHome}&goals_away=${goalsAway}&elapsed=${elapsed}`;
-      const res = await fetch(url, {
-        headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
-      });
-      const data = await res.json();
-      const analysis = data.analysis_5_points;
-      matchView.innerHTML = `
-        <div class="space-y-4">
-          <button onclick="showStatsDefault()" class="bg-surface-container hover:bg-surface-variant/30 text-primary px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all border border-outline-variant/20">
-            <span class="material-symbols-outlined text-[16px]">arrow_back</span> Назад к выбору матча
+      container.innerHTML = '';
+      data.forecasts.forEach(post => {
+        const card = document.createElement('div');
+        card.className = 'bg-card-bg rounded-xl p-4 shadow-sm border border-outline-variant/20 mb-4';
+        card.innerHTML = `
+          <div class="flex justify-between items-center text-sm text-outline mb-2">
+            <span class="font-semibold text-primary">${post.step_1.title}</span>
+            <span>${post.step_1.info}</span>
+          </div>
+          <div class="flex items-center gap-2 mb-3">
+            <img src="${post.home_badge}" class="w-8 h-8 rounded-full object-contain" onerror="this.src='https://ui-avatars.com/api/?name=FC&background=00288e&color=fff'"/>
+            <span class="font-semibold text-base">${post.step_1.match}</span>
+            <img src="${post.away_badge}" class="w-8 h-8 rounded-full object-contain" onerror="this.src='https://ui-avatars.com/api/?name=FC&background=00288e&color=fff'"/>
+          </div>
+          <button class="button w-full rounded-xl p-2 text-sm font-semibold mb-2">
+            ${post.step_2.forecast} — ${post.step_2.coefficient}
           </button>
-          <div class="bg-card-bg rounded-2xl p-4 shadow-sm border border-outline-variant/20 relative">
-            ${isLive ? `<span class="absolute top-3 right-3 bg-red-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-full animate-pulse">LIVE ${elapsed}'</span>` : ''}
-            <h3 class="text-xs font-bold text-outline uppercase tracking-wider text-center mb-4">Детальный разбор матча</h3>
-            <div class="flex justify-around items-center">
-              <div class="flex flex-col items-center text-center w-5/12">
-                <img src="${data.home.badge}" class="w-16 h-16 object-contain mb-2 rounded-full bg-surface-container p-1 border border-outline-variant/20 shadow-sm" alt="${data.home.name}"/>
-                <span class="font-semibold text-base text-on-surface line-clamp-1">${data.home.name}</span>
-                <span class="text-xs text-win-green font-bold mt-1">Винрейт: ${data.home.winrate}</span>
-              </div>
-              <div class="font-bold text-xl text-primary">${isLive ? `${goalsHome} : ${goalsAway}` : 'VS'}</div>
-              <div class="flex flex-col items-center text-center w-5/12">
-                <img src="${data.away.badge}" class="w-16 h-16 object-contain mb-2 rounded-full bg-surface-container p-1 border border-outline-variant/20 shadow-sm" alt="${data.away.name}"/>
-                <span class="font-semibold text-base text-on-surface line-clamp-1">${data.away.name}</span>
-                <span class="text-xs text-win-green font-bold mt-1">Винрейт: ${data.away.winrate}</span>
-              </div>
-            </div>
-          </div>
-          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
-            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
-              <span class="material-symbols-outlined text-[18px]">history</span>
-              <h4>${analysis.point_1_h2h.title}</h4>
-            </div>
-            <p class="text-xs text-on-surface">${analysis.point_1_h2h.summary}</p>
-            <div class="bg-background-main rounded-lg p-2.5 space-y-1 text-xs text-on-surface-variant font-mono">
-              ${analysis.point_1_h2h.details.map(match => `<div>• ${match}</div>`).join('')}
-            </div>
-          </div>
-          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-3">
-            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
-              <span class="material-symbols-outlined text-[18px]">trending_up</span>
-              <h4>${analysis.point_2_form.title}</h4>
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-center text-xs">
-              <div class="bg-surface-container-low p-2 rounded-lg">
-                <span class="font-semibold block mb-1">${data.home.name}</span>
-                <div class="flex justify-center gap-1 font-bold">
-                  ${analysis.point_2_form.home_form.map(r => `<span class="${r === 'W' ? 'text-win-green' : 'text-slate-500'}">${r}</span>`).join('')}
-                </div>
-              </div>
-              <div class="bg-surface-container-low p-2 rounded-lg">
-                <span class="font-semibold block mb-1">${data.away.name}</span>
-                <div class="flex justify-center gap-1 font-bold">
-                  ${analysis.point_2_form.away_form.map(r => `<span class="${r === 'W' ? 'text-win-green' : 'text-slate-500'}">${r}</span>`).join('')}
-                </div>
-              </div>
-            </div>
-            <p class="text-xs text-on-surface">${analysis.point_2_form.home_stats}</p>
-            <p class="text-xs text-on-surface">${analysis.point_2_form.away_stats}</p>
-          </div>
-          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
-            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
-              <span class="material-symbols-outlined text-[18px]">psychology</span>
-              <h4>${analysis.point_3_morale.title}</h4>
-            </div>
-            <p class="text-xs text-on-surface">${analysis.point_3_morale.text}</p>
-          </div>
-          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
-            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
-              <span class="material-symbols-outlined text-[18px]">medical_services</span>
-              <h4>${analysis.point_4_squad.title}</h4>
-            </div>
-            <ul class="text-xs text-on-surface space-y-1">
-              <li class="flex items-center gap-1.5"><span class="text-primary">•</span> ${analysis.point_4_squad.home_news}</li>
-              <li class="flex items-center gap-1.5"><span class="text-primary">•</span> ${analysis.point_4_squad.away_news}</li>
-            </ul>
-          </div>
-          <div class="bg-gradient-to-br from-primary/10 to-primary-container/20 rounded-2xl p-5 border-2 border-primary/30 shadow-md space-y-3">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2 text-primary font-bold text-sm">
-                <span class="material-symbols-outlined text-[20px]">verified</span>
-                <h4>${analysis.point_5_recommendation.title}</h4>
-              </div>
-              <span class="bg-primary text-white font-bold text-xs px-2.5 py-1 rounded-lg">Коэф. ${analysis.point_5_recommendation.coefficient}</span>
-            </div>
-            <div class="bg-card-bg rounded-xl p-3 border border-outline-variant/20">
-              <span class="text-xs text-outline block mb-1">Рекомендуемый тип ставки:</span>
-              <span class="font-semibold text-base text-primary block">${analysis.point_5_recommendation.recommended_bet}</span>
-              <span class="text-[11px] text-on-surface-variant italic mt-1 block">💡 ${analysis.point_5_recommendation.explanation}</span>
-            </div>
-            <div class="grid grid-cols-3 gap-1.5 text-center text-xs font-semibold">
-              <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
-                <span class="text-outline block text-[10px]">П1</span>
-                <span>${analysis.point_5_recommendation.all_odds.П1}</span>
-              </div>
-              <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
-                <span class="text-outline block text-[10px]">Ничья</span>
-                <span>${analysis.point_5_recommendation.all_odds["Ничья"]}</span>
-              </div>
-              <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
-                <span class="text-outline block text-[10px]">П2</span>
-                <span>${analysis.point_5_recommendation.all_odds.П2}</span>
-              </div>
-            </div>
-            <div class="text-xs font-medium text-primary">
-              💼 ${analysis.point_5_recommendation.bank_management}
-            </div>
-            <div class="text-xs text-on-surface bg-card-bg p-3 rounded-xl border border-outline-variant/20">
-              <span class="font-semibold block mb-1 text-primary">Финальное резюме:</span>
-              ${analysis.point_5_recommendation.final_conclusion}
-            </div>
-          </div>
-        </div>
-      `;
+          <div class="text-xs text-on-surface-variant italic">${post.step_2.explanation}</div>
+        `;
+        container.appendChild(card);
+      });
     } catch (err) {
-      showStatsDefault();
+      container.innerHTML = `<div class="text-center text-error py-4">Ошибка загрузки: ${err.message}</div>`;
     }
   }
 
-  function showStatsDefault() {
-    document.getElementById('statsMatchView').classList.add('hidden');
-    document.getElementById('statsDefaultView').classList.remove('hidden');
-  }
-
-  // ======== ОФЕРТА (аккордеон и логика) ========
+  // ===== ОФЕРТА (АККОРДЕОН И ЛОГИКА) =====
   document.addEventListener('DOMContentLoaded', function() {
-    // ... (оставляем без изменений, он рабочий)
-    // Я не дублирую его здесь, чтобы не перегружать ответ, но он должен быть в вашем файле.
-    // Если нужно, я могу выложить полный файл.
+    // 1. Текст оферты (разделы)
+    const offerSections = [
+      {
+        id: 1,
+        title: "1. Общие положения",
+        content: `Настоящая Оферта является официальным предложением Собянина Кирилла Андреевича (далее — «Исполнитель»), являющегося самозанятым (ИНН 781434331920), заключить договор об оказании информационно-аналитических услуг на изложенных ниже условиях. Акцептом настоящей Оферты является совершение Заказчиком действий, предусмотренных настоящим документом, в том числе нажатие кнопки «Принять оферту».
+
+Настоящая Оферта вступает в силу с момента её акцепта Заказчиком и действует до полного исполнения Сторонами своих обязательств. Исполнитель вправе вносить изменения в условия Оферты в одностороннем порядке, уведомив Заказчика не менее чем за 5 (пять) рабочих дней до вступления изменений в силу.`
+      },
+      {
+        id: 2,
+        title: "2. Предмет договора",
+        content: `Исполнитель обязуется оказать Заказчику информационно-аналитические услуги в соответствии с выбранным тарифным планом, а Заказчик обязуется оплатить эти услуги в порядке и на условиях, предусмотренных настоящей Офертой.
+
+Услуги предоставляются исключительно в информационных и образовательных целях. Исполнитель НЕ является организатором азартных игр, букмекером или тотализатором. Информация носит вероятностный характер и не гарантирует результата.`
+      },
+      {
+        id: 3,
+        title: "3. Права и обязанности сторон",
+        content: `Исполнитель обязан: оказывать услуги в соответствии с условиями настоящей Оферты; информировать Заказчика об изменениях условий оказания услуг; обеспечивать конфиденциальность сведений, составляющих коммерческую тайну Заказчика.
+
+Заказчик обязан: своевременно оплачивать оказанные услуги; предоставлять Исполнителю достоверную информацию, необходимую для оказания услуг; соблюдать условия настоящей Оферты и действующее законодательство Российской Федерации.
+
+Заказчик вправе: требовать от Исполнителя надлежащего исполнения обязательств; получать информацию о ходе оказания услуг; расторгнуть договор в порядке, предусмотренном настоящей Офертой.`
+      },
+      {
+        id: 4,
+        title: "4. Стоимость услуг и порядок оплаты",
+        content: `Стоимость услуг определяется согласно действующему тарифному плану, выбранному Заказчиком. Оплата производится в российских рублях через ЮKassa, Telegram Payments, USDT TRC20 или по QR-коду СБП (реквизиты предоставляются при оплате).
+
+Заказчик обязан произвести оплату не позднее 5 (пяти) рабочих дней с момента выставления счёта. В случае просрочки оплаты Исполнитель вправе начислить пени в размере 0,1% от неоплаченной суммы за каждый день просрочки.`
+      },
+      {
+        id: 5,
+        title: "5. Ответственность сторон",
+        content: `Стороны несут ответственность за неисполнение или ненадлежащее исполнение своих обязательств в соответствии с действующим законодательством Российской Федерации и условиями настоящей Оферты.
+
+Исполнитель НЕ несёт ответственности за убытки, упущенную выгоду, действия Заказчика на основе аналитики, задержки, сбои, недостоверность данных из внешних источников. Совокупная ответственность Исполнителя ограничена стоимостью оплаченной, но не оказанной Услуги.`
+      },
+      {
+        id: 6,
+        title: "6. Конфиденциальность",
+        content: `Стороны обязуются сохранять конфиденциальность информации, ставшей им известной в ходе исполнения настоящего договора, и не разглашать её третьим лицам без письменного согласия другой Стороны, за исключением случаев, предусмотренных действующим законодательством.
+
+Обязательства по конфиденциальности сохраняют свою силу в течение 3 (трёх) лет после прекращения действия настоящего договора. Исполнитель обрабатывает персональные данные в соответствии с 152-ФЗ.`
+      },
+      {
+        id: 7,
+        title: "7. Порядок расторжения",
+        content: `Договор может быть расторгнут по соглашению Сторон, а также в одностороннем порядке при условии письменного уведомления другой Стороны не менее чем за 30 (тридцать) календарных дней до предполагаемой даты расторжения.
+
+В случае расторжения договора по инициативе Заказчика ранее установленного срока денежные средства, уплаченные за неоказанные услуги, возвращаются Заказчику в течение 10 (десяти) рабочих дней, за вычетом фактически понесённых расходов.`
+      },
+      {
+        id: 8,
+        title: "8. Применимое право и разрешение споров",
+        content: `Настоящая Оферта регулируется законодательством Российской Федерации. Все споры и разногласия, возникающие в связи с исполнением настоящей Оферты, Стороны будут стремиться разрешить путём переговоров.
+
+В случае невозможности урегулирования спора в досудебном порядке он передаётся на рассмотрение в Третейский суд при РСПП (г. Санкт-Петербург) в соответствии с действующим регламентом. Решение третейского суда является окончательным для Сторон.`
+      }
+    ];
+
+    // 2. Рендер аккордеона
+    const accordionContainer = document.getElementById('accordionContainer');
+    function renderAccordion() {
+      accordionContainer.innerHTML = '';
+      offerSections.forEach((section, index) => {
+        const isOpen = index === 0;
+        const item = document.createElement('div');
+        item.className = 'accordion-item';
+
+        const trigger = document.createElement('button');
+        trigger.className = 'accordion-trigger';
+        trigger.setAttribute('aria-expanded', isOpen);
+        trigger.innerHTML = `
+          <span>${section.title}</span>
+          <span class="chevron ${isOpen ? 'open' : ''}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        `;
+
+        const content = document.createElement('div');
+        content.className = `accordion-content ${isOpen ? 'open' : ''}`;
+        const inner = document.createElement('div');
+        inner.className = 'accordion-content-inner';
+        const paragraphs = section.content.split('\n\n');
+        paragraphs.forEach(p => {
+          if (p.trim()) {
+            const pEl = document.createElement('p');
+            pEl.textContent = p.trim();
+            inner.appendChild(pEl);
+          }
+        });
+        content.appendChild(inner);
+
+        trigger.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const isCurrentlyOpen = content.classList.contains('open');
+          document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('open'));
+          document.querySelectorAll('.accordion-trigger .chevron').forEach(c => c.classList.remove('open'));
+          if (!isCurrentlyOpen) {
+            content.classList.add('open');
+            trigger.querySelector('.chevron').classList.add('open');
+          }
+          trigger.setAttribute('aria-expanded', !isCurrentlyOpen);
+        });
+
+        item.appendChild(trigger);
+        item.appendChild(content);
+        accordionContainer.appendChild(item);
+      });
+    }
+    renderAccordion();
+
+    // 3. Кнопка "Развернуть все"
+    const expandAllBtn = document.getElementById('expandAllBtn');
+    let allExpanded = false;
+    expandAllBtn.addEventListener('click', function() {
+      const contents = document.querySelectorAll('.accordion-content');
+      const chevrons = document.querySelectorAll('.accordion-trigger .chevron');
+      allExpanded = !allExpanded;
+      contents.forEach(c => c.classList.toggle('open', allExpanded));
+      chevrons.forEach(c => c.classList.toggle('open', allExpanded));
+      expandAllBtn.textContent = allExpanded ? 'Свернуть все' : 'Развернуть все';
+    });
+
+    // 4. Чекбоксы и кнопка "Принять"
+    const agreeCheckbox = document.getElementById('agreeCheckbox');
+    const consentCheckbox = document.getElementById('consentCheckbox');
+    const acceptBtn = document.getElementById('acceptBtn');
+    const hintText = document.getElementById('hintText');
+
+    function updateAcceptButton() {
+      const agreed = agreeCheckbox.checked;
+      const consented = consentCheckbox.checked;
+      acceptBtn.disabled = !(agreed && consented);
+      hintText.textContent = (agreed && consented) ? '' : 'Отметьте оба пункта, чтобы продолжить';
+    }
+
+    agreeCheckbox.addEventListener('change', updateAcceptButton);
+    consentCheckbox.addEventListener('change', updateAcceptButton);
+
+    // 5. Принятие оферты
+    const overlay = document.getElementById('offerOverlay');
+    const offerContent = document.getElementById('offerContent');
+    const confirmationScreen = document.getElementById('confirmationScreen');
+    const acceptDateSpan = document.getElementById('acceptDate');
+
+    acceptBtn.addEventListener('click', function() {
+      if (acceptBtn.disabled) return;
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+      acceptDateSpan.textContent = dateStr;
+      offerContent.style.display = 'none';
+      confirmationScreen.style.display = 'block';
+    });
+
+    const backToOfferBtn = document.getElementById('backToOfferBtn');
+    backToOfferBtn.addEventListener('click', function() {
+      confirmationScreen.style.display = 'none';
+      offerContent.style.display = 'block';
+    });
+
+    const continueBtn = document.createElement('button');
+    continueBtn.textContent = 'Продолжить в BETPULSE';
+    continueBtn.className = 'accept-btn';
+    continueBtn.style.marginTop = '16px';
+    continueBtn.addEventListener('click', function() {
+      overlay.classList.add('hidden');
+      renderProfile();
+    });
+    confirmationScreen.appendChild(continueBtn);
+
+    // 6. Профиль при загрузке
+    renderProfile();
   });
 </script>
 
