@@ -5,194 +5,255 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>BETPULSE</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-        tailwind.config = {
-          darkMode: "class",
-          theme: {
-            extend: {
-              "colors": {
-                      "on-primary-fixed-variant": "#173bab",
-                      "inverse-on-surface": "#eaf1ff",
-                      "background-main": "#F8FAFC",
-                      "on-secondary-container": "#003c70",
-                      "outline": "#757684",
-                      "on-error-container": "#93000a",
-                      "inverse-surface": "#213145",
-                      "outline-variant": "#c4c5d5",
-                      "secondary": "#0060ac",
-                      "tertiary": "#323537",
-                      "primary-fixed": "#dde1ff",
-                      "surface-container-lowest": "#ffffff",
-                      "loss-red": "#EF4444",
-                      "surface-container-low": "#eff4ff",
-                      "primary": "#00288e",
-                      "on-primary": "#ffffff",
-                      "on-tertiary-container": "#b9bcbe",
-                      "secondary-fixed": "#d4e3ff",
-                      "on-background": "#0b1c30",
-                      "risk-bg": "#FEF2F2",
-                      "tertiary-container": "#484c4e",
-                      "surface-bright": "#f8f9ff",
-                      "on-tertiary-fixed": "#191c1e",
-                      "primary-container": "#1e40af",
-                      "surface-variant": "#d3e4fe",
-                      "on-surface": "#0b1c30",
-                      "inverse-primary": "#b8c4ff",
-                      "secondary-fixed-dim": "#a4c9ff",
-                      "primary-fixed-dim": "#b8c4ff",
-                      "surface-tint": "#3755c3",
-                      "on-error": "#ffffff",
-                      "tertiary-fixed": "#e0e3e5",
-                      "on-primary-container": "#a8b8ff",
-                      "secondary-container": "#64a8fe",
-                      "surface-container-highest": "#d3e4fe",
-                      "on-tertiary": "#ffffff",
-                      "on-secondary": "#ffffff",
-                      "on-primary-fixed": "#001453",
-                      "on-secondary-fixed": "#001c39",
-                      "error": "#ba1a1a",
-                      "error-container": "#ffdad6",
-                      "surface": "#f8f9ff",
-                      "surface-container": "#e5eeff",
-                      "background": "#f8f9ff",
-                      "surface-dim": "#cbdbf5",
-                      "tertiary-fixed-dim": "#c4c7c9",
-                      "card-bg": "#FFFFFF",
-                      "on-surface-variant": "#444653",
-                      "on-tertiary-fixed-variant": "#444749",
-                      "win-green": "#22C55E",
-                      "surface-container-high": "#dce9ff",
-                      "on-secondary-fixed-variant": "#004883"
-              },
-              "borderRadius": {
-                      "DEFAULT": "0.25rem",
-                      "lg": "8px",
-                      "xl": "12px",
-                      "2xl": "16px",
-                      "full": "9999px"
-              },
-              "spacing": {
-                      "gutter-card": "1rem",
-                      "stack-lg": "1.5rem",
-                      "margin-page": "1rem",
-                      "stack-md": "1rem",
-                      "stack-sm": "0.5rem"
-              },
-              "fontFamily": {
-                      "headline-lg": ["Inter"],
-                      "headline-lg-mobile": ["Inter"],
-                      "headline-md": ["Inter"],
-                      "body-sm": ["Inter"],
-                      "label-caps": ["Inter"],
-                      "body-lg": ["Inter"],
-                      "odds-display": ["Inter"]
-              },
-              "fontSize": {
-                      "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
-                      "headline-lg-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "700" }],
-                      "headline-md": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
-                      "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
-                      "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
-                      "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
-                      "odds-display": ["18px", { "lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "700" }]
-              }
-            }
-          }
-        }
-      </script>
 <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background-color: #F8FAFC;
-            color: theme('colors.on-background');
-            margin: 0;
-            padding: 0;
             font-family: 'Inter', sans-serif;
+            background: #f8f9ff;
+            color: #0b1c30;
         }
 
-        /* --- Стили для оверлея оферты --- */
         #offerOverlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(11, 28, 48, 0.6);
+            backdrop-filter: blur(6px);
             z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 16px;
+            padding: 20px;
             box-sizing: border-box;
-            backdrop-filter: blur(4px);
+            transition: opacity 0.4s ease;
         }
         #offerOverlay.hidden {
             display: none;
+            opacity: 0;
         }
         .offer-modal {
-            background: #FFFFFF;
-            border-radius: 16px;
-            max-width: 720px;
+            background: #ffffff;
+            border-radius: 28px;
+            max-width: 640px;
             width: 100%;
-            max-height: 90vh;
-            padding: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-height: 92vh;
+            padding: 32px 28px 28px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2);
             overflow-y: auto;
             position: relative;
+            animation: slideUp 0.5s ease;
         }
-        .offer-modal h1 {
-            font-size: 22px;
+        @keyframes slideUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .offer-modal .header-title {
+            font-size: 28px;
             font-weight: 700;
-            color: #00288e;
-            margin-top: 0;
-            margin-bottom: 16px;
-            text-align: center;
+            color: #0b1c30;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
         }
-        .offer-modal .offer-text {
-            font-size: 13px;
-            line-height: 1.6;
-            color: #1e293b;
-            max-height: 50vh;
-            overflow-y: auto;
-            padding-right: 8px;
-            margin-bottom: 20px;
-            white-space: pre-wrap;
-            word-break: break-word;
-            background: #f8fafc;
-            padding: 16px;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
+        .offer-modal .header-sub {
+            font-size: 14px;
+            color: #444653;
+            margin-bottom: 24px;
+            line-height: 1.4;
         }
-        .offer-modal .offer-text strong {
-            color: #00288e;
+
+        .accordion-item {
+            border-bottom: 1px solid #e5edf5;
         }
-        .offer-modal .accept-btn {
+        .accordion-item:last-child {
+            border-bottom: none;
+        }
+        .accordion-trigger {
             width: 100%;
-            padding: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+            font-size: 15px;
+            font-weight: 500;
+            color: #0b1c30;
+            transition: color 0.2s;
+            gap: 12px;
+        }
+        .accordion-trigger:hover {
+            color: #00288e;
+        }
+        .accordion-trigger .chevron {
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+            color: #00288e;
+        }
+        .accordion-trigger .chevron.open {
+            transform: rotate(180deg);
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+            opacity: 0;
+        }
+        .accordion-content.open {
+            max-height: 800px;
+            opacity: 1;
+        }
+        .accordion-content-inner {
+            padding-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #1e293b;
+        }
+        .accordion-content-inner p {
+            margin-bottom: 12px;
+        }
+        .accordion-content-inner p:last-child {
+            margin-bottom: 0;
+        }
+
+        .expand-all-btn {
+            font-size: 12px;
+            color: #00288e;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .expand-all-btn:hover {
+            color: #001f6b;
+        }
+
+        .checkbox-custom {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+            margin-bottom: 14px;
+        }
+        .checkbox-custom input[type="checkbox"] {
+            display: none;
+        }
+        .checkbox-custom .box {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #b0c4de;
+            border-radius: 4px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s, border-color 0.15s;
+            background: white;
+        }
+        .checkbox-custom input:checked + .box {
+            background: #00288e;
+            border-color: #00288e;
+        }
+        .checkbox-custom input:checked + .box::after {
+            content: "✓";
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .checkbox-custom .label-text {
+            font-size: 14px;
+            color: #0b1c30;
+            line-height: 1.4;
+        }
+
+        .accept-btn {
+            width: 100%;
+            padding: 16px;
             background: #00288e;
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 16px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 12px rgba(0, 40, 142, 0.25);
         }
-        .offer-modal .accept-btn:hover {
+        .accept-btn:hover:not(:disabled) {
             background: #001f6b;
         }
-        .offer-modal .accept-btn:active {
-            transform: scale(0.98);
+        .accept-btn:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+        .accept-btn:disabled {
+            background: #b0c4de;
+            cursor: not-allowed;
+            box-shadow: none;
         }
 
-        /* --- Остальные стили (без изменений) --- */
+        .accept-btn .sparkle {
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .confirmation-screen {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .confirmation-screen .icon {
+            width: 64px;
+            height: 64px;
+            background: #eef4ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .confirmation-screen .icon svg {
+            width: 36px;
+            height: 36px;
+            stroke: #00288e;
+            fill: none;
+        }
+        .confirmation-screen h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0b1c30;
+            margin-bottom: 8px;
+        }
+        .confirmation-screen p {
+            font-size: 14px;
+            color: #444653;
+            max-width: 320px;
+            margin: 0 auto 24px;
+        }
+        .confirmation-screen .back-link {
+            font-size: 14px;
+            color: #00288e;
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-decoration: underline;
+            transition: color 0.2s;
+        }
+        .confirmation-screen .back-link:hover {
+            color: #001f6b;
+        }
+
         .button {
             position: relative;
             background: linear-gradient(140deg, hsla(240, 40%, 50%, 1) 20%, hsla(240, 40%, 50%, 0.6) 100%);
             color: #fff;
             box-shadow: inset 0px -2px 0px 0px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, text-shadow 0.2s ease;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
             overflow: hidden;
             display: inline-flex;
             align-items: center;
@@ -201,26 +262,10 @@
         }
         .button:hover {
             transform: scale(1.03);
-            text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
             box-shadow: inset 0px -2px 0px 0px rgba(0, 0, 0, 0.2), 0px 8px 16px rgba(0, 0, 0, 0.2);
         }
         .button:active {
             transform: scale(0.98);
-        }
-        .button > span, .button > svg {
-            position: relative;
-            z-index: 1;
-        }
-        .button > svg {
-            fill: currentColor;
-            width: 20px;
-            height: 20px;
-            animation: pulse-lightning 2s infinite;
-        }
-        @keyframes pulse-lightning {
-            0% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.2); filter: brightness(1.5); drop-shadow(0 0 5px rgba(255, 255, 255, 0.8)); }
-            100% { transform: scale(1); filter: brightness(1); }
         }
         .no-scrollbar::-webkit-scrollbar, .scrollbar-hide::-webkit-scrollbar { display: none; }
         .no-scrollbar, .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -233,138 +278,84 @@
             user-select: none;
             scroll-behavior: smooth;
         }
-        .custom-slider:active {
-            cursor: grabbing;
-        }
-        .custom-slider::-webkit-scrollbar {
-            height: 6px;
-        }
-        .custom-slider::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.04);
-            border-radius: 4px;
-            margin: 0 4px;
-        }
-        .custom-slider::-webkit-scrollbar-thumb {
-            background: rgba(0, 40, 142, 0.35);
-            border-radius: 4px;
-        }
+        .custom-slider:active { cursor: grabbing; }
+        .custom-slider::-webkit-scrollbar { height: 6px; }
+        .custom-slider::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.04); border-radius: 4px; }
+        .custom-slider::-webkit-scrollbar-thumb { background: rgba(0, 40, 142, 0.35); border-radius: 4px; }
         .nav-item.active {
-            color: theme('colors.primary');
+            color: #00288e;
             background-color: rgba(0, 40, 142, 0.08);
             border-radius: 0.75rem;
         }
         .league-btn.active {
-            background-color: theme('colors.primary-container');
+            background-color: #1e40af;
             color: white;
-            border-color: theme('colors.primary-container');
+            border-color: #1e40af;
         }
     </style>
 </head>
 <body>
 
-<!-- ======== ОВЕРЛЕЙ С ОФЕРТОЙ ======== -->
 <div id="offerOverlay">
-  <div class="offer-modal">
-    <h1>Публичная оферта</h1>
-    <div class="offer-text">
-Собянин Кирилл Андреевич (далее – Исполнитель), являющийся самозанятым, предлагает заключить договор на оказание информационно-аналитических услуг (далее – Оферта) любому физическому лицу (далее – Заказчик), принявшему условия настоящей Оферты.
+  <div class="offer-modal" id="offerModal">
+    <div id="offerContent">
+      <h1 class="header-title">Договор-оферта об оказании услуг</h1>
+      <p class="header-sub">Внимательно ознакомьтесь с условиями оферты перед её акцептом. Нажимая кнопку «Принять оферту», вы соглашаетесь со всеми изложенными условиями.</p>
 
-Настоящая Оферта является официальным предложением и действует с момента размещения в Telegram-боте и/или на сайте.
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs text-blue-400 uppercase tracking-wider font-medium">Содержание оферты</span>
+        <button class="expand-all-btn" id="expandAllBtn">Развернуть все</button>
+      </div>
 
-Акцепт Оферты означает полное и безоговорочное согласие со всеми условиями.
+      <div class="border border-blue-100 rounded-xl overflow-hidden bg-white mb-8">
+        <div class="px-6" id="accordionContainer"></div>
+      </div>
 
-1. ОПРЕДЕЛЕНИЯ
-- Исполнитель – Собянин Кирилл Андреевич, самозанятый (ИНН 781434331920).
-- Заказчик – физическое лицо, достигшее 18 лет.
-- Сервис – программно-аппаратный комплекс (Telegram-бот и веб-приложение) для предоставления аналитической информации о спортивных событиях.
-- Услуги – информационно-аналитические услуги (статистика, прогнозы, коэффициенты, аналитика).
-- Подписка – платный доступ к расширенному функционалу Сервиса на определённый срок.
+      <div class="bg-blue-50 rounded-2xl p-6">
+        <p class="text-sm font-semibold text-blue-900 mb-4">Подтверждение</p>
 
-2. ПРЕДМЕТ ОФЕРТЫ
-2.1. Исполнитель оказывает Заказчику информационно-аналитические услуги в порядке и на условиях Оферты.
-2.2. Услуги предоставляются исключительно в информационных и образовательных целях. Исполнитель НЕ является организатором азартных игр, букмекером или тотализатором. Информация носит вероятностный характер и не гарантирует результата.
-2.3. Сервис предназначен для лиц старше 18 лет. Заказчик подтверждает своё совершеннолетие.
+        <label class="checkbox-custom">
+          <input type="checkbox" id="agreeCheckbox" />
+          <span class="box"></span>
+          <span class="label-text">Я ознакомился(-ась) с текстом оферты и согласен(-на) с её условиями</span>
+        </label>
 
-3. АКЦЕПТ И ПОРЯДОК ЗАКЛЮЧЕНИЯ ДОГОВОРА
-Акцепт осуществляется путём:
-- регистрации в Сервисе через Telegram-бота;
-- оплаты Подписки;
-- фактического использования Сервиса (просмотр аналитики).
-С момента совершения одного из этих действий договор считается заключённым.
+        <label class="checkbox-custom">
+          <input type="checkbox" id="consentCheckbox" />
+          <span class="box"></span>
+          <span class="label-text">Я даю согласие на обработку персональных данных в соответствии с Политикой конфиденциальности</span>
+        </label>
 
-4. ПРАВА И ОБЯЗАННОСТИ
-4.1. Исполнитель обязуется:
-- обеспечивать доступ к Сервису согласно тарифу;
-- предоставлять аналитику;
-- соблюдать конфиденциальность персональных данных.
-4.2. Исполнитель имеет право:
-- приостанавливать доступ для технических работ;
-- изменять тарифы и условия с уведомлением за 3 дня;
-- отказать Заказчику при нарушении условий.
-4.3. Заказчик обязуется:
-- использовать Сервис в личных некоммерческих целях;
-- не нарушать работу Сервиса, не копировать базу данных;
-- не перепродавать информацию.
-4.4. Заказчик имеет право на доступ к Сервису и обращение в поддержку.
+        <button class="accept-btn" id="acceptBtn" disabled>
+          <span class="sparkle">✨</span> Принять оферту
+        </button>
 
-5. СТОИМОСТЬ И РАСЧЁТЫ
-5.1. Стоимость определяется тарифами, опубликованными в Сервисе.
-5.2. Оплата принимается через ЮKassa, Telegram Payments, USDT TRC20 или по QR-коду СБП (реквизиты предоставляются при оплате).
-5.3. Подписка считается оплаченной с момента поступления средств.
-5.4. Средства за Подписку НЕ ВОЗВРАЩАЮТСЯ при досрочном отказе, кроме случаев невозможности оказания Услуг по вине Исполнителя.
-
-6. ОТВЕТСТВЕННОСТЬ
-6.1. Исполнитель НЕ несёт ответственности за убытки, упущенную выгоду, действия Заказчика на основе аналитики, задержки, сбои, недостоверность данных из внешних источников.
-6.2. Ответственность Исполнителя ограничена стоимостью оплаченной, но не оказанной Услуги.
-6.3. Заказчик несёт ответственность за соблюдение законодательства (в т.ч. непривлечение несовершеннолетних, запрет азартных игр).
-6.4. При нарушении условий Оферты Исполнитель вправе заблокировать доступ без возврата средств.
-
-7. КОНФИДЕНЦИАЛЬНОСТЬ
-7.1. Исполнитель обрабатывает персональные данные в соответствии с 152-ФЗ.
-7.2. Цель обработки – идентификация, оказание Услуг, выдача чеков.
-7.3. Данные защищаются от несанкционированного доступа.
-
-8. РАЗРЕШЕНИЕ СПОРОВ
-8.1. Споры решаются путём переговоров.
-8.2. При недостижении согласия – передаются в Третейский суд при РСПП (г. Санкт-Петербург). Решение окончательное.
-8.3. Альтернативная подсудность – суд общей юрисдикции по месту нахождения Исполнителя (г. Санкт-Петербург).
-8.4. Обязателен претензионный порядок – срок ответа 15 рабочих дней.
-
-9. ФОРС-МАЖОР
-Стороны освобождаются от ответственности при чрезвычайных обстоятельствах (стихийные бедствия, войны, запреты госорганов, сбои сетей). Сторона обязана уведомить другую сторону в течение 5 дней.
-
-10. ПРОЧИЕ УСЛОВИЯ
-10.1. Все изменения публикуются в Сервисе и вступают в силу с момента публикации.
-10.2. Заказчик подтверждает, что ознакомлен и согласен с условиями.
-10.3. Недействительность одного условия не влечёт недействительность остальных.
-10.4. Исполнитель вправе уступать права и переводить долги третьим лицам.
-
-11. РЕКВИЗИТЫ ИСПОЛНИТЕЛЯ
-- ФИО: Собянин Кирилл Андреевич
-- ИНН: 781434331920
-- Статус: самозанятый
-- Адрес: г. Санкт-Петербург
-- E-mail: betpulseoffc@protonmail.com
-- Способы оплаты: USDT TRC20 (адрес по запросу), СБП (QR-код по запросу)
-
-Настоящая Оферта является официальным документом и имеет юридическую силу.
+        <p class="text-center text-xs text-blue-400 mt-3" id="hintText">Отметьте оба пункта, чтобы продолжить</p>
+      </div>
     </div>
-    <button class="accept-btn" id="acceptOfferBtn">✅ Я принимаю условия оферты</button>
+
+    <div id="confirmationScreen" class="confirmation-screen" style="display:none;">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
+      </div>
+      <h2>Оферта принята</h2>
+      <p>Вы успешно приняли условия оферты. Договор считается заключённым с <span id="acceptDate"></span>.</p>
+      <button class="back-link" id="backToOfferBtn">Вернуться к тексту оферты</button>
+    </div>
   </div>
 </div>
 
-<!-- ======== ОСНОВНОЙ КОНТЕНТ ======== -->
-<!-- TopAppBar -->
 <header class="bg-surface shadow-sm fixed top-0 w-full z-50 max-w-[480px] mx-auto left-0 right-0 border-b border-outline-variant/20">
   <div class="flex justify-center items-center px-margin-page h-16">
     <div class="font-headline-lg-mobile text-headline-lg-mobile font-bold tracking-wider text-primary uppercase">BETPULSE</div>
   </div>
 </header>
 
-<!-- Main Content Container -->
 <main class="max-w-[480px] mx-auto pt-20 px-margin-page space-y-stack-lg">
 
-  <!-- Вкладка 1: Главная -->
   <div id="tab-home" class="tab-content space-y-stack-lg">
     <section class="bg-surface-container-low rounded-xl p-6 shadow-sm flex flex-col items-center text-center space-y-stack-md mt-4 border border-outline-variant/20">
       <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Ваш надежный партнер в футбольной аналитике</h1>
@@ -397,7 +388,6 @@
     </section>
   </div>
 
-  <!-- Вкладка 2: Feed -->
   <div id="tab-feed" class="tab-content hidden space-y-stack-md pt-2">
     <div>
       <span class="text-[11px] font-bold text-outline uppercase tracking-wider block mb-1">Футбольный турнир / Лига</span>
@@ -415,13 +405,10 @@
     </div>
 
     <div id="dynamicForecastsContainer" class="space-y-stack-md">
-      <div class="text-center text-outline py-8 font-body-sm animate-pulse">
-        Загрузка футбольных матчей...
-      </div>
+      <div class="text-center text-outline py-8 font-body-sm animate-pulse">Загрузка футбольных матчей...</div>
     </div>
   </div>
 
-  <!-- Вкладка 3: Stats -->
   <div id="tab-stats" class="tab-content hidden space-y-stack-md pt-2">
     <div id="statsDefaultView" class="bg-card-bg rounded-2xl p-8 text-center border border-outline-variant/20 shadow-sm space-y-3 mt-4">
       <span class="material-symbols-outlined text-primary text-[48px]">query_stats</span>
@@ -429,14 +416,11 @@
       <p class="font-body-sm text-body-sm text-on-surface-variant">
         Выберите матч на вкладке <strong class="text-primary">Feed</strong> и нажмите кнопку <span class="text-primary font-semibold">«Статистика»</span>, чтобы открыть подробный 5-пунктный разбор и рекомендации.
       </p>
-      <button onclick="switchTab('feed')" class="button mt-2 px-6 py-2.5 rounded-xl text-xs font-semibold">
-        Перейти к ленте матчей
-      </button>
+      <button onclick="switchTab('feed')" class="button mt-2 px-6 py-2.5 rounded-xl text-xs font-semibold">Перейти к ленте матчей</button>
     </div>
     <div id="statsMatchView" class="space-y-stack-md hidden"></div>
   </div>
 
-  <!-- Вкладка 4: Профиль -->
   <div id="tab-subscribe" class="tab-content hidden space-y-stack-lg">
     <section class="bg-card-bg rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] p-gutter-card flex flex-col gap-stack-md border border-outline-variant/20">
       <div class="flex items-center gap-4">
@@ -486,450 +470,583 @@
 </nav>
 
 <script>
-  // ========== УПРАВЛЕНИЕ ОВЕРЛЕЕМ ОФЕРТЫ ==========
+  const offerSections = [
+    {
+      id: 1,
+      title: "1. Общие положения",
+      content: `Настоящая Оферта является официальным предложением Собянина Кирилла Андреевича (далее — «Исполнитель»), являющегося самозанятым (ИНН 781434331920), заключить договор об оказании информационно-аналитических услуг на изложенных ниже условиях. Акцептом настоящей Оферты является совершение Заказчиком действий, предусмотренных настоящим документом, в том числе нажатие кнопки «Принять оферту».
+
+Настоящая Оферта вступает в силу с момента её акцепта Заказчиком и действует до полного исполнения Сторонами своих обязательств. Исполнитель вправе вносить изменения в условия Оферты в одностороннем порядке, уведомив Заказчика не менее чем за 5 (пять) рабочих дней до вступления изменений в силу.`
+    },
+    {
+      id: 2,
+      title: "2. Предмет договора",
+      content: `Исполнитель обязуется оказать Заказчику информационно-аналитические услуги в соответствии с выбранным тарифным планом, а Заказчик обязуется оплатить эти услуги в порядке и на условиях, предусмотренных настоящей Офертой.
+
+Услуги предоставляются исключительно в информационных и образовательных целях. Исполнитель НЕ является организатором азартных игр, букмекером или тотализатором. Информация носит вероятностный характер и не гарантирует результата.`
+    },
+    {
+      id: 3,
+      title: "3. Права и обязанности сторон",
+      content: `Исполнитель обязан: оказывать услуги в соответствии с условиями настоящей Оферты; информировать Заказчика об изменениях условий оказания услуг; обеспечивать конфиденциальность сведений, составляющих коммерческую тайну Заказчика.
+
+Заказчик обязан: своевременно оплачивать оказанные услуги; предоставлять Исполнителю достоверную информацию, необходимую для оказания услуг; соблюдать условия настоящей Оферты и действующее законодательство Российской Федерации.
+
+Заказчик вправе: требовать от Исполнителя надлежащего исполнения обязательств; получать информацию о ходе оказания услуг; расторгнуть договор в порядке, предусмотренном настоящей Офертой.`
+    },
+    {
+      id: 4,
+      title: "4. Стоимость услуг и порядок оплаты",
+      content: `Стоимость услуг определяется согласно действующему тарифному плану, выбранному Заказчиком. Оплата производится в российских рублях через ЮKassa, Telegram Payments, USDT TRC20 или по QR-коду СБП (реквизиты предоставляются при оплате).
+
+Заказчик обязан произвести оплату не позднее 5 (пяти) рабочих дней с момента выставления счёта. В случае просрочки оплаты Исполнитель вправе начислить пени в размере 0,1% от неоплаченной суммы за каждый день просрочки.`
+    },
+    {
+      id: 5,
+      title: "5. Ответственность сторон",
+      content: `Стороны несут ответственность за неисполнение или ненадлежащее исполнение своих обязательств в соответствии с действующим законодательством Российской Федерации и условиями настоящей Оферты.
+
+Исполнитель НЕ несёт ответственности за убытки, упущенную выгоду, действия Заказчика на основе аналитики, задержки, сбои, недостоверность данных из внешних источников. Совокупная ответственность Исполнителя ограничена стоимостью оплаченной, но не оказанной Услуги.`
+    },
+    {
+      id: 6,
+      title: "6. Конфиденциальность",
+      content: `Стороны обязуются сохранять конфиденциальность информации, ставшей им известной в ходе исполнения настоящего договора, и не разглашать её третьим лицам без письменного согласия другой Стороны, за исключением случаев, предусмотренных действующим законодательством.
+
+Обязательства по конфиденциальности сохраняют свою силу в течение 3 (трёх) лет после прекращения действия настоящего договора. Исполнитель обрабатывает персональные данные в соответствии с 152-ФЗ.`
+    },
+    {
+      id: 7,
+      title: "7. Порядок расторжения",
+      content: `Договор может быть расторгнут по соглашению Сторон, а также в одностороннем порядке при условии письменного уведомления другой Стороны не менее чем за 30 (тридцать) календарных дней до предполагаемой даты расторжения.
+
+В случае расторжения договора по инициативе Заказчика ранее установленного срока денежные средства, уплаченные за неоказанные услуги, возвращаются Заказчику в течение 10 (десяти) рабочих дней, за вычетом фактически понесённых расходов.`
+    },
+    {
+      id: 8,
+      title: "8. Применимое право и разрешение споров",
+      content: `Настоящая Оферта регулируется законодательством Российской Федерации. Все споры и разногласия, возникающие в связи с исполнением настоящей Оферты, Стороны будут стремиться разрешить путём переговоров.
+
+В случае невозможности урегулирования спора в досудебном порядке он передаётся на рассмотрение в Третейский суд при РСПП (г. Санкт-Петербург) в соответствии с действующим регламентом. Решение третейского суда является окончательным для Сторон.`
+    }
+  ];
+
   document.addEventListener('DOMContentLoaded', function() {
     const overlay = document.getElementById('offerOverlay');
-    const acceptBtn = document.getElementById('acceptOfferBtn');
+    const offerContent = document.getElementById('offerContent');
+    const confirmationScreen = document.getElementById('confirmationScreen');
+    const acceptBtn = document.getElementById('acceptBtn');
+    const agreeCheckbox = document.getElementById('agreeCheckbox');
+    const consentCheckbox = document.getElementById('consentCheckbox');
+    const hintText = document.getElementById('hintText');
+    const expandAllBtn = document.getElementById('expandAllBtn');
+    const accordionContainer = document.getElementById('accordionContainer');
+    const backToOfferBtn = document.getElementById('backToOfferBtn');
+    const acceptDateSpan = document.getElementById('acceptDate');
 
-    // Проверяем, принимал ли пользователь оферту ранее
-    if (localStorage.getItem('offerAccepted') === 'true') {
-      overlay.classList.add('hidden');
-    } else {
-      overlay.classList.remove('hidden');
+    function renderAccordion() {
+      accordionContainer.innerHTML = '';
+      offerSections.forEach((section, index) => {
+        const isOpen = index === 0;
+        const item = document.createElement('div');
+        item.className = 'accordion-item';
+
+        const trigger = document.createElement('button');
+        trigger.className = 'accordion-trigger';
+        trigger.setAttribute('aria-expanded', isOpen);
+        trigger.innerHTML = `
+          <span>${section.title}</span>
+          <span class="chevron ${isOpen ? 'open' : ''}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        `;
+
+        const content = document.createElement('div');
+        content.className = `accordion-content ${isOpen ? 'open' : ''}`;
+        const inner = document.createElement('div');
+        inner.className = 'accordion-content-inner';
+        const paragraphs = section.content.split('\n\n');
+        paragraphs.forEach(p => {
+          if (p.trim()) {
+            const pEl = document.createElement('p');
+            pEl.textContent = p.trim();
+            inner.appendChild(pEl);
+          }
+        });
+        content.appendChild(inner);
+
+        trigger.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const isCurrentlyOpen = content.classList.contains('open');
+          document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('open'));
+          document.querySelectorAll('.accordion-trigger .chevron').forEach(c => c.classList.remove('open'));
+          if (!isCurrentlyOpen) {
+            content.classList.add('open');
+            trigger.querySelector('.chevron').classList.add('open');
+          }
+          trigger.setAttribute('aria-expanded', !isCurrentlyOpen);
+        });
+
+        item.appendChild(trigger);
+        item.appendChild(content);
+        accordionContainer.appendChild(item);
+      });
+    }
+    renderAccordion();
+
+    let allExpanded = false;
+    expandAllBtn.addEventListener('click', function() {
+      const contents = document.querySelectorAll('.accordion-content');
+      const chevrons = document.querySelectorAll('.accordion-trigger .chevron');
+      allExpanded = !allExpanded;
+      contents.forEach(c => c.classList.toggle('open', allExpanded));
+      chevrons.forEach(c => c.classList.toggle('open', allExpanded));
+      expandAllBtn.textContent = allExpanded ? 'Свернуть все' : 'Развернуть все';
+    });
+
+    function updateAcceptButton() {
+      const agreed = agreeCheckbox.checked;
+      const consented = consentCheckbox.checked;
+      acceptBtn.disabled = !(agreed && consented);
+      hintText.textContent = (agreed && consented) ? '' : 'Отметьте оба пункта, чтобы продолжить';
     }
 
+    agreeCheckbox.addEventListener('change', updateAcceptButton);
+    consentCheckbox.addEventListener('change', updateAcceptButton);
+
     acceptBtn.addEventListener('click', function() {
-      localStorage.setItem('offerAccepted', 'true');
+      if (acceptBtn.disabled) return;
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+      acceptDateSpan.textContent = dateStr;
+      offerContent.style.display = 'none';
+      confirmationScreen.style.display = 'block';
+    });
+
+    backToOfferBtn.addEventListener('click', function() {
+      confirmationScreen.style.display = 'none';
+      offerContent.style.display = 'block';
+    });
+
+    const continueBtn = document.createElement('button');
+    continueBtn.textContent = 'Продолжить в BETPULSE';
+    continueBtn.className = 'accept-btn';
+    continueBtn.style.marginTop = '16px';
+    continueBtn.addEventListener('click', function() {
       overlay.classList.add('hidden');
-      // После принятия оферты инициализируем всё остальное
       initApp();
     });
-  });
+    confirmationScreen.appendChild(continueBtn);
 
-  // ========== ОСНОВНАЯ ЛОГИКА (вызывается после принятия оферты) ==========
-  function initApp() {
-    initTelegramUser();
-    // Остальные функции инициализируются при переключении на вкладку Feed
-  }
+    function initApp() {
+      initTelegramUser();
+    }
 
-  // ========== ПОЛУЧЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ ИЗ TELEGRAM ==========
-  function initTelegramUser() {
-    const avatar = document.getElementById('userAvatar');
-    const nameEl = document.getElementById('userName');
-    const usernameEl = document.getElementById('userUsername');
+    function initTelegramUser() {
+      const avatar = document.getElementById('userAvatar');
+      const nameEl = document.getElementById('userName');
+      const usernameEl = document.getElementById('userUsername');
 
-    if (window.Telegram && window.Telegram.WebApp) {
-      const webApp = window.Telegram.WebApp;
-      webApp.ready();
+      if (window.Telegram && window.Telegram.WebApp) {
+        const webApp = window.Telegram.WebApp;
+        webApp.ready();
 
-      const user = webApp.initDataUnsafe?.user;
-      if (user) {
-        let displayName = user.first_name || '';
-        if (user.last_name) displayName += ' ' + user.last_name;
-        if (!displayName.trim() && user.username) displayName = user.username;
-        if (!displayName.trim()) displayName = 'Пользователь';
-        nameEl.textContent = displayName;
+        const user = webApp.initDataUnsafe?.user;
+        if (user) {
+          let displayName = user.first_name || '';
+          if (user.last_name) displayName += ' ' + user.last_name;
+          if (!displayName.trim() && user.username) displayName = user.username;
+          if (!displayName.trim()) displayName = 'Пользователь';
+          nameEl.textContent = displayName;
 
-        if (user.username) {
-          usernameEl.textContent = '@' + user.username;
+          if (user.username) {
+            usernameEl.textContent = '@' + user.username;
+          } else {
+            usernameEl.textContent = 'Пользователь Telegram';
+          }
+
+          if (user.photo_url) {
+            avatar.src = user.photo_url;
+          } else {
+            const initials = (user.first_name ? user.first_name[0] : '') + (user.last_name ? user.last_name[0] : '');
+            const fallback = initials || 'U';
+            avatar.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(fallback) + '&background=00288e&color=fff&size=64';
+          }
         } else {
-          usernameEl.textContent = 'Пользователь Telegram';
-        }
-
-        if (user.photo_url) {
-          avatar.src = user.photo_url;
-        } else {
-          const initials = (user.first_name ? user.first_name[0] : '') + (user.last_name ? user.last_name[0] : '');
-          const fallback = initials || 'U';
-          avatar.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(fallback) + '&background=00288e&color=fff&size=64';
+          nameEl.textContent = 'Гость';
+          usernameEl.textContent = 'Авторизуйтесь в Telegram';
+          avatar.src = 'https://ui-avatars.com/api/?name=U&background=00288e&color=fff&size=64';
         }
       } else {
         nameEl.textContent = 'Гость';
-        usernameEl.textContent = 'Авторизуйтесь в Telegram';
+        usernameEl.textContent = 'Откройте через Telegram';
         avatar.src = 'https://ui-avatars.com/api/?name=U&background=00288e&color=fff&size=64';
       }
-    } else {
-      nameEl.textContent = 'Гость';
-      usernameEl.textContent = 'Откройте через Telegram';
-      avatar.src = 'https://ui-avatars.com/api/?name=U&background=00288e&color=fff&size=64';
     }
-  }
 
-  // ========== ОСТАЛЬНАЯ ЛОГИКА (без изменений) ==========
-  let currentSelectedLeague = "all";
+    let currentSelectedLeague = "all";
 
-  function getTelegramInitData() {
-    if (window.Telegram && window.Telegram.WebApp) {
-      return window.Telegram.WebApp.initData || '';
+    function getTelegramInitData() {
+      if (window.Telegram && window.Telegram.WebApp) {
+        return window.Telegram.WebApp.initData || '';
+      }
+      return '';
     }
-    return '';
-  }
 
-  function switchTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    const targetTab = document.getElementById('tab-' + tabName);
-    if (targetTab) {
-      targetTab.classList.remove('hidden');
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      const targetTab = document.getElementById('tab-' + tabName);
+      if (targetTab) {
+        targetTab.classList.remove('hidden');
+      }
+      document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+      const activeNav = document.getElementById('nav-' + tabName);
+      if (activeNav && activeNav.classList.contains('nav-item')) {
+        activeNav.classList.add('active');
+      }
+      if (tabName === 'feed' && !window.feedLoaded) {
+        initFeedLeaguesAndMatches();
+        window.feedLoaded = true;
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-    const activeNav = document.getElementById('nav-' + tabName);
-    if (activeNav && activeNav.classList.contains('nav-item')) {
-      activeNav.classList.add('active');
+
+    async function initFeedLeaguesAndMatches() {
+      await loadLeaguesFilters();
+      setupDragScrollForSlider();
     }
-    if (tabName === 'feed' && !window.feedLoaded) {
-      initFeedLeaguesAndMatches();
-      window.feedLoaded = true;
-    }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
 
-  async function initFeedLeaguesAndMatches() {
-    await loadLeaguesFilters();
-    setupDragScrollForSlider();
-  }
-
-  function setupDragScrollForSlider() {
-    const slider = document.getElementById('leaguesFilterContainer');
-    if (!slider) return;
-    let isDown = false;
-    let startX;
-    let scrollLeft;
-    slider.addEventListener('mousedown', (e) => {
-      isDown = true;
-      startX = e.pageX - slider.offsetLeft;
-      scrollLeft = slider.scrollLeft;
-    });
-    slider.addEventListener('mouseleave', () => { isDown = false; });
-    slider.addEventListener('mouseup', () => { isDown = false; });
-    slider.addEventListener('mousemove', (e) => {
-      if (!isDown) return;
-      e.preventDefault();
-      const x = e.pageX - slider.offsetLeft;
-      const walk = (x - startX) * 1.5;
-      slider.scrollLeft = scrollLeft - walk;
-    });
-  }
-
-  async function loadLeaguesFilters() {
-    const container = document.getElementById('leaguesFilterContainer');
-    const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
-    try {
-      const res = await fetch(`${API_BASE}/leagues`, {
-        headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
+    function setupDragScrollForSlider() {
+      const slider = document.getElementById('leaguesFilterContainer');
+      if (!slider) return;
+      let isDown = false;
+      let startX;
+      let scrollLeft;
+      slider.addEventListener('mousedown', (e) => {
+        isDown = true;
+        startX = e.pageX - slider.offsetLeft;
+        scrollLeft = slider.scrollLeft;
       });
-      const data = await res.json();
-      const leagues = data.leagues || [];
-      container.innerHTML = "";
-      leagues.forEach((league, index) => {
-        const btn = document.createElement('button');
-        btn.className = `league-btn whitespace-nowrap px-3 py-1.5 bg-card-bg border border-outline-variant/30 text-on-surface rounded-lg font-label-caps text-label-caps transition-all ${index === 0 ? 'active' : ''}`;
-        btn.innerText = league.name;
-        btn.onclick = () => selectLeagueFilter(league.id, btn);
-        container.appendChild(btn);
+      slider.addEventListener('mouseleave', () => { isDown = false; });
+      slider.addEventListener('mouseup', () => { isDown = false; });
+      slider.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - slider.offsetLeft;
+        const walk = (x - startX) * 1.5;
+        slider.scrollLeft = scrollLeft - walk;
       });
-      loadTodayMatches("all");
-    } catch (err) {
-      console.error("Ошибка загрузки лиг", err);
     }
-  }
 
-  function selectLeagueFilter(leagueId, btnElement) {
-    currentSelectedLeague = leagueId;
-    document.querySelectorAll('.league-btn').forEach(b => b.classList.remove('active'));
-    btnElement.classList.add('active');
-    loadTodayMatches(leagueId);
-  }
+    async function loadLeaguesFilters() {
+      const container = document.getElementById('leaguesFilterContainer');
+      const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
+      try {
+        const res = await fetch(`${API_BASE}/leagues`, {
+          headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
+        });
+        const data = await res.json();
+        const leagues = data.leagues || [];
+        container.innerHTML = "";
+        leagues.forEach((league, index) => {
+          const btn = document.createElement('button');
+          btn.className = `league-btn whitespace-nowrap px-3 py-1.5 bg-card-bg border border-outline-variant/30 text-on-surface rounded-lg font-label-caps text-label-caps transition-all ${index === 0 ? 'active' : ''}`;
+          btn.innerText = league.name;
+          btn.onclick = () => selectLeagueFilter(league.id, btn);
+          container.appendChild(btn);
+        });
+        loadTodayMatches("all");
+      } catch (err) {
+        console.error("Ошибка загрузки лиг", err);
+      }
+    }
 
-  async function loadTodayMatches(leagueId = "all") {
-    const container = document.getElementById('dynamicForecastsContainer');
-    container.innerHTML = `
-      <div class="text-center text-outline py-8 font-body-sm animate-pulse">
-        Загрузка футбольных матчей...
-      </div>`;
-    const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
-    const url = `${API_BASE}/matches/today?league_id=${encodeURIComponent(leagueId)}`;
-    console.log('🔍 [DEBUG] Запрос к:', url);
-    try {
-      const res = await fetch(url, {
-        headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
-      });
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('❌ [DEBUG] Ошибка ответа:', res.status, errorText);
+    function selectLeagueFilter(leagueId, btnElement) {
+      currentSelectedLeague = leagueId;
+      document.querySelectorAll('.league-btn').forEach(b => b.classList.remove('active'));
+      btnElement.classList.add('active');
+      loadTodayMatches(leagueId);
+    }
+
+    async function loadTodayMatches(leagueId = "all") {
+      const container = document.getElementById('dynamicForecastsContainer');
+      container.innerHTML = `<div class="text-center text-outline py-8 font-body-sm animate-pulse">Загрузка футбольных матчей...</div>`;
+      const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
+      const url = `${API_BASE}/matches/today?league_id=${encodeURIComponent(leagueId)}`;
+      try {
+        const res = await fetch(url, {
+          headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
+        });
+        if (!res.ok) {
+          const errorText = await res.text();
+          container.innerHTML = `
+            <div class="bg-risk-bg rounded-xl p-6 text-center border border-error-container shadow-sm space-y-2">
+              <span class="material-symbols-outlined text-error text-3xl">error</span>
+              <p class="font-headline-md text-headline-md text-on-surface">Ошибка загрузки матчей</p>
+              <p class="text-xs text-on-surface">HTTP ${res.status}: ${res.statusText}</p>
+              <p class="text-xs text-outline break-all">${errorText.substring(0, 200)}</p>
+            </div>`;
+          return;
+        }
+        const data = await res.json();
+        if (data.api_error) {
+          container.innerHTML = `
+            <div class="bg-risk-bg rounded-xl p-6 text-center border border-error-container shadow-sm space-y-2">
+              <span class="material-symbols-outlined text-error text-3xl">error</span>
+              <p class="font-headline-md text-headline-md text-on-surface">Ошибка загрузки матчей</p>
+              <p class="text-xs text-on-surface">${data.api_error}</p>
+              <p class="text-xs text-outline">Проверьте логи сервера для диагностики.</p>
+            </div>`;
+          return;
+        }
+        if (!data.forecasts || data.forecasts.length === 0) {
+          container.innerHTML = `
+            <div class="bg-card-bg rounded-xl p-6 text-center border border-outline-variant/20 shadow-sm space-y-2">
+              <span class="material-symbols-outlined text-outline text-3xl">event_busy</span>
+              <p class="font-headline-md text-headline-md text-on-surface">На сегодня футбольных матчей нет</p>
+              <p class="text-xs text-outline">В выбранном турнире на сегодня по расписанию игр не запланировано.</p>
+              <details class="text-left text-xs">
+                <summary class="text-primary cursor-pointer">Показать сырые данные</summary>
+                <pre class="mt-2 p-2 bg-surface-container-low rounded overflow-auto max-h-40">${JSON.stringify(data, null, 2)}</pre>
+              </details>
+            </div>`;
+          return;
+        }
+        container.innerHTML = "";
+        data.forecasts.forEach((post) => {
+          try {
+            container.appendChild(createForecastCardElement(post));
+          } catch (err) {
+            console.error(err);
+          }
+        });
+      } catch (err) {
         container.innerHTML = `
           <div class="bg-risk-bg rounded-xl p-6 text-center border border-error-container shadow-sm space-y-2">
             <span class="material-symbols-outlined text-error text-3xl">error</span>
-            <p class="font-headline-md text-headline-md text-on-surface">Ошибка загрузки матчей</p>
-            <p class="text-xs text-on-surface">HTTP ${res.status}: ${res.statusText}</p>
-            <p class="text-xs text-outline break-all">${errorText.substring(0, 200)}</p>
-          </div>`;
-        return;
-      }
-      const data = await res.json();
-      console.log('📦 [DEBUG] Ответ от сервера:', data);
-      if (data.api_error) {
-        console.error('⚠️ [DEBUG] Ошибка от сервера:', data.api_error);
-        container.innerHTML = `
-          <div class="bg-risk-bg rounded-xl p-6 text-center border border-error-container shadow-sm space-y-2">
-            <span class="material-symbols-outlined text-error text-3xl">error</span>
-            <p class="font-headline-md text-headline-md text-on-surface">Ошибка загрузки матчей</p>
-            <p class="text-xs text-on-surface">${data.api_error}</p>
-            <p class="text-xs text-outline">Проверьте логи сервера для диагностики.</p>
-          </div>`;
-        return;
-      }
-      if (!data.forecasts || data.forecasts.length === 0) {
-        console.warn('⚠️ [DEBUG] Матчей нет, forecasts пуст или отсутствует');
-        container.innerHTML = `
-          <div class="bg-card-bg rounded-xl p-6 text-center border border-outline-variant/20 shadow-sm space-y-2">
-            <span class="material-symbols-outlined text-outline text-3xl">event_busy</span>
-            <p class="font-headline-md text-headline-md text-on-surface">На сегодня футбольных матчей нет</p>
-            <p class="text-xs text-outline">В выбранном турнире на сегодня по расписанию игр не запланировано.</p>
+            <p class="font-headline-md text-headline-md text-on-surface">Не удалось загрузить матчи</p>
+            <p class="text-xs text-on-surface">${err.message}</p>
             <details class="text-left text-xs">
-              <summary class="text-primary cursor-pointer">Показать сырые данные</summary>
-              <pre class="mt-2 p-2 bg-surface-container-low rounded overflow-auto max-h-40">${JSON.stringify(data, null, 2)}</pre>
+              <summary class="text-primary cursor-pointer">Подробности ошибки</summary>
+              <pre class="mt-2 p-2 bg-surface-container-low rounded overflow-auto max-h-40">${err.stack || err.message}</pre>
             </details>
           </div>`;
-        return;
       }
-      console.log(`✅ [DEBUG] Количество матчей: ${data.forecasts.length}`);
-      container.innerHTML = "";
-      data.forecasts.forEach((post, index) => {
-        console.log(`📊 [DEBUG] Матч #${index + 1}:`, post.step_1?.match);
-        try {
-          container.appendChild(createForecastCardElement(post));
-        } catch (err) {
-          console.error(`❌ [DEBUG] Ошибка рендеринга матча #${index + 1}:`, err);
+    }
+
+    function createForecastCardElement(post) {
+      const card = document.createElement('div');
+      card.className = "bg-card-bg rounded-lg p-gutter-card shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 relative";
+      const matchTeams = post.step_1.match.split('—').map(t => t.trim());
+      let homeTeam = matchTeams[0] || "Команда 1";
+      let awayTeam = matchTeams[1] || "Команда 2";
+      if (post.is_live && post.step_1.match.includes(':')) {
+        const parts = post.step_1.match.split(/\d+\s*:\s*\d+/);
+        if (parts.length >= 2) {
+          homeTeam = parts[0].trim();
+          awayTeam = parts[1].trim();
         }
-      });
-    } catch (err) {
-      console.error('💥 [DEBUG] Ошибка при загрузке:', err);
-      container.innerHTML = `
-        <div class="bg-risk-bg rounded-xl p-6 text-center border border-error-container shadow-sm space-y-2">
-          <span class="material-symbols-outlined text-error text-3xl">error</span>
-          <p class="font-headline-md text-headline-md text-on-surface">Не удалось загрузить матчи</p>
-          <p class="text-xs text-on-surface">${err.message}</p>
-          <details class="text-left text-xs">
-            <summary class="text-primary cursor-pointer">Подробности ошибки</summary>
-            <pre class="mt-2 p-2 bg-surface-container-low rounded overflow-auto max-h-40">${err.stack || err.message}</pre>
-          </details>
-        </div>`;
-    }
-  }
-
-  function createForecastCardElement(post) {
-    const card = document.createElement('div');
-    card.className = "bg-card-bg rounded-lg p-gutter-card shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 relative";
-    const matchTeams = post.step_1.match.split('—').map(t => t.trim());
-    let homeTeam = matchTeams[0] || "Команда 1";
-    let awayTeam = matchTeams[1] || "Команда 2";
-    if (post.is_live && post.step_1.match.includes(':')) {
-      const parts = post.step_1.match.split(/\d+\s*:\s*\d+/);
-      if (parts.length >= 2) {
-        homeTeam = parts[0].trim();
-        awayTeam = parts[1].trim();
       }
-    }
-    const homeBadge = post.home_badge;
-    const awayBadge = post.away_badge;
-    const liveBadgeHTML = post.is_live ? `
-      <div class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider shadow-sm animate-pulse">
-        <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
-        LIVE
-      </div>
-    ` : '';
-    card.innerHTML = `
-      ${liveBadgeHTML}
-      <div class="flex justify-between items-center mb-stack-sm text-outline font-body-sm text-body-sm ${post.is_live ? 'pr-16' : ''}">
-        <div class="flex items-center gap-2">
-          <span class="material-symbols-outlined text-[18px]">sports_soccer</span>
-          <span class="font-semibold text-primary">${post.step_1.title}</span>
+      const homeBadge = post.home_badge;
+      const awayBadge = post.away_badge;
+      const liveBadgeHTML = post.is_live ? `
+        <div class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider shadow-sm animate-pulse">
+          <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+          LIVE
         </div>
-        <span>${post.step_1.info}</span>
-      </div>
-      <div class="flex justify-between items-center mb-stack-md gap-2">
-        <div class="flex items-center gap-2.5 flex-1 overflow-hidden">
-          <img src="${homeBadge}" class="w-8 h-8 object-contain shrink-0 rounded-full bg-surface-container p-0.5 border border-outline-variant/20 shadow-sm" alt="${homeTeam}" onerror="this.src='https://ui-avatars.com/api/?name=FC&background=00288e&color=fff'"/>
-          <h2 class="font-headline-md text-headline-md text-on-surface line-clamp-1">${post.step_1.match}</h2>
-          <img src="${awayBadge}" class="w-8 h-8 object-contain shrink-0 rounded-full bg-surface-container p-0.5 border border-outline-variant/20 shadow-sm" alt="${awayTeam}" onerror="this.src='https://ui-avatars.com/api/?name=FC&background=00288e&color=fff'"/>
+      ` : '';
+      card.innerHTML = `
+        ${liveBadgeHTML}
+        <div class="flex justify-between items-center mb-stack-sm text-outline font-body-sm text-body-sm ${post.is_live ? 'pr-16' : ''}">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">sports_soccer</span>
+            <span class="font-semibold text-primary">${post.step_1.title}</span>
+          </div>
+          <span>${post.step_1.info}</span>
         </div>
-        <button onclick="openStatsForTeams('${homeTeam}', '${awayTeam}', '${homeBadge}', '${awayBadge}', ${post.is_live}, ${post.goals_home || 0}, ${post.goals_away || 0}, ${post.elapsed || 0})" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0">
-          <span class="material-symbols-outlined text-[16px]">query_stats</span>
-          Статистика
-        </button>
-      </div>
-      <button class="button w-full rounded-lg p-3 flex justify-between items-center mb-stack-md">
-        <span class="flex items-center font-body-lg text-body-lg font-semibold">
-          <svg class="w-4 h-4 mr-2" fill="currentColor" viewbox="0 0 24 24"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.16-.28L11.5 2h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"></path></svg>
-          ${post.step_2.forecast}
-        </span>
-        <span class="font-odds-display text-odds-display">${post.step_2.coefficient}</span>
-      </button>
-      <div class="bg-surface-container-low p-3 rounded-lg text-xs italic text-on-surface-variant mb-stack-md border border-outline-variant/20">
-        💡 ${post.step_2.explanation}
-      </div>
-      <ul class="space-y-2 mb-stack-md font-body-sm text-body-sm text-on-surface">
-        ${post.step_3.map(reason => `
-          <li class="flex items-start gap-2 bg-background-main p-2 rounded border border-outline-variant/20">
-            <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">check_circle</span>
-            <span>${reason}</span>
-          </li>
-        `).join('')}
-      </ul>
-      <div class="bg-risk-bg rounded-lg p-3 flex items-start gap-2 mb-stack-md border border-error-container">
-        <span class="material-symbols-outlined text-error text-[18px] mt-0.5 shrink-0">info</span>
-        <p class="font-body-sm text-body-sm text-on-surface">${post.step_4}</p>
-      </div>
-      <div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm border-t border-outline-variant/30 pt-3">
-        <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
-        <span class="font-medium text-primary">${post.step_5}</span>
-      </div>
-    `;
-    return card;
-  }
-
-  async function openStatsForTeams(homeTeam, awayTeam, homeBadge = "", awayBadge = "", isLive = false, goalsHome = 0, goalsAway = 0, elapsed = 0) {
-    switchTab('stats');
-    const defaultView = document.getElementById('statsDefaultView');
-    const matchView = document.getElementById('statsMatchView');
-    defaultView.classList.add('hidden');
-    matchView.classList.remove('hidden');
-    matchView.innerHTML = `
-      <div class="bg-card-bg rounded-xl p-6 text-center border border-outline-variant/20 shadow-sm space-y-3">
-        <button onclick="showStatsDefault()" class="text-xs text-primary font-semibold flex items-center gap-1 mb-2">
-          <span class="material-symbols-outlined text-[16px]">arrow_back</span> Назад к выбору матча
-        </button>
-        <div class="font-headline-md text-headline-md animate-pulse">Загрузка аналитики...</div>
-        <p class="text-xs text-outline">${homeTeam} vs ${awayTeam}</p>
-      </div>`;
-    const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
-    try {
-      const url = `${API_BASE}/stats/compare?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&home_badge=${encodeURIComponent(homeBadge)}&away_badge=${encodeURIComponent(awayBadge)}&is_live=${isLive}&goals_home=${goalsHome}&goals_away=${goalsAway}&elapsed=${elapsed}`;
-      const res = await fetch(url, {
-        headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
-      });
-      const data = await res.json();
-      const analysis = data.analysis_5_points;
-      matchView.innerHTML = `
-        <div class="space-y-stack-md pt-2">
-          <button onclick="showStatsDefault()" class="bg-surface-container hover:bg-surface-variant/30 text-primary px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all border border-outline-variant/20">
-            <span class="material-symbols-outlined text-[16px]">arrow_back</span> Назад к выбору матча
+        <div class="flex justify-between items-center mb-stack-md gap-2">
+          <div class="flex items-center gap-2.5 flex-1 overflow-hidden">
+            <img src="${homeBadge}" class="w-8 h-8 object-contain shrink-0 rounded-full bg-surface-container p-0.5 border border-outline-variant/20 shadow-sm" alt="${homeTeam}" onerror="this.src='https://ui-avatars.com/api/?name=FC&background=00288e&color=fff'"/>
+            <h2 class="font-headline-md text-headline-md text-on-surface line-clamp-1">${post.step_1.match}</h2>
+            <img src="${awayBadge}" class="w-8 h-8 object-contain shrink-0 rounded-full bg-surface-container p-0.5 border border-outline-variant/20 shadow-sm" alt="${awayTeam}" onerror="this.src='https://ui-avatars.com/api/?name=FC&background=00288e&color=fff'"/>
+          </div>
+          <button onclick="openStatsForTeams('${homeTeam}', '${awayTeam}', '${homeBadge}', '${awayBadge}', ${post.is_live}, ${post.goals_home || 0}, ${post.goals_away || 0}, ${post.elapsed || 0})" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0">
+            <span class="material-symbols-outlined text-[16px]">query_stats</span>
+            Статистика
           </button>
-          <div class="bg-card-bg rounded-2xl p-gutter-card shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 relative">
-            ${isLive ? `<span class="absolute top-3 right-3 bg-red-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-full animate-pulse">LIVE ${elapsed}'</span>` : ''}
-            <h3 class="text-xs font-bold text-outline uppercase tracking-wider text-center mb-4">Детальный разбор матча</h3>
-            <div class="flex justify-around items-center">
-              <div class="flex flex-col items-center text-center w-5/12">
-                <img src="${data.home.badge}" class="w-16 h-16 object-contain mb-2 rounded-full bg-surface-container p-1 border border-outline-variant/20 shadow-sm" alt="${data.home.name}"/>
-                <span class="font-headline-md text-headline-md text-on-surface line-clamp-1">${data.home.name}</span>
-                <span class="text-xs text-win-green font-bold mt-1">Винрейт: ${data.home.winrate}</span>
-              </div>
-              <div class="font-odds-display text-odds-display text-primary font-bold text-xl">${isLive ? `${goalsHome} : ${goalsAway}` : 'VS'}</div>
-              <div class="flex flex-col items-center text-center w-5/12">
-                <img src="${data.away.badge}" class="w-16 h-16 object-contain mb-2 rounded-full bg-surface-container p-1 border border-outline-variant/20 shadow-sm" alt="${data.away.name}"/>
-                <span class="font-headline-md text-headline-md text-on-surface line-clamp-1">${data.away.name}</span>
-                <span class="text-xs text-win-green font-bold mt-1">Винрейт: ${data.away.winrate}</span>
-              </div>
-            </div>
-          </div>
-          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
-            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
-              <span class="material-symbols-outlined text-[18px]">history</span>
-              <h4>${analysis.point_1_h2h.title}</h4>
-            </div>
-            <p class="text-xs text-on-surface">${analysis.point_1_h2h.summary}</p>
-            <div class="bg-background-main rounded-lg p-2.5 space-y-1 text-xs text-on-surface-variant font-mono">
-              ${analysis.point_1_h2h.details.map(match => `<div>• ${match}</div>`).join('')}
-            </div>
-          </div>
-          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-3">
-            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
-              <span class="material-symbols-outlined text-[18px]">trending_up</span>
-              <h4>${analysis.point_2_form.title}</h4>
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-center text-xs">
-              <div class="bg-surface-container-low p-2 rounded-lg">
-                <span class="font-semibold block mb-1">${data.home.name}</span>
-                <div class="flex justify-center gap-1 font-bold">
-                  ${analysis.point_2_form.home_form.map(r => `<span class="${r === 'W' ? 'text-win-green' : 'text-slate-500'}">${r}</span>`).join('')}
-                </div>
-              </div>
-              <div class="bg-surface-container-low p-2 rounded-lg">
-                <span class="font-semibold block mb-1">${data.away.name}</span>
-                <div class="flex justify-center gap-1 font-bold">
-                  ${analysis.point_2_form.away_form.map(r => `<span class="${r === 'W' ? 'text-win-green' : 'text-slate-500'}">${r}</span>`).join('')}
-                </div>
-              </div>
-            </div>
-            <p class="text-xs text-on-surface">${analysis.point_2_form.home_stats}</p>
-            <p class="text-xs text-on-surface">${analysis.point_2_form.away_stats}</p>
-          </div>
-          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
-            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
-              <span class="material-symbols-outlined text-[18px]">psychology</span>
-              <h4>${analysis.point_3_morale.title}</h4>
-            </div>
-            <p class="text-xs text-on-surface">${analysis.point_3_morale.text}</p>
-          </div>
-          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
-            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
-              <span class="material-symbols-outlined text-[18px]">medical_services</span>
-              <h4>${analysis.point_4_squad.title}</h4>
-            </div>
-            <ul class="text-xs text-on-surface space-y-1">
-              <li class="flex items-center gap-1.5"><span class="text-primary">•</span> ${analysis.point_4_squad.home_news}</li>
-              <li class="flex items-center gap-1.5"><span class="text-primary">•</span> ${analysis.point_4_squad.away_news}</li>
-            </ul>
-          </div>
-          <div class="bg-gradient-to-br from-primary/10 to-primary-container/20 rounded-2xl p-5 border-2 border-primary/30 shadow-md space-y-3">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2 text-primary font-bold text-sm">
-                <span class="material-symbols-outlined text-[20px]">verified</span>
-                <h4>${analysis.point_5_recommendation.title}</h4>
-              </div>
-              <span class="bg-primary text-white font-bold text-xs px-2.5 py-1 rounded-lg">Коэф. ${analysis.point_5_recommendation.coefficient}</span>
-            </div>
-            <div class="bg-card-bg rounded-xl p-3 border border-outline-variant/20">
-              <span class="text-xs text-outline block mb-1">Рекомендуемый тип ставки:</span>
-              <span class="font-headline-md text-headline-md text-primary font-bold block">${analysis.point_5_recommendation.recommended_bet}</span>
-              <span class="text-[11px] text-on-surface-variant italic mt-1 block">💡 ${analysis.point_5_recommendation.explanation}</span>
-            </div>
-            <div class="grid grid-cols-3 gap-1.5 text-center text-xs font-semibold">
-              <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
-                <span class="text-outline block text-[10px]">П1</span>
-                <span>${analysis.point_5_recommendation.all_odds.П1}</span>
-              </div>
-              <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
-                <span class="text-outline block text-[10px]">Ничья</span>
-                <span>${analysis.point_5_recommendation.all_odds["Ничья"]}</span>
-              </div>
-              <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
-                <span class="text-outline block text-[10px]">П2</span>
-                <span>${analysis.point_5_recommendation.all_odds.П2}</span>
-              </div>
-            </div>
-            <div class="text-xs font-medium text-primary">
-              💼 ${analysis.point_5_recommendation.bank_management}
-            </div>
-            <div class="text-xs text-on-surface bg-card-bg p-3 rounded-xl border border-outline-variant/20">
-              <span class="font-semibold block mb-1 text-primary">Финальное резюме:</span>
-              ${analysis.point_5_recommendation.final_conclusion}
-            </div>
-          </div>
+        </div>
+        <button class="button w-full rounded-lg p-3 flex justify-between items-center mb-stack-md">
+          <span class="flex items-center font-body-lg text-body-lg font-semibold">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewbox="0 0 24 24"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.16-.28L11.5 2h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"></path></svg>
+            ${post.step_2.forecast}
+          </span>
+          <span class="font-odds-display text-odds-display">${post.step_2.coefficient}</span>
+        </button>
+        <div class="bg-surface-container-low p-3 rounded-lg text-xs italic text-on-surface-variant mb-stack-md border border-outline-variant/20">
+          💡 ${post.step_2.explanation}
+        </div>
+        <ul class="space-y-2 mb-stack-md font-body-sm text-body-sm text-on-surface">
+          ${post.step_3.map(reason => `
+            <li class="flex items-start gap-2 bg-background-main p-2 rounded border border-outline-variant/20">
+              <span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">check_circle</span>
+              <span>${reason}</span>
+            </li>
+          `).join('')}
+        </ul>
+        <div class="bg-risk-bg rounded-lg p-3 flex items-start gap-2 mb-stack-md border border-error-container">
+          <span class="material-symbols-outlined text-error text-[18px] mt-0.5 shrink-0">info</span>
+          <p class="font-body-sm text-body-sm text-on-surface">${post.step_4}</p>
+        </div>
+        <div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm border-t border-outline-variant/30 pt-3">
+          <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+          <span class="font-medium text-primary">${post.step_5}</span>
         </div>
       `;
-    } catch (err) {
-      showStatsDefault();
+      return card;
     }
-  }
 
-  function showStatsDefault() {
-    document.getElementById('statsMatchView').classList.add('hidden');
-    document.getElementById('statsDefaultView').classList.remove('hidden');
-  }
+    async function openStatsForTeams(homeTeam, awayTeam, homeBadge = "", awayBadge = "", isLive = false, goalsHome = 0, goalsAway = 0, elapsed = 0) {
+      switchTab('stats');
+      const defaultView = document.getElementById('statsDefaultView');
+      const matchView = document.getElementById('statsMatchView');
+      defaultView.classList.add('hidden');
+      matchView.classList.remove('hidden');
+      matchView.innerHTML = `
+        <div class="bg-card-bg rounded-xl p-6 text-center border border-outline-variant/20 shadow-sm space-y-3">
+          <button onclick="showStatsDefault()" class="text-xs text-primary font-semibold flex items-center gap-1 mb-2">
+            <span class="material-symbols-outlined text-[16px]">arrow_back</span> Назад к выбору матча
+          </button>
+          <div class="font-headline-md text-headline-md animate-pulse">Загрузка аналитики...</div>
+          <p class="text-xs text-outline">${homeTeam} vs ${awayTeam}</p>
+        </div>`;
+      const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
+      try {
+        const url = `${API_BASE}/stats/compare?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&home_badge=${encodeURIComponent(homeBadge)}&away_badge=${encodeURIComponent(awayBadge)}&is_live=${isLive}&goals_home=${goalsHome}&goals_away=${goalsAway}&elapsed=${elapsed}`;
+        const res = await fetch(url, {
+          headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
+        });
+        const data = await res.json();
+        const analysis = data.analysis_5_points;
+        matchView.innerHTML = `
+          <div class="space-y-stack-md pt-2">
+            <button onclick="showStatsDefault()" class="bg-surface-container hover:bg-surface-variant/30 text-primary px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all border border-outline-variant/20">
+              <span class="material-symbols-outlined text-[16px]">arrow_back</span> Назад к выбору матча
+            </button>
+            <div class="bg-card-bg rounded-2xl p-gutter-card shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 relative">
+              ${isLive ? `<span class="absolute top-3 right-3 bg-red-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-full animate-pulse">LIVE ${elapsed}'</span>` : ''}
+              <h3 class="text-xs font-bold text-outline uppercase tracking-wider text-center mb-4">Детальный разбор матча</h3>
+              <div class="flex justify-around items-center">
+                <div class="flex flex-col items-center text-center w-5/12">
+                  <img src="${data.home.badge}" class="w-16 h-16 object-contain mb-2 rounded-full bg-surface-container p-1 border border-outline-variant/20 shadow-sm" alt="${data.home.name}"/>
+                  <span class="font-headline-md text-headline-md text-on-surface line-clamp-1">${data.home.name}</span>
+                  <span class="text-xs text-win-green font-bold mt-1">Винрейт: ${data.home.winrate}</span>
+                </div>
+                <div class="font-odds-display text-odds-display text-primary font-bold text-xl">${isLive ? `${goalsHome} : ${goalsAway}` : 'VS'}</div>
+                <div class="flex flex-col items-center text-center w-5/12">
+                  <img src="${data.away.badge}" class="w-16 h-16 object-contain mb-2 rounded-full bg-surface-container p-1 border border-outline-variant/20 shadow-sm" alt="${data.away.name}"/>
+                  <span class="font-headline-md text-headline-md text-on-surface line-clamp-1">${data.away.name}</span>
+                  <span class="text-xs text-win-green font-bold mt-1">Винрейт: ${data.away.winrate}</span>
+                </div>
+              </div>
+            </div>
+            <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
+              <div class="flex items-center gap-2 text-primary font-semibold text-sm">
+                <span class="material-symbols-outlined text-[18px]">history</span>
+                <h4>${analysis.point_1_h2h.title}</h4>
+              </div>
+              <p class="text-xs text-on-surface">${analysis.point_1_h2h.summary}</p>
+              <div class="bg-background-main rounded-lg p-2.5 space-y-1 text-xs text-on-surface-variant font-mono">
+                ${analysis.point_1_h2h.details.map(match => `<div>• ${match}</div>`).join('')}
+              </div>
+            </div>
+            <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-3">
+              <div class="flex items-center gap-2 text-primary font-semibold text-sm">
+                <span class="material-symbols-outlined text-[18px]">trending_up</span>
+                <h4>${analysis.point_2_form.title}</h4>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-center text-xs">
+                <div class="bg-surface-container-low p-2 rounded-lg">
+                  <span class="font-semibold block mb-1">${data.home.name}</span>
+                  <div class="flex justify-center gap-1 font-bold">
+                    ${analysis.point_2_form.home_form.map(r => `<span class="${r === 'W' ? 'text-win-green' : 'text-slate-500'}">${r}</span>`).join('')}
+                  </div>
+                </div>
+                <div class="bg-surface-container-low p-2 rounded-lg">
+                  <span class="font-semibold block mb-1">${data.away.name}</span>
+                  <div class="flex justify-center gap-1 font-bold">
+                    ${analysis.point_2_form.away_form.map(r => `<span class="${r === 'W' ? 'text-win-green' : 'text-slate-500'}">${r}</span>`).join('')}
+                  </div>
+                </div>
+              </div>
+              <p class="text-xs text-on-surface">${analysis.point_2_form.home_stats}</p>
+              <p class="text-xs text-on-surface">${analysis.point_2_form.away_stats}</p>
+            </div>
+            <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
+              <div class="flex items-center gap-2 text-primary font-semibold text-sm">
+                <span class="material-symbols-outlined text-[18px]">psychology</span>
+                <h4>${analysis.point_3_morale.title}</h4>
+              </div>
+              <p class="text-xs text-on-surface">${analysis.point_3_morale.text}</p>
+            </div>
+            <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
+              <div class="flex items-center gap-2 text-primary font-semibold text-sm">
+                <span class="material-symbols-outlined text-[18px]">medical_services</span>
+                <h4>${analysis.point_4_squad.title}</h4>
+              </div>
+              <ul class="text-xs text-on-surface space-y-1">
+                <li class="flex items-center gap-1.5"><span class="text-primary">•</span> ${analysis.point_4_squad.home_news}</li>
+                <li class="flex items-center gap-1.5"><span class="text-primary">•</span> ${analysis.point_4_squad.away_news}</li>
+              </ul>
+            </div>
+            <div class="bg-gradient-to-br from-primary/10 to-primary-container/20 rounded-2xl p-5 border-2 border-primary/30 shadow-md space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2 text-primary font-bold text-sm">
+                  <span class="material-symbols-outlined text-[20px]">verified</span>
+                  <h4>${analysis.point_5_recommendation.title}</h4>
+                </div>
+                <span class="bg-primary text-white font-bold text-xs px-2.5 py-1 rounded-lg">Коэф. ${analysis.point_5_recommendation.coefficient}</span>
+              </div>
+              <div class="bg-card-bg rounded-xl p-3 border border-outline-variant/20">
+                <span class="text-xs text-outline block mb-1">Рекомендуемый тип ставки:</span>
+                <span class="font-headline-md text-headline-md text-primary font-bold block">${analysis.point_5_recommendation.recommended_bet}</span>
+                <span class="text-[11px] text-on-surface-variant italic mt-1 block">💡 ${analysis.point_5_recommendation.explanation}</span>
+              </div>
+              <div class="grid grid-cols-3 gap-1.5 text-center text-xs font-semibold">
+                <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
+                  <span class="text-outline block text-[10px]">П1</span>
+                  <span>${analysis.point_5_recommendation.all_odds.П1}</span>
+                </div>
+                <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
+                  <span class="text-outline block text-[10px]">Ничья</span>
+                  <span>${analysis.point_5_recommendation.all_odds["Ничья"]}</span>
+                </div>
+                <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
+                  <span class="text-outline block text-[10px]">П2</span>
+                  <span>${analysis.point_5_recommendation.all_odds.П2}</span>
+                </div>
+              </div>
+              <div class="text-xs font-medium text-primary">
+                💼 ${analysis.point_5_recommendation.bank_management}
+              </div>
+              <div class="text-xs text-on-surface bg-card-bg p-3 rounded-xl border border-outline-variant/20">
+                <span class="font-semibold block mb-1 text-primary">Финальное резюме:</span>
+                ${analysis.point_5_recommendation.final_conclusion}
+              </div>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        showStatsDefault();
+      }
+    }
 
-  // ========== ИНИЦИАЛИЗАЦИЯ ==========
-  // (initTelegramUser вызывается после принятия оферты внутри initApp)
+    function showStatsDefault() {
+      document.getElementById('statsMatchView').classList.add('hidden');
+      document.getElementById('statsDefaultView').classList.remove('hidden');
+    }
+
+    initApp();
+  });
 </script>
 
 </body>
