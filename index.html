@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
   <style>
+    /* ===== СБРОС ===== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
       height: 100%;
@@ -661,20 +662,46 @@
       data.forecasts.forEach(post => {
         const card = document.createElement('div');
         card.className = 'bg-card-bg rounded-xl p-4 shadow-sm border border-outline-variant/20 mb-4';
+
+        const matchTeams = post.step_1.match.split('—').map(t => t.trim());
+        let homeTeam = matchTeams[0] || "Команда 1";
+        let awayTeam = matchTeams[1] || "Команда 2";
+        if (post.is_live && post.step_1.match.includes(':')) {
+          const parts = post.step_1.match.split(/\d+\s*:\s*\d+/);
+          if (parts.length >= 2) {
+            homeTeam = parts[0].trim();
+            awayTeam = parts[1].trim();
+          }
+        }
+
+        const liveBadgeHTML = post.is_live ? `
+          <div class="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider shadow-sm animate-pulse">
+            <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+            LIVE
+          </div>
+        ` : '';
+
         card.innerHTML = `
-          <div class="flex justify-between items-center text-sm text-outline mb-2">
-            <span class="font-semibold text-primary">${post.step_1.title}</span>
-            <span>${post.step_1.info}</span>
+          <div class="relative">
+            ${liveBadgeHTML}
+            <div class="flex justify-between items-center text-sm text-outline mb-2">
+              <span class="font-semibold text-primary">${post.step_1.title}</span>
+              <span>${post.step_1.info}</span>
+            </div>
+            <div class="flex items-center gap-2 mb-3">
+              <img src="${post.home_badge}" class="w-8 h-8 rounded-full object-contain" onerror="this.src='https://ui-avatars.com/api/?name=FC&background=00288e&color=fff'"/>
+              <span class="font-semibold text-base">${post.step_1.match}</span>
+              <img src="${post.away_badge}" class="w-8 h-8 rounded-full object-contain" onerror="this.src='https://ui-avatars.com/api/?name=FC&background=00288e&color=fff'"/>
+            </div>
+            <button class="button w-full rounded-xl p-2 text-sm font-semibold mb-2">
+              ${post.step_2.forecast} — ${post.step_2.coefficient}
+            </button>
+            <div class="text-xs text-on-surface-variant italic mb-2">${post.step_2.explanation}</div>
+            <button onclick="openStatsForTeams('${homeTeam}', '${awayTeam}', '${post.home_badge}', '${post.away_badge}', ${post.is_live}, ${post.goals_home || 0}, ${post.goals_away || 0}, ${post.elapsed || 0})" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0 border border-primary/20">
+              <span class="material-symbols-outlined text-[16px]">query_stats</span>
+              Статистика
+            </button>
           </div>
-          <div class="flex items-center gap-2 mb-3">
-            <img src="${post.home_badge}" class="w-8 h-8 rounded-full object-contain" onerror="this.src='https://ui-avatars.com/api/?name=FC&background=00288e&color=fff'"/>
-            <span class="font-semibold text-base">${post.step_1.match}</span>
-            <img src="${post.away_badge}" class="w-8 h-8 rounded-full object-contain" onerror="this.src='https://ui-avatars.com/api/?name=FC&background=00288e&color=fff'"/>
-          </div>
-          <button class="button w-full rounded-xl p-2 text-sm font-semibold mb-2">
-            ${post.step_2.forecast} — ${post.step_2.coefficient}
-          </button>
-          <div class="text-xs text-on-surface-variant italic">${post.step_2.explanation}</div>
         `;
         container.appendChild(card);
       });
@@ -683,9 +710,149 @@
     }
   }
 
-  // ===== ОФЕРТА (АККОРДЕОН И ЛОГИКА) =====
+  // ===== СТАТИСТИКА =====
+  async function openStatsForTeams(homeTeam, awayTeam, homeBadge, awayBadge, isLive, goalsHome, goalsAway, elapsed) {
+    switchTab('stats');
+    const defaultView = document.getElementById('statsDefaultView');
+    const matchView = document.getElementById('statsMatchView');
+    defaultView.classList.add('hidden');
+    matchView.classList.remove('hidden');
+    matchView.innerHTML = `
+      <div class="bg-card-bg rounded-xl p-6 text-center border border-outline-variant/20 shadow-sm space-y-3">
+        <button onclick="showStatsDefault()" class="text-xs text-primary font-semibold flex items-center gap-1 mb-2">
+          <span class="material-symbols-outlined text-[16px]">arrow_back</span> Назад к выбору матча
+        </button>
+        <div class="font-semibold text-base animate-pulse">Загрузка аналитики...</div>
+        <p class="text-xs text-outline">${homeTeam} vs ${awayTeam}</p>
+      </div>`;
+    const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
+    try {
+      const url = `${API_BASE}/stats/compare?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&home_badge=${encodeURIComponent(homeBadge)}&away_badge=${encodeURIComponent(awayBadge)}&is_live=${isLive}&goals_home=${goalsHome}&goals_away=${goalsAway}&elapsed=${elapsed}`;
+      const res = await fetch(url, {
+        headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
+      });
+      const data = await res.json();
+      const analysis = data.analysis_5_points;
+      matchView.innerHTML = `
+        <div class="space-y-4">
+          <button onclick="showStatsDefault()" class="bg-surface-container hover:bg-surface-variant/30 text-primary px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all border border-outline-variant/20">
+            <span class="material-symbols-outlined text-[16px]">arrow_back</span> Назад к выбору матча
+          </button>
+          <div class="bg-card-bg rounded-2xl p-4 shadow-sm border border-outline-variant/20 relative">
+            ${isLive ? `<span class="absolute top-3 right-3 bg-red-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-full animate-pulse">LIVE ${elapsed}'</span>` : ''}
+            <h3 class="text-xs font-bold text-outline uppercase tracking-wider text-center mb-4">Детальный разбор матча</h3>
+            <div class="flex justify-around items-center">
+              <div class="flex flex-col items-center text-center w-5/12">
+                <img src="${data.home.badge}" class="w-16 h-16 object-contain mb-2 rounded-full bg-surface-container p-1 border border-outline-variant/20 shadow-sm" alt="${data.home.name}"/>
+                <span class="font-semibold text-base text-on-surface line-clamp-1">${data.home.name}</span>
+                <span class="text-xs text-win-green font-bold mt-1">Винрейт: ${data.home.winrate}</span>
+              </div>
+              <div class="font-bold text-xl text-primary">${isLive ? `${goalsHome} : ${goalsAway}` : 'VS'}</div>
+              <div class="flex flex-col items-center text-center w-5/12">
+                <img src="${data.away.badge}" class="w-16 h-16 object-contain mb-2 rounded-full bg-surface-container p-1 border border-outline-variant/20 shadow-sm" alt="${data.away.name}"/>
+                <span class="font-semibold text-base text-on-surface line-clamp-1">${data.away.name}</span>
+                <span class="text-xs text-win-green font-bold mt-1">Винрейт: ${data.away.winrate}</span>
+              </div>
+            </div>
+          </div>
+          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
+            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
+              <span class="material-symbols-outlined text-[18px]">history</span>
+              <h4>${analysis.point_1_h2h.title}</h4>
+            </div>
+            <p class="text-xs text-on-surface">${analysis.point_1_h2h.summary}</p>
+            <div class="bg-background-main rounded-lg p-2.5 space-y-1 text-xs text-on-surface-variant font-mono">
+              ${analysis.point_1_h2h.details.map(match => `<div>• ${match}</div>`).join('')}
+            </div>
+          </div>
+          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-3">
+            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
+              <span class="material-symbols-outlined text-[18px]">trending_up</span>
+              <h4>${analysis.point_2_form.title}</h4>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-center text-xs">
+              <div class="bg-surface-container-low p-2 rounded-lg">
+                <span class="font-semibold block mb-1">${data.home.name}</span>
+                <div class="flex justify-center gap-1 font-bold">
+                  ${analysis.point_2_form.home_form.map(r => `<span class="${r === 'W' ? 'text-win-green' : 'text-slate-500'}">${r}</span>`).join('')}
+                </div>
+              </div>
+              <div class="bg-surface-container-low p-2 rounded-lg">
+                <span class="font-semibold block mb-1">${data.away.name}</span>
+                <div class="flex justify-center gap-1 font-bold">
+                  ${analysis.point_2_form.away_form.map(r => `<span class="${r === 'W' ? 'text-win-green' : 'text-slate-500'}">${r}</span>`).join('')}
+                </div>
+              </div>
+            </div>
+            <p class="text-xs text-on-surface">${analysis.point_2_form.home_stats}</p>
+            <p class="text-xs text-on-surface">${analysis.point_2_form.away_stats}</p>
+          </div>
+          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
+            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
+              <span class="material-symbols-outlined text-[18px]">psychology</span>
+              <h4>${analysis.point_3_morale.title}</h4>
+            </div>
+            <p class="text-xs text-on-surface">${analysis.point_3_morale.text}</p>
+          </div>
+          <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
+            <div class="flex items-center gap-2 text-primary font-semibold text-sm">
+              <span class="material-symbols-outlined text-[18px]">medical_services</span>
+              <h4>${analysis.point_4_squad.title}</h4>
+            </div>
+            <ul class="text-xs text-on-surface space-y-1">
+              <li class="flex items-center gap-1.5"><span class="text-primary">•</span> ${analysis.point_4_squad.home_news}</li>
+              <li class="flex items-center gap-1.5"><span class="text-primary">•</span> ${analysis.point_4_squad.away_news}</li>
+            </ul>
+          </div>
+          <div class="bg-gradient-to-br from-primary/10 to-primary-container/20 rounded-2xl p-5 border-2 border-primary/30 shadow-md space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 text-primary font-bold text-sm">
+                <span class="material-symbols-outlined text-[20px]">verified</span>
+                <h4>${analysis.point_5_recommendation.title}</h4>
+              </div>
+              <span class="bg-primary text-white font-bold text-xs px-2.5 py-1 rounded-lg">Коэф. ${analysis.point_5_recommendation.coefficient}</span>
+            </div>
+            <div class="bg-card-bg rounded-xl p-3 border border-outline-variant/20">
+              <span class="text-xs text-outline block mb-1">Рекомендуемый тип ставки:</span>
+              <span class="font-semibold text-base text-primary block">${analysis.point_5_recommendation.recommended_bet}</span>
+              <span class="text-[11px] text-on-surface-variant italic mt-1 block">💡 ${analysis.point_5_recommendation.explanation}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5 text-center text-xs font-semibold">
+              <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
+                <span class="text-outline block text-[10px]">П1</span>
+                <span>${analysis.point_5_recommendation.all_odds.П1}</span>
+              </div>
+              <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
+                <span class="text-outline block text-[10px]">Ничья</span>
+                <span>${analysis.point_5_recommendation.all_odds["Ничья"]}</span>
+              </div>
+              <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
+                <span class="text-outline block text-[10px]">П2</span>
+                <span>${analysis.point_5_recommendation.all_odds.П2}</span>
+              </div>
+            </div>
+            <div class="text-xs font-medium text-primary">
+              💼 ${analysis.point_5_recommendation.bank_management}
+            </div>
+            <div class="text-xs text-on-surface bg-card-bg p-3 rounded-xl border border-outline-variant/20">
+              <span class="font-semibold block mb-1 text-primary">Финальное резюме:</span>
+              ${analysis.point_5_recommendation.final_conclusion}
+            </div>
+          </div>
+        </div>
+      `;
+    } catch (err) {
+      showStatsDefault();
+    }
+  }
+
+  function showStatsDefault() {
+    document.getElementById('statsMatchView').classList.add('hidden');
+    document.getElementById('statsDefaultView').classList.remove('hidden');
+  }
+
+  // ===== ОФЕРТА =====
   document.addEventListener('DOMContentLoaded', function() {
-    // 1. Текст оферты (разделы)
     const offerSections = [
       {
         id: 1,
@@ -747,8 +914,18 @@
       }
     ];
 
-    // 2. Рендер аккордеона
     const accordionContainer = document.getElementById('accordionContainer');
+    const expandAllBtn = document.getElementById('expandAllBtn');
+    const agreeCheckbox = document.getElementById('agreeCheckbox');
+    const consentCheckbox = document.getElementById('consentCheckbox');
+    const acceptBtn = document.getElementById('acceptBtn');
+    const hintText = document.getElementById('hintText');
+    const overlay = document.getElementById('offerOverlay');
+    const offerContent = document.getElementById('offerContent');
+    const confirmationScreen = document.getElementById('confirmationScreen');
+    const acceptDateSpan = document.getElementById('acceptDate');
+    const backToOfferBtn = document.getElementById('backToOfferBtn');
+
     function renderAccordion() {
       accordionContainer.innerHTML = '';
       offerSections.forEach((section, index) => {
@@ -799,8 +976,6 @@
     }
     renderAccordion();
 
-    // 3. Кнопка "Развернуть все"
-    const expandAllBtn = document.getElementById('expandAllBtn');
     let allExpanded = false;
     expandAllBtn.addEventListener('click', function() {
       const contents = document.querySelectorAll('.accordion-content');
@@ -810,12 +985,6 @@
       chevrons.forEach(c => c.classList.toggle('open', allExpanded));
       expandAllBtn.textContent = allExpanded ? 'Свернуть все' : 'Развернуть все';
     });
-
-    // 4. Чекбоксы и кнопка "Принять"
-    const agreeCheckbox = document.getElementById('agreeCheckbox');
-    const consentCheckbox = document.getElementById('consentCheckbox');
-    const acceptBtn = document.getElementById('acceptBtn');
-    const hintText = document.getElementById('hintText');
 
     function updateAcceptButton() {
       const agreed = agreeCheckbox.checked;
@@ -827,12 +996,6 @@
     agreeCheckbox.addEventListener('change', updateAcceptButton);
     consentCheckbox.addEventListener('change', updateAcceptButton);
 
-    // 5. Принятие оферты
-    const overlay = document.getElementById('offerOverlay');
-    const offerContent = document.getElementById('offerContent');
-    const confirmationScreen = document.getElementById('confirmationScreen');
-    const acceptDateSpan = document.getElementById('acceptDate');
-
     acceptBtn.addEventListener('click', function() {
       if (acceptBtn.disabled) return;
       const now = new Date();
@@ -842,7 +1005,6 @@
       confirmationScreen.style.display = 'block';
     });
 
-    const backToOfferBtn = document.getElementById('backToOfferBtn');
     backToOfferBtn.addEventListener('click', function() {
       confirmationScreen.style.display = 'none';
       offerContent.style.display = 'block';
@@ -858,7 +1020,7 @@
     });
     confirmationScreen.appendChild(continueBtn);
 
-    // 6. Профиль при загрузке
+    // Профиль при загрузке
     renderProfile();
   });
 </script>
