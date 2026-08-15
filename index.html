@@ -106,8 +106,87 @@
         body {
             background-color: #F8FAFC;
             color: theme('colors.on-background');
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
         }
-        
+
+        /* --- Стили для оверлея оферты --- */
+        #offerOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            box-sizing: border-box;
+            backdrop-filter: blur(4px);
+        }
+        #offerOverlay.hidden {
+            display: none;
+        }
+        .offer-modal {
+            background: #FFFFFF;
+            border-radius: 16px;
+            max-width: 720px;
+            width: 100%;
+            max-height: 90vh;
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
+            position: relative;
+        }
+        .offer-modal h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #00288e;
+            margin-top: 0;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .offer-modal .offer-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #1e293b;
+            max-height: 50vh;
+            overflow-y: auto;
+            padding-right: 8px;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .offer-modal .offer-text strong {
+            color: #00288e;
+        }
+        .offer-modal .accept-btn {
+            width: 100%;
+            padding: 14px;
+            background: #00288e;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .offer-modal .accept-btn:hover {
+            background: #001f6b;
+        }
+        .offer-modal .accept-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* --- Остальные стили (без изменений) --- */
         .button {
             position: relative;
             background: linear-gradient(140deg, hsla(240, 40%, 50%, 1) 20%, hsla(240, 40%, 50%, 0.6) 100%);
@@ -120,38 +199,31 @@
             justify-content: center;
             gap: 8px;
         }
-
         .button:hover {
             transform: scale(1.03);
             text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
             box-shadow: inset 0px -2px 0px 0px rgba(0, 0, 0, 0.2), 0px 8px 16px rgba(0, 0, 0, 0.2);
         }
-
         .button:active {
             transform: scale(0.98);
         }
-
         .button > span, .button > svg {
             position: relative;
             z-index: 1;
         }
-
         .button > svg {
             fill: currentColor;
             width: 20px;
             height: 20px;
             animation: pulse-lightning 2s infinite;
         }
-
         @keyframes pulse-lightning {
             0% { transform: scale(1); filter: brightness(1); }
             50% { transform: scale(1.2); filter: brightness(1.5); drop-shadow(0 0 5px rgba(255, 255, 255, 0.8)); }
             100% { transform: scale(1); filter: brightness(1); }
         }
-
         .no-scrollbar::-webkit-scrollbar, .scrollbar-hide::-webkit-scrollbar { display: none; }
         .no-scrollbar, .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-
         .custom-slider {
             overflow-x: auto;
             scrollbar-width: thin;
@@ -176,13 +248,11 @@
             background: rgba(0, 40, 142, 0.35);
             border-radius: 4px;
         }
-
         .nav-item.active {
             color: theme('colors.primary');
             background-color: rgba(0, 40, 142, 0.08);
             border-radius: 0.75rem;
         }
-
         .league-btn.active {
             background-color: theme('colors.primary-container');
             color: white;
@@ -190,8 +260,100 @@
         }
     </style>
 </head>
-<body class="antialiased min-h-screen pb-24">
+<body>
 
+<!-- ======== ОВЕРЛЕЙ С ОФЕРТОЙ ======== -->
+<div id="offerOverlay">
+  <div class="offer-modal">
+    <h1>Публичная оферта</h1>
+    <div class="offer-text">
+Собянин Кирилл Андреевич (далее – Исполнитель), являющийся самозанятым, предлагает заключить договор на оказание информационно-аналитических услуг (далее – Оферта) любому физическому лицу (далее – Заказчик), принявшему условия настоящей Оферты.
+
+Настоящая Оферта является официальным предложением и действует с момента размещения в Telegram-боте и/или на сайте.
+
+Акцепт Оферты означает полное и безоговорочное согласие со всеми условиями.
+
+1. ОПРЕДЕЛЕНИЯ
+- Исполнитель – Собянин Кирилл Андреевич, самозанятый (ИНН 781434331920).
+- Заказчик – физическое лицо, достигшее 18 лет.
+- Сервис – программно-аппаратный комплекс (Telegram-бот и веб-приложение) для предоставления аналитической информации о спортивных событиях.
+- Услуги – информационно-аналитические услуги (статистика, прогнозы, коэффициенты, аналитика).
+- Подписка – платный доступ к расширенному функционалу Сервиса на определённый срок.
+
+2. ПРЕДМЕТ ОФЕРТЫ
+2.1. Исполнитель оказывает Заказчику информационно-аналитические услуги в порядке и на условиях Оферты.
+2.2. Услуги предоставляются исключительно в информационных и образовательных целях. Исполнитель НЕ является организатором азартных игр, букмекером или тотализатором. Информация носит вероятностный характер и не гарантирует результата.
+2.3. Сервис предназначен для лиц старше 18 лет. Заказчик подтверждает своё совершеннолетие.
+
+3. АКЦЕПТ И ПОРЯДОК ЗАКЛЮЧЕНИЯ ДОГОВОРА
+Акцепт осуществляется путём:
+- регистрации в Сервисе через Telegram-бота;
+- оплаты Подписки;
+- фактического использования Сервиса (просмотр аналитики).
+С момента совершения одного из этих действий договор считается заключённым.
+
+4. ПРАВА И ОБЯЗАННОСТИ
+4.1. Исполнитель обязуется:
+- обеспечивать доступ к Сервису согласно тарифу;
+- предоставлять аналитику;
+- соблюдать конфиденциальность персональных данных.
+4.2. Исполнитель имеет право:
+- приостанавливать доступ для технических работ;
+- изменять тарифы и условия с уведомлением за 3 дня;
+- отказать Заказчику при нарушении условий.
+4.3. Заказчик обязуется:
+- использовать Сервис в личных некоммерческих целях;
+- не нарушать работу Сервиса, не копировать базу данных;
+- не перепродавать информацию.
+4.4. Заказчик имеет право на доступ к Сервису и обращение в поддержку.
+
+5. СТОИМОСТЬ И РАСЧЁТЫ
+5.1. Стоимость определяется тарифами, опубликованными в Сервисе.
+5.2. Оплата принимается через ЮKassa, Telegram Payments, USDT TRC20 или по QR-коду СБП (реквизиты предоставляются при оплате).
+5.3. Подписка считается оплаченной с момента поступления средств.
+5.4. Средства за Подписку НЕ ВОЗВРАЩАЮТСЯ при досрочном отказе, кроме случаев невозможности оказания Услуг по вине Исполнителя.
+
+6. ОТВЕТСТВЕННОСТЬ
+6.1. Исполнитель НЕ несёт ответственности за убытки, упущенную выгоду, действия Заказчика на основе аналитики, задержки, сбои, недостоверность данных из внешних источников.
+6.2. Ответственность Исполнителя ограничена стоимостью оплаченной, но не оказанной Услуги.
+6.3. Заказчик несёт ответственность за соблюдение законодательства (в т.ч. непривлечение несовершеннолетних, запрет азартных игр).
+6.4. При нарушении условий Оферты Исполнитель вправе заблокировать доступ без возврата средств.
+
+7. КОНФИДЕНЦИАЛЬНОСТЬ
+7.1. Исполнитель обрабатывает персональные данные в соответствии с 152-ФЗ.
+7.2. Цель обработки – идентификация, оказание Услуг, выдача чеков.
+7.3. Данные защищаются от несанкционированного доступа.
+
+8. РАЗРЕШЕНИЕ СПОРОВ
+8.1. Споры решаются путём переговоров.
+8.2. При недостижении согласия – передаются в Третейский суд при РСПП (г. Санкт-Петербург). Решение окончательное.
+8.3. Альтернативная подсудность – суд общей юрисдикции по месту нахождения Исполнителя (г. Санкт-Петербург).
+8.4. Обязателен претензионный порядок – срок ответа 15 рабочих дней.
+
+9. ФОРС-МАЖОР
+Стороны освобождаются от ответственности при чрезвычайных обстоятельствах (стихийные бедствия, войны, запреты госорганов, сбои сетей). Сторона обязана уведомить другую сторону в течение 5 дней.
+
+10. ПРОЧИЕ УСЛОВИЯ
+10.1. Все изменения публикуются в Сервисе и вступают в силу с момента публикации.
+10.2. Заказчик подтверждает, что ознакомлен и согласен с условиями.
+10.3. Недействительность одного условия не влечёт недействительность остальных.
+10.4. Исполнитель вправе уступать права и переводить долги третьим лицам.
+
+11. РЕКВИЗИТЫ ИСПОЛНИТЕЛЯ
+- ФИО: Собянин Кирилл Андреевич
+- ИНН: 781434331920
+- Статус: самозанятый
+- Адрес: г. Санкт-Петербург
+- E-mail: betpulseoffc@protonmail.com
+- Способы оплаты: USDT TRC20 (адрес по запросу), СБП (QR-код по запросу)
+
+Настоящая Оферта является официальным документом и имеет юридическую силу.
+    </div>
+    <button class="accept-btn" id="acceptOfferBtn">✅ Я принимаю условия оферты</button>
+  </div>
+</div>
+
+<!-- ======== ОСНОВНОЙ КОНТЕНТ ======== -->
 <!-- TopAppBar -->
 <header class="bg-surface shadow-sm fixed top-0 w-full z-50 max-w-[480px] mx-auto left-0 right-0 border-b border-outline-variant/20">
   <div class="flex justify-center items-center px-margin-page h-16">
@@ -207,7 +369,6 @@
     <section class="bg-surface-container-low rounded-xl p-6 shadow-sm flex flex-col items-center text-center space-y-stack-md mt-4 border border-outline-variant/20">
       <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Ваш надежный партнер в футбольной аналитике</h1>
       <p class="font-body-lg text-body-lg text-on-surface-variant">Профессиональные прогнозы, глубокая аналитика матчей топ-лиг и честная статистика. Доступ предоставляется авторизованным пользователям через Telegram-бота.</p>
-      
       <button onclick="switchTab('feed')" class="button mt-4 w-full py-3 rounded-xl font-headline-md text-headline-md flex items-center justify-center gap-2">
         <span class="material-symbols-outlined text-[20px]">analytics</span>
         <span>Смотреть матчи и аналитику</span>
@@ -325,6 +486,32 @@
 </nav>
 
 <script>
+  // ========== УПРАВЛЕНИЕ ОВЕРЛЕЕМ ОФЕРТЫ ==========
+  document.addEventListener('DOMContentLoaded', function() {
+    const overlay = document.getElementById('offerOverlay');
+    const acceptBtn = document.getElementById('acceptOfferBtn');
+
+    // Проверяем, принимал ли пользователь оферту ранее
+    if (localStorage.getItem('offerAccepted') === 'true') {
+      overlay.classList.add('hidden');
+    } else {
+      overlay.classList.remove('hidden');
+    }
+
+    acceptBtn.addEventListener('click', function() {
+      localStorage.setItem('offerAccepted', 'true');
+      overlay.classList.add('hidden');
+      // После принятия оферты инициализируем всё остальное
+      initApp();
+    });
+  });
+
+  // ========== ОСНОВНАЯ ЛОГИКА (вызывается после принятия оферты) ==========
+  function initApp() {
+    initTelegramUser();
+    // Остальные функции инициализируются при переключении на вкладку Feed
+  }
+
   // ========== ПОЛУЧЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ ИЗ TELEGRAM ==========
   function initTelegramUser() {
     const avatar = document.getElementById('userAvatar');
@@ -368,7 +555,7 @@
     }
   }
 
-  // ========== ОСТАЛЬНАЯ ЛОГИКА С РАСШИРЕННЫМ ЛОГИРОВАНИЕМ ==========
+  // ========== ОСТАЛЬНАЯ ЛОГИКА (без изменений) ==========
   let currentSelectedLeague = "all";
 
   function getTelegramInitData() {
@@ -380,23 +567,19 @@
 
   function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    
     const targetTab = document.getElementById('tab-' + tabName);
     if (targetTab) {
       targetTab.classList.remove('hidden');
     }
-
     document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
     const activeNav = document.getElementById('nav-' + tabName);
     if (activeNav && activeNav.classList.contains('nav-item')) {
       activeNav.classList.add('active');
     }
-    
     if (tabName === 'feed' && !window.feedLoaded) {
       initFeedLeaguesAndMatches();
       window.feedLoaded = true;
     }
-
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -411,7 +594,6 @@
     let isDown = false;
     let startX;
     let scrollLeft;
-
     slider.addEventListener('mousedown', (e) => {
       isDown = true;
       startX = e.pageX - slider.offsetLeft;
@@ -431,14 +613,12 @@
   async function loadLeaguesFilters() {
     const container = document.getElementById('leaguesFilterContainer');
     const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
-
     try {
       const res = await fetch(`${API_BASE}/leagues`, {
         headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
       });
       const data = await res.json();
       const leagues = data.leagues || [];
-
       container.innerHTML = "";
       leagues.forEach((league, index) => {
         const btn = document.createElement('button');
@@ -447,7 +627,6 @@
         btn.onclick = () => selectLeagueFilter(league.id, btn);
         container.appendChild(btn);
       });
-
       loadTodayMatches("all");
     } catch (err) {
       console.error("Ошибка загрузки лиг", err);
@@ -467,24 +646,14 @@
       <div class="text-center text-outline py-8 font-body-sm animate-pulse">
         Загрузка футбольных матчей...
       </div>`;
-
     const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
     const url = `${API_BASE}/matches/today?league_id=${encodeURIComponent(leagueId)}`;
-    
     console.log('🔍 [DEBUG] Запрос к:', url);
-    console.log('🔍 [DEBUG] API_BASE:', API_BASE);
-    console.log('🔍 [DEBUG] Протокол:', window.location.protocol);
-
     try {
       const res = await fetch(url, {
         headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
       });
-      
-      console.log('📡 [DEBUG] Статус ответа:', res.status);
-      console.log('📡 [DEBUG] Статус текст:', res.statusText);
-
       if (!res.ok) {
-        // Если ответ не OK, показываем детали
         const errorText = await res.text();
         console.error('❌ [DEBUG] Ошибка ответа:', res.status, errorText);
         container.innerHTML = `
@@ -493,22 +662,11 @@
             <p class="font-headline-md text-headline-md text-on-surface">Ошибка загрузки матчей</p>
             <p class="text-xs text-on-surface">HTTP ${res.status}: ${res.statusText}</p>
             <p class="text-xs text-outline break-all">${errorText.substring(0, 200)}</p>
-            <details class="text-left text-xs">
-              <summary class="text-primary cursor-pointer">Подробности запроса</summary>
-              <p class="mt-2 text-outline">URL: ${url}</p>
-              <p class="text-outline">Метод: GET</p>
-            </details>
           </div>`;
         return;
       }
-
       const data = await res.json();
       console.log('📦 [DEBUG] Ответ от сервера:', data);
-      console.log('📦 [DEBUG] Тип data:', typeof data);
-      console.log('📦 [DEBUG] forecasts:', data.forecasts);
-      console.log('📦 [DEBUG] api_error:', data.api_error);
-      console.log('📦 [DEBUG] count:', data.count);
-
       if (data.api_error) {
         console.error('⚠️ [DEBUG] Ошибка от сервера:', data.api_error);
         container.innerHTML = `
@@ -520,7 +678,6 @@
           </div>`;
         return;
       }
-
       if (!data.forecasts || data.forecasts.length === 0) {
         console.warn('⚠️ [DEBUG] Матчей нет, forecasts пуст или отсутствует');
         container.innerHTML = `
@@ -535,9 +692,7 @@
           </div>`;
         return;
       }
-
       console.log(`✅ [DEBUG] Количество матчей: ${data.forecasts.length}`);
-      
       container.innerHTML = "";
       data.forecasts.forEach((post, index) => {
         console.log(`📊 [DEBUG] Матч #${index + 1}:`, post.step_1?.match);
@@ -547,7 +702,6 @@
           console.error(`❌ [DEBUG] Ошибка рендеринга матча #${index + 1}:`, err);
         }
       });
-
     } catch (err) {
       console.error('💥 [DEBUG] Ошибка при загрузке:', err);
       container.innerHTML = `
@@ -566,11 +720,9 @@
   function createForecastCardElement(post) {
     const card = document.createElement('div');
     card.className = "bg-card-bg rounded-lg p-gutter-card shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 relative";
-
     const matchTeams = post.step_1.match.split('—').map(t => t.trim());
     let homeTeam = matchTeams[0] || "Команда 1";
     let awayTeam = matchTeams[1] || "Команда 2";
-    
     if (post.is_live && post.step_1.match.includes(':')) {
       const parts = post.step_1.match.split(/\d+\s*:\s*\d+/);
       if (parts.length >= 2) {
@@ -578,17 +730,14 @@
         awayTeam = parts[1].trim();
       }
     }
-    
     const homeBadge = post.home_badge;
     const awayBadge = post.away_badge;
-
     const liveBadgeHTML = post.is_live ? `
       <div class="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider shadow-sm animate-pulse">
         <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
         LIVE
       </div>
     ` : '';
-
     card.innerHTML = `
       ${liveBadgeHTML}
       <div class="flex justify-between items-center mb-stack-sm text-outline font-body-sm text-body-sm ${post.is_live ? 'pr-16' : ''}">
@@ -598,7 +747,6 @@
         </div>
         <span>${post.step_1.info}</span>
       </div>
-      
       <div class="flex justify-between items-center mb-stack-md gap-2">
         <div class="flex items-center gap-2.5 flex-1 overflow-hidden">
           <img src="${homeBadge}" class="w-8 h-8 object-contain shrink-0 rounded-full bg-surface-container p-0.5 border border-outline-variant/20 shadow-sm" alt="${homeTeam}" onerror="this.src='https://ui-avatars.com/api/?name=FC&background=00288e&color=fff'"/>
@@ -610,7 +758,6 @@
           Статистика
         </button>
       </div>
-
       <button class="button w-full rounded-lg p-3 flex justify-between items-center mb-stack-md">
         <span class="flex items-center font-body-lg text-body-lg font-semibold">
           <svg class="w-4 h-4 mr-2" fill="currentColor" viewbox="0 0 24 24"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.16-.28L11.5 2h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"></path></svg>
@@ -618,11 +765,9 @@
         </span>
         <span class="font-odds-display text-odds-display">${post.step_2.coefficient}</span>
       </button>
-
       <div class="bg-surface-container-low p-3 rounded-lg text-xs italic text-on-surface-variant mb-stack-md border border-outline-variant/20">
         💡 ${post.step_2.explanation}
       </div>
-
       <ul class="space-y-2 mb-stack-md font-body-sm text-body-sm text-on-surface">
         ${post.step_3.map(reason => `
           <li class="flex items-start gap-2 bg-background-main p-2 rounded border border-outline-variant/20">
@@ -631,12 +776,10 @@
           </li>
         `).join('')}
       </ul>
-
       <div class="bg-risk-bg rounded-lg p-3 flex items-start gap-2 mb-stack-md border border-error-container">
         <span class="material-symbols-outlined text-error text-[18px] mt-0.5 shrink-0">info</span>
         <p class="font-body-sm text-body-sm text-on-surface">${post.step_4}</p>
       </div>
-
       <div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm border-t border-outline-variant/30 pt-3">
         <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
         <span class="font-medium text-primary">${post.step_5}</span>
@@ -649,10 +792,8 @@
     switchTab('stats');
     const defaultView = document.getElementById('statsDefaultView');
     const matchView = document.getElementById('statsMatchView');
-    
     defaultView.classList.add('hidden');
     matchView.classList.remove('hidden');
-
     matchView.innerHTML = `
       <div class="bg-card-bg rounded-xl p-6 text-center border border-outline-variant/20 shadow-sm space-y-3">
         <button onclick="showStatsDefault()" class="text-xs text-primary font-semibold flex items-center gap-1 mb-2">
@@ -661,9 +802,7 @@
         <div class="font-headline-md text-headline-md animate-pulse">Загрузка аналитики...</div>
         <p class="text-xs text-outline">${homeTeam} vs ${awayTeam}</p>
       </div>`;
-
     const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
-
     try {
       const url = `${API_BASE}/stats/compare?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&home_badge=${encodeURIComponent(homeBadge)}&away_badge=${encodeURIComponent(awayBadge)}&is_live=${isLive}&goals_home=${goalsHome}&goals_away=${goalsAway}&elapsed=${elapsed}`;
       const res = await fetch(url, {
@@ -671,26 +810,21 @@
       });
       const data = await res.json();
       const analysis = data.analysis_5_points;
-
       matchView.innerHTML = `
         <div class="space-y-stack-md pt-2">
           <button onclick="showStatsDefault()" class="bg-surface-container hover:bg-surface-variant/30 text-primary px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all border border-outline-variant/20">
             <span class="material-symbols-outlined text-[16px]">arrow_back</span> Назад к выбору матча
           </button>
-
           <div class="bg-card-bg rounded-2xl p-gutter-card shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant/20 relative">
             ${isLive ? `<span class="absolute top-3 right-3 bg-red-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-full animate-pulse">LIVE ${elapsed}'</span>` : ''}
             <h3 class="text-xs font-bold text-outline uppercase tracking-wider text-center mb-4">Детальный разбор матча</h3>
-            
             <div class="flex justify-around items-center">
               <div class="flex flex-col items-center text-center w-5/12">
                 <img src="${data.home.badge}" class="w-16 h-16 object-contain mb-2 rounded-full bg-surface-container p-1 border border-outline-variant/20 shadow-sm" alt="${data.home.name}"/>
                 <span class="font-headline-md text-headline-md text-on-surface line-clamp-1">${data.home.name}</span>
                 <span class="text-xs text-win-green font-bold mt-1">Винрейт: ${data.home.winrate}</span>
               </div>
-
               <div class="font-odds-display text-odds-display text-primary font-bold text-xl">${isLive ? `${goalsHome} : ${goalsAway}` : 'VS'}</div>
-
               <div class="flex flex-col items-center text-center w-5/12">
                 <img src="${data.away.badge}" class="w-16 h-16 object-contain mb-2 rounded-full bg-surface-container p-1 border border-outline-variant/20 shadow-sm" alt="${data.away.name}"/>
                 <span class="font-headline-md text-headline-md text-on-surface line-clamp-1">${data.away.name}</span>
@@ -698,7 +832,6 @@
               </div>
             </div>
           </div>
-
           <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
             <div class="flex items-center gap-2 text-primary font-semibold text-sm">
               <span class="material-symbols-outlined text-[18px]">history</span>
@@ -709,13 +842,11 @@
               ${analysis.point_1_h2h.details.map(match => `<div>• ${match}</div>`).join('')}
             </div>
           </div>
-
           <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-3">
             <div class="flex items-center gap-2 text-primary font-semibold text-sm">
               <span class="material-symbols-outlined text-[18px]">trending_up</span>
               <h4>${analysis.point_2_form.title}</h4>
             </div>
-            
             <div class="grid grid-cols-2 gap-2 text-center text-xs">
               <div class="bg-surface-container-low p-2 rounded-lg">
                 <span class="font-semibold block mb-1">${data.home.name}</span>
@@ -730,11 +861,9 @@
                 </div>
               </div>
             </div>
-
             <p class="text-xs text-on-surface">${analysis.point_2_form.home_stats}</p>
             <p class="text-xs text-on-surface">${analysis.point_2_form.away_stats}</p>
           </div>
-
           <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
             <div class="flex items-center gap-2 text-primary font-semibold text-sm">
               <span class="material-symbols-outlined text-[18px]">psychology</span>
@@ -742,7 +871,6 @@
             </div>
             <p class="text-xs text-on-surface">${analysis.point_3_morale.text}</p>
           </div>
-
           <div class="bg-card-bg rounded-xl p-4 border border-outline-variant/20 shadow-sm space-y-2">
             <div class="flex items-center gap-2 text-primary font-semibold text-sm">
               <span class="material-symbols-outlined text-[18px]">medical_services</span>
@@ -753,7 +881,6 @@
               <li class="flex items-center gap-1.5"><span class="text-primary">•</span> ${analysis.point_4_squad.away_news}</li>
             </ul>
           </div>
-
           <div class="bg-gradient-to-br from-primary/10 to-primary-container/20 rounded-2xl p-5 border-2 border-primary/30 shadow-md space-y-3">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2 text-primary font-bold text-sm">
@@ -762,13 +889,11 @@
               </div>
               <span class="bg-primary text-white font-bold text-xs px-2.5 py-1 rounded-lg">Коэф. ${analysis.point_5_recommendation.coefficient}</span>
             </div>
-
             <div class="bg-card-bg rounded-xl p-3 border border-outline-variant/20">
               <span class="text-xs text-outline block mb-1">Рекомендуемый тип ставки:</span>
               <span class="font-headline-md text-headline-md text-primary font-bold block">${analysis.point_5_recommendation.recommended_bet}</span>
               <span class="text-[11px] text-on-surface-variant italic mt-1 block">💡 ${analysis.point_5_recommendation.explanation}</span>
             </div>
-
             <div class="grid grid-cols-3 gap-1.5 text-center text-xs font-semibold">
               <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
                 <span class="text-outline block text-[10px]">П1</span>
@@ -783,11 +908,9 @@
                 <span>${analysis.point_5_recommendation.all_odds.П2}</span>
               </div>
             </div>
-
             <div class="text-xs font-medium text-primary">
               💼 ${analysis.point_5_recommendation.bank_management}
             </div>
-
             <div class="text-xs text-on-surface bg-card-bg p-3 rounded-xl border border-outline-variant/20">
               <span class="font-semibold block mb-1 text-primary">Финальное резюме:</span>
               ${analysis.point_5_recommendation.final_conclusion}
@@ -795,7 +918,6 @@
           </div>
         </div>
       `;
-
     } catch (err) {
       showStatsDefault();
     }
@@ -807,9 +929,7 @@
   }
 
   // ========== ИНИЦИАЛИЗАЦИЯ ==========
-  document.addEventListener('DOMContentLoaded', function() {
-    initTelegramUser();
-  });
+  // (initTelegramUser вызывается после принятия оферты внутри initApp)
 </script>
 
 </body>
