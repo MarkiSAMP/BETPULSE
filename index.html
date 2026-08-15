@@ -561,13 +561,8 @@
       </section>
     </div>
 
-    <!-- Вкладка 2: Feed -->
+    <!-- Вкладка 2: Feed (без выбора лиг) -->
     <div id="tab-feed" class="tab-content hidden space-y-4">
-      <div>
-        <span class="text-[11px] font-bold text-outline uppercase tracking-wider block mb-1">Футбольный турнир / Лига</span>
-        <div id="leaguesFilterContainer" class="custom-slider flex space-x-2 pb-2"></div>
-      </div>
-
       <div class="bg-gradient-to-r from-primary to-primary-container rounded-lg p-4 text-white flex items-center justify-between shadow-sm">
         <div>
           <h3 class="font-semibold text-base mb-1">PRO Доступ</h3>
@@ -650,7 +645,6 @@
 <script>
   // ======== ГЛОБАЛЬНЫЕ ДАННЫЕ ========
   let telegramUser = null;
-  let currentSelectedLeague = "all";
   let feedLoaded = false;
 
   // ======== ИНИЦИАЛИЗАЦИЯ TELEGRAM ========
@@ -712,14 +706,14 @@
       activeNav.classList.add('active');
     }
     if (tabName === 'feed' && !feedLoaded) {
-      initFeedLeaguesAndMatches();
+      loadTodayMatches();
       feedLoaded = true;
     }
     const content = document.getElementById('appContent');
     if (content) content.scrollTop = 0;
   }
 
-  // ======== FEED ========
+  // ======== FEED (без фильтра лиг) ========
   function getTelegramInitData() {
     if (window.Telegram && window.Telegram.WebApp) {
       return window.Telegram.WebApp.initData || '';
@@ -727,68 +721,11 @@
     return '';
   }
 
-  async function initFeedLeaguesAndMatches() {
-    await loadLeaguesFilters();
-    setupDragScrollForSlider();
-  }
-
-  function setupDragScrollForSlider() {
-    const slider = document.getElementById('leaguesFilterContainer');
-    if (!slider) return;
-    let isDown = false;
-    let startX;
-    let scrollLeft;
-    slider.addEventListener('mousedown', (e) => {
-      isDown = true;
-      startX = e.pageX - slider.offsetLeft;
-      scrollLeft = slider.scrollLeft;
-    });
-    slider.addEventListener('mouseleave', () => { isDown = false; });
-    slider.addEventListener('mouseup', () => { isDown = false; });
-    slider.addEventListener('mousemove', (e) => {
-      if (!isDown) return;
-      e.preventDefault();
-      const x = e.pageX - slider.offsetLeft;
-      const walk = (x - startX) * 1.5;
-      slider.scrollLeft = scrollLeft - walk;
-    });
-  }
-
-  async function loadLeaguesFilters() {
-    const container = document.getElementById('leaguesFilterContainer');
-    const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
-    try {
-      const res = await fetch(`${API_BASE}/leagues`, {
-        headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
-      });
-      const data = await res.json();
-      const leagues = data.leagues || [];
-      container.innerHTML = "";
-      leagues.forEach((league, index) => {
-        const btn = document.createElement('button');
-        btn.className = `league-btn ${index === 0 ? 'active' : ''}`;
-        btn.innerText = league.name;
-        btn.onclick = () => selectLeagueFilter(league.id, btn);
-        container.appendChild(btn);
-      });
-      loadTodayMatches("all");
-    } catch (err) {
-      console.error("Ошибка загрузки лиг", err);
-    }
-  }
-
-  function selectLeagueFilter(leagueId, btnElement) {
-    currentSelectedLeague = leagueId;
-    document.querySelectorAll('.league-btn').forEach(b => b.classList.remove('active'));
-    btnElement.classList.add('active');
-    loadTodayMatches(leagueId);
-  }
-
-  async function loadTodayMatches(leagueId = "all") {
+  async function loadTodayMatches() {
     const container = document.getElementById('dynamicForecastsContainer');
     container.innerHTML = `<div class="text-center text-outline py-8 text-sm animate-pulse">Загрузка футбольных матчей...</div>`;
     const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
-    const url = `${API_BASE}/matches/today?league_id=${encodeURIComponent(leagueId)}`;
+    const url = `${API_BASE}/matches/today?league_id=all`;
     try {
       const res = await fetch(url, {
         headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
