@@ -10,7 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
   <style>
-    /* ===== СБРОС ===== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
       height: 100%;
@@ -18,61 +17,6 @@
       background: #f8f9ff;
       color: #0b1c30;
       overflow: hidden;
-    }
-
-    /* ===== БЛОК ДЛЯ БРАУЗЕРА (показывается только вне Telegram) ===== */
-    #browser-block {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #f8f9ff;
-      z-index: 99999;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      text-align: center;
-      font-family: 'Inter', sans-serif;
-    }
-    #browser-block.visible {
-      display: flex;
-    }
-    #browser-block .icon {
-      font-size: 64px;
-      color: #00288e;
-      margin-bottom: 24px;
-    }
-    #browser-block h1 {
-      font-size: 24px;
-      font-weight: 700;
-      color: #0b1c30;
-      margin-bottom: 12px;
-    }
-    #browser-block p {
-      font-size: 16px;
-      color: #444653;
-      max-width: 360px;
-      line-height: 1.5;
-      margin-bottom: 24px;
-    }
-    #browser-block .button {
-      background: #00288e;
-      color: white;
-      border: none;
-      padding: 12px 32px;
-      border-radius: 16px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-      text-decoration: none;
-      display: inline-block;
-    }
-    #browser-block .button:hover {
-      background: #001f6b;
     }
 
     /* ===== ОВЕРЛЕЙ ОФЕРТЫ ===== */
@@ -127,12 +71,8 @@
       line-height: 1.4;
     }
 
-    .accordion-item {
-      border-bottom: 1px solid #e5edf5;
-    }
-    .accordion-item:last-child {
-      border-bottom: none;
-    }
+    .accordion-item { border-bottom: 1px solid #e5edf5; }
+    .accordion-item:last-child { border-bottom: none; }
     .accordion-trigger {
       width: 100%;
       display: flex;
@@ -149,39 +89,23 @@
       transition: color 0.2s;
       gap: 12px;
     }
-    .accordion-trigger:hover {
-      color: #00288e;
-    }
+    .accordion-trigger:hover { color: #00288e; }
     .accordion-trigger .chevron {
       transition: transform 0.3s ease;
       flex-shrink: 0;
       color: #00288e;
     }
-    .accordion-trigger .chevron.open {
-      transform: rotate(180deg);
-    }
+    .accordion-trigger .chevron.open { transform: rotate(180deg); }
     .accordion-content {
       max-height: 0;
       overflow: hidden;
       transition: max-height 0.35s ease, opacity 0.3s ease;
       opacity: 0;
     }
-    .accordion-content.open {
-      max-height: 800px;
-      opacity: 1;
-    }
-    .accordion-content-inner {
-      padding-bottom: 20px;
-      font-size: 14px;
-      line-height: 1.7;
-      color: #1e293b;
-    }
-    .accordion-content-inner p {
-      margin-bottom: 12px;
-    }
-    .accordion-content-inner p:last-child {
-      margin-bottom: 0;
-    }
+    .accordion-content.open { max-height: 800px; opacity: 1; }
+    .accordion-content-inner { padding-bottom: 20px; font-size: 14px; line-height: 1.7; color: #1e293b; }
+    .accordion-content-inner p { margin-bottom: 12px; }
+    .accordion-content-inner p:last-child { margin-bottom: 0; }
 
     .expand-all-btn {
       font-size: 12px;
@@ -192,9 +116,7 @@
       font-weight: 500;
       transition: color 0.2s;
     }
-    .expand-all-btn:hover {
-      color: #001f6b;
-    }
+    .expand-all-btn:hover { color: #001f6b; }
 
     .checkbox-custom {
       display: flex;
@@ -203,9 +125,7 @@
       cursor: pointer;
       margin-bottom: 14px;
     }
-    .checkbox-custom input[type="checkbox"] {
-      display: none;
-    }
+    .checkbox-custom input[type="checkbox"] { display: none; }
     .checkbox-custom .box {
       width: 20px;
       height: 20px;
@@ -228,11 +148,7 @@
       font-size: 14px;
       font-weight: 700;
     }
-    .checkbox-custom .label-text {
-      font-size: 14px;
-      color: #0b1c30;
-      line-height: 1.4;
-    }
+    .checkbox-custom .label-text { font-size: 14px; color: #0b1c30; line-height: 1.4; }
 
     .accept-btn {
       width: 100%;
@@ -247,26 +163,12 @@
       transition: background 0.2s, transform 0.1s;
       box-shadow: 0 4px 12px rgba(0, 40, 142, 0.25);
     }
-    .accept-btn:hover:not(:disabled) {
-      background: #001f6b;
-    }
-    .accept-btn:active:not(:disabled) {
-      transform: scale(0.97);
-    }
-    .accept-btn:disabled {
-      background: #b0c4de;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-    .accept-btn .sparkle {
-      display: inline-block;
-      margin-right: 8px;
-    }
+    .accept-btn:hover:not(:disabled) { background: #001f6b; }
+    .accept-btn:active:not(:disabled) { transform: scale(0.97); }
+    .accept-btn:disabled { background: #b0c4de; cursor: not-allowed; box-shadow: none; }
+    .accept-btn .sparkle { display: inline-block; margin-right: 8px; }
 
-    .confirmation-screen {
-      text-align: center;
-      padding: 20px 0;
-    }
+    .confirmation-screen { text-align: center; padding: 20px 0; }
     .confirmation-screen .icon {
       width: 64px;
       height: 64px;
@@ -277,36 +179,11 @@
       justify-content: center;
       margin: 0 auto 20px;
     }
-    .confirmation-screen .icon svg {
-      width: 36px;
-      height: 36px;
-      stroke: #00288e;
-      fill: none;
-    }
-    .confirmation-screen h2 {
-      font-size: 24px;
-      font-weight: 700;
-      color: #0b1c30;
-      margin-bottom: 8px;
-    }
-    .confirmation-screen p {
-      font-size: 14px;
-      color: #444653;
-      max-width: 320px;
-      margin: 0 auto 24px;
-    }
-    .confirmation-screen .back-link {
-      font-size: 14px;
-      color: #00288e;
-      background: none;
-      border: none;
-      cursor: pointer;
-      text-decoration: underline;
-      transition: color 0.2s;
-    }
-    .confirmation-screen .back-link:hover {
-      color: #001f6b;
-    }
+    .confirmation-screen .icon svg { width: 36px; height: 36px; stroke: #00288e; fill: none; }
+    .confirmation-screen h2 { font-size: 24px; font-weight: 700; color: #0b1c30; margin-bottom: 8px; }
+    .confirmation-screen p { font-size: 14px; color: #444653; max-width: 320px; margin: 0 auto 24px; }
+    .confirmation-screen .back-link { font-size: 14px; color: #00288e; background: none; border: none; cursor: pointer; text-decoration: underline; transition: color 0.2s; }
+    .confirmation-screen .back-link:hover { color: #001f6b; }
 
     /* ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== */
     .app-wrapper {
@@ -333,13 +210,7 @@
       z-index: 20;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-    .app-header .logo {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      color: #00288e;
-      text-transform: uppercase;
-    }
+    .app-header .logo { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; color: #00288e; text-transform: uppercase; }
 
     .app-content {
       flex: 1;
@@ -376,23 +247,10 @@
       min-width: 56px;
       text-decoration: none;
     }
-    .nav-item:hover {
-      color: #00288e;
-    }
-    .nav-item.active {
-      color: #00288e;
-      background: rgba(0, 40, 142, 0.08);
-    }
-    .nav-item .material-symbols-outlined {
-      font-size: 24px;
-      margin-bottom: 2px;
-    }
-    .nav-item .nav-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-    }
+    .nav-item:hover { color: #00288e; }
+    .nav-item.active { color: #00288e; background: rgba(0, 40, 142, 0.08); }
+    .nav-item .material-symbols-outlined { font-size: 24px; margin-bottom: 2px; }
+    .nav-item .nav-label { font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; }
 
     .button {
       background: linear-gradient(140deg, hsla(240, 40%, 50%, 1) 20%, hsla(240, 40%, 50%, 0.6) 100%);
@@ -407,13 +265,8 @@
       border: none;
       cursor: pointer;
     }
-    .button:hover {
-      transform: scale(1.03);
-      box-shadow: inset 0px -2px 0px 0px rgba(0, 0, 0, 0.2), 0px 8px 16px rgba(0, 0, 0, 0.2);
-    }
-    .button:active {
-      transform: scale(0.98);
-    }
+    .button:hover { transform: scale(1.03); box-shadow: inset 0px -2px 0px 0px rgba(0,0,0,0.2), 0px 8px 16px rgba(0,0,0,0.2); }
+    .button:active { transform: scale(0.98); }
 
     .tab-content { display: block; }
     .tab-content.hidden { display: none; }
@@ -435,14 +288,6 @@
   </style>
 </head>
 <body>
-
-<!-- ===== БЛОК ДЛЯ БРАУЗЕРА (показывается только вне Telegram) ===== -->
-<div id="browser-block">
-  <div class="icon">🚫</div>
-  <h1>Доступ только через Telegram</h1>
-  <p>Это приложение работает только внутри Telegram. Пожалуйста, откройте его через нашего бота.</p>
-  <a class="button" href="tg://resolve?domain=betpulse_bot" target="_blank">Открыть в Telegram</a>
-</div>
 
 <!-- ===== ОВЕРЛЕЙ ОФЕРТЫ ===== -->
 <div id="offerOverlay">
@@ -539,7 +384,7 @@
       </section>
     </div>
 
-    <!-- Вкладка 2: Feed -->
+    <!-- Вкладка 2: Feed (без фильтра лиг) -->
     <div id="tab-feed" class="tab-content hidden space-y-4">
       <div class="bg-gradient-to-r from-primary to-primary-container rounded-lg p-4 text-white flex items-center justify-between shadow-sm">
         <div>
@@ -621,24 +466,6 @@
 </div>
 
 <script>
-  // ===== ПРОВЕРКА ЗАПУСКА В TELEGRAM =====
-  (function checkTelegram() {
-    const isTelegram = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData;
-    const browserBlock = document.getElementById('browser-block');
-
-    if (!isTelegram) {
-      // Показываем блок для браузера, скрываем всё остальное
-      browserBlock.classList.add('visible');
-      // Скрываем оверлей оферты и основной интерфейс
-      document.getElementById('offerOverlay').style.display = 'none';
-      document.querySelector('.app-wrapper').style.display = 'none';
-      return;
-    }
-
-    // Если всё в порядке – скрываем блок для браузера (на всякий случай)
-    browserBlock.classList.remove('visible');
-  })();
-
   // ===== ГЛОБАЛЬНЫЕ ДАННЫЕ =====
   let telegramUser = null;
   let feedLoaded = false;
@@ -651,7 +478,6 @@
       const user = webApp.initDataUnsafe?.user;
       if (user) {
         telegramUser = user;
-        console.log('✅ Telegram user loaded:', user);
       } else {
         console.warn('⚠️ No user data in Telegram WebApp');
       }
