@@ -187,7 +187,6 @@ async def cmd_start(message: Message):
 
     # ===== УСТАНАВЛИВАЕМ КНОПКУ МЕНЮ В ЗАВИСИМОСТИ ОТ ПОДПИСКИ =====
     if is_paid and expires_at and expires_at > now:
-        # Активная подписка → кнопка открывает Mini App
         await bot.set_chat_menu_button(
             chat_id=user_id,
             menu_button=MenuButtonWebApp(
@@ -205,7 +204,6 @@ async def cmd_start(message: Message):
             parse_mode=ParseMode.HTML
         )
     else:
-        # Нет подписки → стандартное меню (или кнопка с предложением оформить)
         await bot.set_chat_menu_button(
             chat_id=user_id,
             menu_button=MenuButtonDefault()
@@ -353,7 +351,6 @@ async def check_donationalerts(callback: CallbackQuery):
             except Exception:
                 pass
 
-        # Обновляем кнопку меню (теперь с доступом к Mini App)
         await bot.set_chat_menu_button(
             chat_id=user_id,
             menu_button=MenuButtonWebApp(
@@ -444,10 +441,6 @@ async def process_pay_transfer(callback: CallbackQuery):
         "💳 <b>Оплата переводом на карту</b>\n\n"
         "Переведите 500 ₽ на карту:\n"
         "<b>1111 2222 3333 4444</b>\n"
-        "Получает**Ошибка**: Я не должен завершать сообщение некорректно. Продолжим.
-
-        "Переведите 500 ₽ на карту:\n"
-        "<b>1111 2222 3333 4444</b>\n"
         "Получатель: Собянин К.А.\n\n"
         "После перевода отправьте чек / скриншот в этот чат.\n"
         "Подписка будет активирована вручную в течение 24 часов."
@@ -492,7 +485,6 @@ async def successful_payment_handler(message: Message):
         except Exception as e:
             print(f"[DB Update Error]: {e}")
 
-    # Обновляем кнопку меню (теперь с доступом к Mini App)
     await bot.set_chat_menu_button(
         chat_id=user_id,
         menu_button=MenuButtonWebApp(
@@ -523,13 +515,11 @@ async def successful_payment_handler(message: Message):
         except Exception:
             pass
 
-# ===== ЗАПУСК =====
 async def main():
     await init_db()
     await bot.delete_webhook(drop_pending_updates=True)
 
     # Устанавливаем кнопку меню по умолчанию (для всех, кто ещё не взаимодействовал)
-    # Она будет переопределена при первом /start
     await bot.set_chat_menu_button(
         menu_button=MenuButtonDefault()
     )
