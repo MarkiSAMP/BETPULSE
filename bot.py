@@ -15,6 +15,8 @@ from aiogram.types import (
     WebAppInfo,
     LabeledPrice,
     PreCheckoutQuery,
+    MenuButtonWebApp,
+    MenuButtonDefault,
 )
 from aiogram.enums import ParseMode
 
@@ -80,18 +82,15 @@ def get_expires_at(days: int = 30) -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=days)
 
 # ===== Donation Alerts API =====
-# Храним уникальные суммы для пользователей (в памяти)
 user_amounts = {}
 
 def generate_unique_amount(user_id: int) -> float:
-    """Генерирует уникальную сумму для пользователя (500.00 + случайные копейки)."""
     random_cents = random.randint(1, 99)
     amount = 500.00 + random_cents / 100
     user_amounts[user_id] = amount
     return amount
 
 async def check_recent_donation(user_id: int) -> bool:
-    """Проверяет, был ли за последние 30 секунд донат с уникальной суммой."""
     if not DONATIONALERTS_ACCESS_TOKEN:
         print("[DonationAlerts] Access token not set")
         return False
@@ -186,7 +185,16 @@ async def cmd_start(message: Message):
     if last_msg_id:
         await safe_delete_message(message.chat.id, last_msg_id)
 
+    # ===== УСТАНАВЛИВАЕМ КНОПКУ МЕНЮ В ЗАВИСИМОСТИ ОТ ПОДПИСКИ =====
     if is_paid and expires_at and expires_at > now:
+        # Активная подписка → кнопка открывает Mini App
+        await bot.set_chat_menu_button(
+            chat_id=user_id,
+            menu_button=MenuButtonWebApp(
+                text="🚀 Открыть BETPULSE",
+                web_app=WebAppInfo(url=WEBAPP_URL)
+            )
+        )
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🚀 Открыть BETPULSE App", web_app=WebAppInfo(url=WEBAPP_URL))]
         ])
@@ -197,6 +205,11 @@ async def cmd_start(message: Message):
             parse_mode=ParseMode.HTML
         )
     else:
+        # Нет подписки → стандартное меню (или кнопка с предложением оформить)
+        await bot.set_chat_menu_button(
+            chat_id=user_id,
+            menu_button=MenuButtonDefault()
+        )
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="💳 Оформить подписку", callback_data="show_subscription")]
         ])
@@ -281,7 +294,6 @@ async def process_pay_donationalerts(callback: CallbackQuery):
         )
         return
 
-    # Генерируем уникальную сумму для пользователя
     amount = generate_unique_amount(callback.from_user.id)
     amount_str = f"{amount:.2f}"
 
@@ -340,6 +352,15 @@ async def check_donationalerts(callback: CallbackQuery):
                 await conn.close()
             except Exception:
                 pass
+
+        # Обновляем кнопку меню (теперь с доступом к Mini App)
+        await bot.set_chat_menu_button(
+            chat_id=user_id,
+            menu_button=MenuButtonWebApp(
+                text="🚀 Открыть BETPULSE",
+                web_app=WebAppInfo(url=WEBAPP_URL)
+            )
+        )
 
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🚀 Открыть BETPULSE App", web_app=WebAppInfo(url=WEBAPP_URL))]
@@ -423,6 +444,10 @@ async def process_pay_transfer(callback: CallbackQuery):
         "💳 <b>Оплата переводом на карту</b>\n\n"
         "Переведите 500 ₽ на карту:\n"
         "<b>1111 2222 3333 4444</b>\n"
+        "Получает**Ошибка**: Я не должен завершать сообщение некорректно. Продолжим.
+
+        "Переведите 500 ₽ на карту:\n"
+        "<b>1111 2222 3333 4444</b>\n"
         "Получатель: Собянин К.А.\n\n"
         "После перевода отправьте чек / скриншот в этот чат.\n"
         "Подписка будет активирована вручную в течение 24 часов."
@@ -467,6 +492,15 @@ async def successful_payment_handler(message: Message):
         except Exception as e:
             print(f"[DB Update Error]: {e}")
 
+    # Обновляем кнопку меню (теперь с доступом к Mini App)
+    await bot.set_chat_menu_button(
+        chat_id=user_id,
+        menu_button=MenuButtonWebApp(
+            text="🚀 Открыть BETPULSE",
+            web_app=WebAppInfo(url=WEBAPP_URL)
+        )
+    )
+
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🚀 Открыть BETPULSE App", web_app=WebAppInfo(url=WEBAPP_URL))]
     ])
@@ -489,9 +523,17 @@ async def successful_payment_handler(message: Message):
         except Exception:
             pass
 
+# ===== ЗАПУСК =====
 async def main():
     await init_db()
     await bot.delete_webhook(drop_pending_updates=True)
+
+    # Устанавливаем кнопку меню по умолчанию (для всех, кто ещё не взаимодействовал)
+    # Она будет переопределена при первом /start
+    await bot.set_chat_menu_button(
+        menu_button=MenuButtonDefault()
+    )
+
     print("[BOT]: Бот BETPULSE запущен!")
     await dp.start_polling(bot)
 
