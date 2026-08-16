@@ -5,9 +5,7 @@
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
   <title>BETPULSE</title>
 
-  <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js?63"></script>
-
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -292,7 +290,7 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 16px 16px 80px 16px;
+      padding: 8px 16px 80px 16px;  /* верхний отступ уменьшен */
       -webkit-overflow-scrolling: touch;
     }
 
@@ -306,7 +304,7 @@
       justify-content: space-around;
       padding: 0 8px;
       position: relative;
-      z-index: 20;
+      z-index: 10;  /* чтобы навигация была поверх контента */
       box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
     }
 
@@ -447,7 +445,8 @@
 
     <!-- Вкладка 1: Главная -->
     <div id="tab-home" class="tab-content space-y-4">
-      <section class="bg-surface-container-low rounded-xl p-6 shadow-sm flex flex-col items-center text-center space-y-4 mt-1 border border-outline-variant/20">
+      <section class="bg-surface-container-low rounded-xl p-6 shadow-sm flex flex-col items-center text-center space-y-4 border border-outline-variant/20">
+        <!-- убрали mt-4 -->
         <h1 class="text-xl font-bold text-on-surface">Ваш надежный партнер в футбольной аналитике</h1>
         <p class="text-sm text-on-surface-variant">Профессиональные прогнозы, глубокая аналитика матчей топ-лиг и честная статистика. Доступ предоставляется авторизованным пользователям через Telegram-бота.</p>
         <button onclick="switchTab('feed')" class="button w-full py-3 rounded-xl font-semibold text-base flex items-center justify-center gap-2">
@@ -661,7 +660,7 @@
       container.innerHTML = '';
       data.forecasts.forEach(post => {
         const card = document.createElement('div');
-        card.className = 'bg-card-bg rounded-xl p-4 shadow-sm border border-outline-variant/20 mb-4';
+        card.className = 'bg-card-bg rounded-xl p-4 shadow-sm border border-outline-variant/20 mb-4 relative';
 
         const matchTeams = post.step_1.match.split('—').map(t => t.trim());
         let homeTeam = matchTeams[0] || "Команда 1";
@@ -1020,7 +1019,6 @@
     });
     confirmationScreen.appendChild(continueBtn);
 
-    // Профиль при загрузке
     renderProfile();
   });
 </script>
