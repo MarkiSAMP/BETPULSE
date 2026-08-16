@@ -20,13 +20,11 @@ from aiogram.types import (
 )
 from aiogram.enums import ParseMode
 
-# === Переменные окружения ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
 WEBAPP_URL = os.getenv("WEBAPP_URL", "https://betpulse-6knn.onrender.com")
 PAYMENT_PROVIDER_TOKEN = os.getenv("PAYMENT_PROVIDER_TOKEN", "")
 
-# Donation Alerts
 DONATIONALERTS_PAGE_URL = os.getenv("DONATIONALERTS_PAGE_URL")
 DONATIONALERTS_ACCESS_TOKEN = os.getenv("DONATIONALERTS_ACCESS_TOKEN")
 DONATIONALERTS_API_URL = "https://www.donationalerts.com/api/v1"
@@ -39,7 +37,6 @@ if not DATABASE_URL:
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-# ===== БАЗА ДАННЫХ =====
 def get_clean_db_url(url: str) -> str:
     if not url:
         return ""
@@ -81,7 +78,6 @@ async def safe_delete_message(chat_id: int, message_id: int):
 def get_expires_at(days: int = 30) -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=days)
 
-# ===== Donation Alerts API =====
 user_amounts = {}
 
 def generate_unique_amount(user_id: int) -> float:
@@ -117,7 +113,7 @@ async def check_recent_donation(user_id: int) -> bool:
             data = res.json()
             donations = data.get("data", [])
             now = datetime.now(timezone.utc)
-            threshold = now - timedelta(seconds=30)
+            threshold = now - timedelta(seconds=60)  # увеличен до 60 секунд
 
             for donation in donations:
                 created_at = donation.get("created_at")
@@ -133,18 +129,18 @@ async def check_recent_donation(user_id: int) -> bool:
 
                 amount = float(donation.get("amount", 0))
                 if abs(amount - expected_amount) < 0.01:
-                    print(f"[DonationAlerts] Found matching donation of {amount} for user {user_id}")
+                    print(f"[DonationAlerts] Найден донат {amount} для пользователя {user_id}")
                     if user_id in user_amounts:
                         del user_amounts[user_id]
                     return True
 
+            print(f"[DonationAlerts] Донат на сумму {expected_amount} для пользователя {user_id} не найден")
             return False
 
     except Exception as e:
-        print(f"[DonationAlerts] Error: {e}")
+        print(f"[DonationAlerts] Ошибка: {e}")
         return False
 
-# ===== ОБРАБОТЧИКИ =====
 @dp.message(CommandStart())
 async def cmd_start(message: Message):
     user_id = message.from_user.id
@@ -185,7 +181,6 @@ async def cmd_start(message: Message):
     if last_msg_id:
         await safe_delete_message(message.chat.id, last_msg_id)
 
-    # ===== УСТАНАВЛИВАЕМ КНОПКУ МЕНЮ В ЗАВИСИМОСТИ ОТ ПОДПИСКИ =====
     if is_paid and expires_at and expires_at > now:
         await bot.set_chat_menu_button(
             chat_id=user_id,
@@ -240,7 +235,6 @@ async def process_show_subscription(callback: CallbackQuery):
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="⭐ Telegram Stars (авто)", callback_data="pay_stars")],
         [InlineKeyboardButton(text="💳 Donation Alerts (карта/СБП)", callback_data="pay_donationalerts")],
-        [InlineKeyboardButton(text="💸 Ручной перевод на карту", callback_data="pay_transfer")],
         [InlineKeyboardButton(text="« Назад", callback_data="back_to_main")]
     ])
     text = (
@@ -276,7 +270,6 @@ async def process_back_to_main(callback: CallbackQuery):
     except Exception:
         pass
 
-# ===== ОПЛАТА ЧЕРЕЗ DONATION ALERTS =====
 @dp.callback_query(F.data == "pay_donationalerts")
 async def process_pay_donationalerts(callback: CallbackQuery):
     await callback.answer()
@@ -286,7 +279,7 @@ async def process_pay_donationalerts(callback: CallbackQuery):
         ])
         await callback.message.edit_text(
             "⚠️ <b>Donation Alerts временно недоступен.</b>\n"
-            "Выберите другой способ.",
+            "Пожалуйста, выберите другой способ оплаты.",
             reply_markup=kb,
             parse_mode=ParseMode.HTML
         )
@@ -385,7 +378,7 @@ async def check_donationalerts(callback: CallbackQuery):
         await callback.message.answer(
             f"⏳ <b>Донат не найден или сумма не совпадает.</b>\n\n"
             f"Убедитесь, что вы перевели ровно <b>{amount_str} ₽</b>.\n"
-            "Донат должен быть совершён в течение последних 30 секунд.\n\n"
+            "Донат должен быть совершён в течение последних 60 секунд.\n\n"
             "Если вы всё сделали правильно, попробуйте подождать 1 минуту и нажать кнопку снова.\n"
             "Если проблема повторяется – отправьте скриншот чека в поддержку.",
             parse_mode=ParseMode.HTML,
@@ -395,7 +388,6 @@ async def check_donationalerts(callback: CallbackQuery):
             ])
         )
 
-# ===== ОПЛАТА ЧЕРЕЗ TELEGRAM STARS =====
 @dp.callback_query(F.data == "pay_stars")
 async def process_pay_stars(callback: CallbackQuery):
     await callback.answer()
@@ -404,13 +396,14 @@ async def process_pay_stars(callback: CallbackQuery):
             [InlineKeyboardButton(text="« Назад", callback_data="show_subscription")]
         ])
         await callback.message.edit_text(
-            "⚠️ <b>Платежи через Stars временно недоступны.</b>",
+            "⚠️ <b>Оплата через Telegram Stars временно недоступна.</b>\n"
+            "Пожалуйста, выберите другой способ оплаты.",
             reply_markup=kb,
             parse_mode=ParseMode.HTML
         )
         return
 
-    prices = [LabeledPrice(label="Подписка BETPULSE PRO (30 дней)", amount=50000)]  # 500 RUB
+    prices = [LabeledPrice(label="Подписка BETPULSE PRO (30 дней)", amount=50000)]
     await safe_delete_message(callback.message.chat.id, callback.message.message_id)
     sent_msg = await bot.send_invoice(
         chat_id=callback.from_user.id,
@@ -433,33 +426,6 @@ async def process_pay_stars(callback: CallbackQuery):
         except Exception:
             pass
 
-# ===== РУЧНАЯ ОПЛАТА ПЕРЕВОДОМ =====
-@dp.callback_query(F.data == "pay_transfer")
-async def process_pay_transfer(callback: CallbackQuery):
-    await callback.answer()
-    text = (
-        "💳 <b>Оплата переводом на карту</b>\n\n"
-        "Переведите 500 ₽ на карту:\n"
-        "<b>1111 2222 3333 4444</b>\n"
-        "Получатель: Собянин К.А.\n\n"
-        "После перевода отправьте чек / скриншот в этот чат.\n"
-        "Подписка будет активирована вручную в течение 24 часов."
-    )
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="📤 Отправить чек", callback_data="send_receipt")],
-        [InlineKeyboardButton(text="« Назад", callback_data="show_subscription")]
-    ])
-    await callback.message.edit_text(text, reply_markup=kb, parse_mode=ParseMode.HTML)
-
-@dp.callback_query(F.data == "send_receipt")
-async def process_send_receipt(callback: CallbackQuery):
-    await callback.answer()
-    await callback.message.answer(
-        "Пожалуйста, отправьте скриншот или фото чека в это сообщение.\n"
-        "После проверки мы активируем подписку."
-    )
-
-# ===== ОБРАБОТКА УСПЕШНОЙ ОПЛАТЫ (Stars) =====
 @dp.pre_checkout_query()
 async def pre_checkout_handler(pre_checkout_q: PreCheckoutQuery):
     await bot.answer_pre_checkout_query(pre_checkout_q.id, ok=True)
@@ -518,12 +484,7 @@ async def successful_payment_handler(message: Message):
 async def main():
     await init_db()
     await bot.delete_webhook(drop_pending_updates=True)
-
-    # Устанавливаем кнопку меню по умолчанию (для всех, кто ещё не взаимодействовал)
-    await bot.set_chat_menu_button(
-        menu_button=MenuButtonDefault()
-    )
-
+    await bot.set_chat_menu_button(menu_button=MenuButtonDefault())
     print("[BOT]: Бот BETPULSE запущен!")
     await dp.start_polling(bot)
 
