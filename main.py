@@ -49,6 +49,17 @@ def get_from_cache(key: str) -> Optional[Dict]:
 def set_to_cache(key: str, data: Dict):
     cache[key] = (data, time())
 
+# ===== ФУНКЦИЯ ДЛЯ ИСПРАВЛЕНИЯ КОДИРОВКИ =====
+def fix_encoding(text: str) -> str:
+    """Исправляет двойную кодировку UTF-8 -> Latin-1 -> UTF-8."""
+    if not text or not isinstance(text, str):
+        return text
+    try:
+        # Пробуем исправить типичную проблему: символы Ã± и т.п.
+        return text.encode('latin-1').decode('utf-8')
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return text
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("[SERVER]: Инициализация базы данных...")
@@ -357,11 +368,16 @@ async def get_today_matches(
 
         league = match.get("league", {})
         competition = league.get("name") or "Турнир"
+        # Исправляем кодировку названия турнира
+        competition = fix_encoding(competition)
 
         home_team = match.get("home_team", {})
         away_team = match.get("away_team", {})
         home_name = home_team.get("team_name") or "Команда 1"
         away_name = away_team.get("team_name") or "Команда 2"
+        # Исправляем кодировку названий команд
+        home_name = fix_encoding(home_name)
+        away_name = fix_encoding(away_name)
 
         home_logo = home_team.get("team_logo")
         away_logo = away_team.get("team_logo")
@@ -407,6 +423,8 @@ async def get_today_matches(
 
         venue = match.get("venue", {})
         venue_name = venue.get("stadium_name") or "Стадион"
+        # Исправляем кодировку названия стадиона
+        venue_name = fix_encoding(venue_name)
 
         bet_data = generate_bet_market_for_match(
             home_name, away_name, match_id, is_live=is_live,
@@ -474,7 +492,7 @@ async def compare_teams(
     goals_home: int = 0,
     goals_away: int = 0,
     elapsed: int = 0,
-    event_id: str = "",  # <-- НОВЫЙ ПАРАМЕТР
+    event_id: str = "",
     x_telegram_init_data: str = Header(None, alias="X-Telegram-Init-Data")
 ):
     if x_telegram_init_data:
@@ -483,7 +501,10 @@ async def compare_teams(
     home_badge = home_badge or f"https://ui-avatars.com/api/?name={urllib.parse.quote(home[:3])}&background=00288e&color=fff"
     away_badge = away_badge or f"https://ui-avatars.com/api/?name={urllib.parse.quote(away[:3])}&background=00288e&color=fff"
 
-    # Используем переданный event_id, иначе формируем из названий
+    # Исправляем кодировку названий (на случай, если они пришли с ошибкой)
+    home = fix_encoding(home)
+    away = fix_encoding(away)
+
     id_event = event_id if event_id else f"{home}_{away}"
 
     bet_market = generate_bet_market_for_match(
