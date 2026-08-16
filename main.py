@@ -17,11 +17,9 @@ from fastapi.responses import FileResponse
 
 from bot import bot, dp, init_db, get_db
 
-# === Переменные окружения ===
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 DATABASE_URL = os.getenv("DATABASE_URL")
 FOOTBALL_DATA_API_KEY = os.getenv("FOOTBALL_DATA_API_KEY")
-RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")  # Новый ключ для API-Football
 
 if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN не задан")
@@ -31,9 +29,7 @@ if not FOOTBALL_DATA_API_KEY:
     raise RuntimeError("FOOTBALL_DATA_API_KEY не задан")
 
 FOOTBALL_DATA_URL = "https://footballdata.io/api/v1"
-API_FOOTBALL_URL = "https://api-football-v1.p.rapidapi.com/v3"
 
-# ===== КЕШИРОВАНИЕ =====
 CACHE_TTL = int(os.getenv("CACHE_TTL", 300))
 cache = {}
 
@@ -53,7 +49,6 @@ def get_from_cache(key: str) -> Optional[Dict]:
 def set_to_cache(key: str, data: Dict):
     cache[key] = (data, time())
 
-# ===== Lifespan =====
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("[SERVER]: Инициализация базы данных...")
@@ -85,7 +80,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
 LEAGUES_DATA = [
     {"id": "all", "name": "Все лиги"},
     {"id": "15", "name": "АПЛ (Англия)"},
@@ -219,7 +213,6 @@ def generate_bet_market_for_match(
     ]
     return markets[market_index]
 
-# ===== КЕШИРОВАНИЕ ЛИГ =====
 _LEAGUES_CACHE = {"data": None, "timestamp": 0}
 _LEAGUES_TTL = 3600
 
@@ -259,114 +252,6 @@ async def fetch_leagues_from_api() -> List[Dict]:
         print(f"[Footballdata.io] Исключение при получении лиг: {e}")
         return LEAGUES_DATA
 
-# ===== ПОЛУЧЕНИЕ МАТЧЕЙ ИЗ API-FOOTBALL (RAPIDAPI) =====
-async def fetch_matches_from_api_football() -> List[Dict]:
-    if not RAPIDAPI_KEY:
-        print("[API-Football] Ключ не задан, пропускаем")
-        return []
-
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    headers = {
-        "x-rapidapi-key": RAPIDAPI_KEY,
-        "x-rapidapi-host": "api-football-v1.p.rapidapi.com"
-    }
-    params = {
-        "date": today,
-        "timezone": "Europe/Moscow"
-    }
-
-    url = f"{API_FOOTBALL_URL}/fixtures"
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            res = await client.get(url, headers=headers, params=params)
-            if res.status_code == 200:
-                data = res.json()
-                return data.get("response", [])
-            else:
-                print(f"[API-Football] Ошибка: {res.status_code} - {res.text}")
-                return []
-    except Exception as e:
-        print(f"[API-Football] Исключение: {e}")
-        return []
-
-def format_api_football_match(match: Dict) -> Optional[Dict]:
-    try:
-        fixture = match.get("fixture", {})
-        league = match.get("league", {})
-        teams = match.get("teams", {})
-        goals = match.get("goals", {})
-        status = fixture.get("status", {})
-
-        home_team = teams.get("home", {}).get("name", "Команда 1")
-        away_team = teams.get("away", {}).get("name", "Команда 2")
-        competition = league.get("name", "Турнир")
-        match_id = str(fixture.get("id", ""))
-
-        is_live = status.get("short") in ["1H", "2H", "HT", "ET", "BT", "P", "LIVE"]
-        goals_home = goals.get("home") or 0
-        goals_away = goals.get("away") or 0
-        elapsed = status.get("elapsed") or 0
-
-        home_badge = teams.get("home", {}).get("logo") or f"https://ui-avatars.com/api/?name={urllib.parse.quote(home_team[:3])}&background=00288e&color=fff"
-        away_badge = teams.get("away", {}).get("logo") or f"https://ui-avatars.com/api/?name={urllib.parse.quote(away_team[:3])}&background=00288e&color=fff"
-
-        date_str = fixture.get("date")
-        time_str = "19:00 (МСК)"
-        if date_str:
-            try:
-                dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
-                dt_msk = dt + timedelta(hours=3)
-                time_str = dt_msk.strftime("%H:%M") + " (МСК)"
-            except:
-                pass
-
-        venue = fixture.get("venue", {}).get("name", "Стадион")
-
-        bet_data = generate_bet_market_for_match(
-            home_team, away_team, match_id, is_live=is_live,
-            goals_home=goals_home, goals_away=goals_away, elapsed=elapsed
-        )
-
-        match_display = f"{home_team} {goals_home} : {goals_away} {away_team}" if is_live else f"{home_team} — {away_team}"
-        info_prefix = f"LIVE ({elapsed}')" if is_live and elapsed else ("LIVE" if is_live else "Ближайший матч")
-
-        reasons = [
-            f"1. Ход встречи: {home_team} контролирует инициативу." if is_live else f"1. Мотивация: {home_team} нацелена на победу на домашнем стадионе.",
-            f"2. Динамика: {away_team} перестраивает тактическую схему." if is_live else f"2. Форма: {away_team} демонстрирует высокую результативность в атаке.",
-            bet_data["reason_3"]
-        ]
-
-        return {
-            "event_id": match_id,
-            "league_id": str(league.get("id", "")),
-            "sport": "Футбол",
-            "is_live": is_live,
-            "goals_home": goals_home,
-            "goals_away": goals_away,
-            "elapsed": elapsed,
-            "home_badge": home_badge,
-            "away_badge": away_badge,
-            "match_date": fixture.get("date"),
-            "step_1": {
-                "title": competition,
-                "match": match_display,
-                "info": f"{info_prefix}, {time_str} | Стадион: {venue}"
-            },
-            "step_2": {
-                "forecast": bet_data["type"],
-                "coefficient": bet_data["coef"],
-                "explanation": bet_data["exp"]
-            },
-            "step_3": reasons,
-            "step_4": sanitize_text(bet_data["risk"]),
-            "step_5": f"Рекомендуемый размер подрасчета: {bet_data['bank']} от банка.",
-            "disclaimer": "Аналитика сформирована на основе математической модели вероятностей."
-        }
-    except Exception as e:
-        print(f"[API-Football] Ошибка парсинга матча: {e}")
-        return None
-
-# ===== ЭНДПОИНТЫ =====
 @app.get("/")
 async def serve_frontend():
     return FileResponse("index.html")
@@ -393,65 +278,180 @@ async def get_today_matches(
     posts = []
     api_error = None
 
-    # --- 1. Получаем матчи из footballdata.io (топ-лиги) ---
     headers = {"Authorization": f"Bearer {FOOTBALL_DATA_API_KEY}"}
     url = f"{FOOTBALL_DATA_URL}/fixtures/upcoming"
     params = {"page": 1, "limit": 300}  # Увеличили до 300
 
-    matches_fd = []
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
             res = await client.get(url, headers=headers, params=params)
+            print(f"[Footballdata.io] Статус: {res.status_code}")
+
             if res.status_code == 200:
                 data = res.json()
                 if data.get("success"):
                     matches_data = data.get("data", {})
                     if isinstance(matches_data, dict) and "matches" in matches_data:
-                        matches_fd = matches_data.get("matches", [])
+                        matches = matches_data.get("matches", [])
                     elif isinstance(matches_data, list):
-                        matches_fd = matches_data
-                    print(f"[Footballdata.io] Получено матчей: {len(matches_fd)}")
-                else:
-                    api_error = data.get("error", {}).get("message", "Ошибка footballdata.io")
-            else:
-                api_error = f"HTTP {res.status_code}"
-    except Exception as e:
-        api_error = str(e)
-        print(f"[Footballdata.io Error]: {e}")
+                        matches = matches_data
+                    else:
+                        matches = []
 
-    # Фильтруем footballdata.io по дате (до послезавтра)
-    msk_now = datetime.now(timezone.utc) + timedelta(hours=3)
-    max_date = (msk_now + timedelta(days=2)).date()
-    for m in matches_fd:
-        match_date = m.get("match_date") or m.get("date")
+                    print(f"[Footballdata.io] Получено матчей (всего): {len(matches)}")
+
+                    # Фильтр по дате: сегодня, завтра, послезавтра
+                    msk_now = datetime.now(timezone.utc) + timedelta(hours=3)
+                    max_date = (msk_now + timedelta(days=2)).date()
+
+                    filtered_by_date = []
+                    for m in matches:
+                        match_date = m.get("match_date") or m.get("date")
+                        if match_date:
+                            try:
+                                dt = datetime.strptime(match_date, "%Y-%m-%d %H:%M:%S")
+                                dt_msk = dt + timedelta(hours=3)
+                                if dt_msk.date() <= max_date:
+                                    filtered_by_date.append(m)
+                            except:
+                                filtered_by_date.append(m)
+                        else:
+                            filtered_by_date.append(m)
+
+                    matches = filtered_by_date
+                    print(f"[Footballdata.io] После фильтрации по дате (до {max_date}): {len(matches)}")
+
+                    if league_id != "all":
+                        filtered_matches = []
+                        for m in matches:
+                            match_league = m.get("league", {})
+                            if str(match_league.get("league_id")) == str(league_id):
+                                filtered_matches.append(m)
+                        matches = filtered_matches
+                        print(f"[Footballdata.io] После фильтрации по лиге: {len(matches)}")
+                    else:
+                        print(f"[Footballdata.io] Показываем все матчи (без фильтрации)")
+
+                    # Убираем завершённые и отменённые
+                    filtered = []
+                    for m in matches:
+                        status = m.get("status") or m.get("status_localized") or ""
+                        if status not in ["FT", "FINISHED", "POSTPONED", "CANCELLED"]:
+                            filtered.append(m)
+                    matches = filtered
+                    print(f"[Footballdata.io] Актуальных матчей (без завершённых): {len(matches)}")
+                else:
+                    api_error = f"Ошибка API: {data.get('error', {}).get('message', 'Unknown error')}"
+                    print(f"[Footballdata.io] {api_error}")
+                    matches = []
+            else:
+                api_error = f"Ошибка HTTP: {res.status_code} — {res.text[:200]}"
+                print(f"[Footballdata.io] {api_error}")
+                matches = []
+
+    except Exception as e:
+        api_error = f"Исключение при запросе: {str(e)}"
+        print(f"[Footballdata.io Error]: {e}")
+        matches = []
+
+    for match in matches:
+        match_id = str(match.get("match_id") or match.get("id") or "")
+
+        league = match.get("league", {})
+        competition = league.get("name") or "Турнир"
+
+        home_team = match.get("home_team", {})
+        away_team = match.get("away_team", {})
+        home_name = home_team.get("team_name") or "Команда 1"
+        away_name = away_team.get("team_name") or "Команда 2"
+
+        home_logo = home_team.get("team_logo")
+        away_logo = away_team.get("team_logo")
+        if not home_logo:
+            home_logo = f"https://ui-avatars.com/api/?name={urllib.parse.quote(home_name[:3])}&background=00288e&color=fff"
+        if not away_logo:
+            away_logo = f"https://ui-avatars.com/api/?name={urllib.parse.quote(away_name[:3])}&background=00288e&color=fff"
+
+        status = match.get("status") or match.get("status_localized") or "SCHEDULED"
+        live_statuses = ["LIVE", "In Play", "1H", "2H", "HT", "ET", "BT", "P"]
+        is_live = status in live_statuses
+
+        score = match.get("score", {})
+        goals_home = score.get("home") or 0
+        goals_away = score.get("away") or 0
+
+        match_date = match.get("match_date") or match.get("date") or ""
+        dt_utc = None
         if match_date:
             try:
-                dt = datetime.strptime(match_date, "%Y-%m-%d %H:%M:%S")
-                dt_msk = dt + timedelta(hours=3)
-                if dt_msk.date() > max_date:
-                    continue
+                dt_utc = datetime.strptime(match_date, "%Y-%m-%d %H:%M:%S")
             except:
                 pass
-        # Парсим матч из footballdata.io (используем тот же формат, что был раньше)
-        # Я копирую полный парсер из предыдущей версии. Для краткости здесь покажу структуру.
-        # В реальном файле вы вставите полный парсер.
-        post = parse_footballdata_match(m, is_live=False)  # функция должна быть определена
-        if post:
-            posts.append(post)
 
-    # --- 2. Получаем матчи из API-Football (только если league_id == "all") ---
-    if league_id == "all" and RAPIDAPI_KEY:
-        af_matches = await fetch_matches_from_api_football()
-        print(f"[API-Football] Получено матчей: {len(af_matches)}")
-        for match in af_matches:
-            formatted = format_api_football_match(match)
-            if formatted:
-                # Проверяем дубликаты по event_id
-                if not any(p["event_id"] == formatted["event_id"] for p in posts):
-                    posts.append(formatted)
+        if dt_utc:
+            dt_msk = dt_utc + timedelta(hours=3)
+            time_str = dt_msk.strftime("%H:%M") + " (МСК)"
+            msk_now = datetime.now(timezone.utc) + timedelta(hours=3)
+            today_msk = msk_now.date()
+            match_date_only = dt_msk.date()
+            if match_date_only == today_msk:
+                date_text = "Сегодня"
+            elif match_date_only == today_msk + timedelta(days=1):
+                date_text = "Завтра"
+            elif match_date_only == today_msk + timedelta(days=2):
+                date_text = "Послезавтра"
+            else:
+                date_text = dt_msk.strftime("%d.%m")
+            info_date = f"{date_text}, {time_str}"
+        else:
+            time_str = "19:00 (МСК)"
+            info_date = f"Ближайший матч, {time_str}"
 
-    # --- 3. Сортируем и возвращаем ---
-    posts.sort(key=lambda x: x.get("match_date", ""))
+        venue = match.get("venue", {})
+        venue_name = venue.get("stadium_name") or "Стадион"
+
+        bet_data = generate_bet_market_for_match(
+            home_name, away_name, match_id, is_live=is_live,
+            goals_home=goals_home, goals_away=goals_away, elapsed=0
+        )
+
+        match_display = f"{home_name} {goals_home} : {goals_away} {away_name}" if is_live else f"{home_name} — {away_name}"
+        info_prefix = "LIVE" if is_live else ""
+
+        reasons = [
+            f"1. Мотивация: {home_name} нацелена на победу на домашнем стадионе.",
+            f"2. Форма: {away_name} демонстрирует высокую результативность в атаке.",
+            bet_data["reason_3"]
+        ]
+
+        post = {
+            "event_id": match_id,
+            "league_id": str(league.get("league_id") if isinstance(league, dict) else ""),
+            "sport": "Футбол",
+            "is_live": is_live,
+            "goals_home": int(goals_home),
+            "goals_away": int(goals_away),
+            "elapsed": 0,
+            "home_badge": home_logo,
+            "away_badge": away_logo,
+            "step_1": {
+                "title": competition,
+                "match": match_display,
+                "info": f"{info_prefix} {info_date}".strip() if info_prefix else info_date
+            },
+            "step_2": {
+                "forecast": bet_data["type"],
+                "coefficient": bet_data["coef"],
+                "explanation": bet_data["exp"]
+            },
+            "step_3": reasons,
+            "step_4": sanitize_text(bet_data["risk"]),
+            "step_5": f"Рекомендуемый размер подрасчета: {bet_data['bank']} от банка.",
+            "disclaimer": "Аналитика сформирована на основе математической модели вероятностей."
+        }
+        posts.append(post)
+
+    posts.sort(key=lambda x: x["step_1"]["info"])
 
     response = {
         "count": len(posts),
@@ -465,15 +465,6 @@ async def get_today_matches(
         print(f"[Cache] Данные сохранены в кеш для league_id={league_id}")
 
     return response
-
-# ===== ФУНКЦИЯ ПАРСИНГА ДЛЯ footballdata.io (вставьте ваш готовый код) =====
-def parse_footballdata_match(match: Dict) -> Optional[Dict]:
-    # Здесь должен быть ваш парсер, который преобразует матч из footballdata.io
-    # в формат, совместимый с приложением.
-    # Я не копирую его сюда, чтобы не раздувать ответ, но вы можете скопировать его из предыдущей версии main.py.
-    # Убедитесь, что он возвращает объект с полями event_id, league_id, is_live, goals_home, goals_away,
-    # elapsed, home_badge, away_badge, match_date, step_1, step_2, step_3, step_4, step_5.
-    return None
 
 @app.get("/api/stats/compare")
 async def compare_teams(
