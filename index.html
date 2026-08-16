@@ -20,6 +20,61 @@
       overflow: hidden;
     }
 
+    /* ===== БЛОК ДЛЯ БРАУЗЕРА (показывается только вне Telegram) ===== */
+    #browser-block {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #f8f9ff;
+      z-index: 99999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      font-family: 'Inter', sans-serif;
+    }
+    #browser-block.visible {
+      display: flex;
+    }
+    #browser-block .icon {
+      font-size: 64px;
+      color: #00288e;
+      margin-bottom: 24px;
+    }
+    #browser-block h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0b1c30;
+      margin-bottom: 12px;
+    }
+    #browser-block p {
+      font-size: 16px;
+      color: #444653;
+      max-width: 360px;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    #browser-block .button {
+      background: #00288e;
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    #browser-block .button:hover {
+      background: #001f6b;
+    }
+
     /* ===== ОВЕРЛЕЙ ОФЕРТЫ ===== */
     #offerOverlay {
       position: fixed;
@@ -290,7 +345,7 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 8px 16px 80px 16px;  /* верхний отступ уменьшен */
+      padding: 8px 16px 80px 16px;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -304,7 +359,7 @@
       justify-content: space-around;
       padding: 0 8px;
       position: relative;
-      z-index: 10;  /* чтобы навигация была поверх контента */
+      z-index: 10;
       box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
     }
 
@@ -381,6 +436,14 @@
 </head>
 <body>
 
+<!-- ===== БЛОК ДЛЯ БРАУЗЕРА (показывается только вне Telegram) ===== -->
+<div id="browser-block">
+  <div class="icon">🚫</div>
+  <h1>Доступ только через Telegram</h1>
+  <p>Это приложение работает только внутри Telegram. Пожалуйста, откройте его через нашего бота.</p>
+  <a class="button" href="tg://resolve?domain=betpulse_bot" target="_blank">Открыть в Telegram</a>
+</div>
+
 <!-- ===== ОВЕРЛЕЙ ОФЕРТЫ ===== -->
 <div id="offerOverlay">
   <div class="offer-modal" id="offerModal">
@@ -446,7 +509,6 @@
     <!-- Вкладка 1: Главная -->
     <div id="tab-home" class="tab-content space-y-4">
       <section class="bg-surface-container-low rounded-xl p-6 shadow-sm flex flex-col items-center text-center space-y-4 border border-outline-variant/20">
-        <!-- убрали mt-4 -->
         <h1 class="text-xl font-bold text-on-surface">Ваш надежный партнер в футбольной аналитике</h1>
         <p class="text-sm text-on-surface-variant">Профессиональные прогнозы, глубокая аналитика матчей топ-лиг и честная статистика. Доступ предоставляется авторизованным пользователям через Telegram-бота.</p>
         <button onclick="switchTab('feed')" class="button w-full py-3 rounded-xl font-semibold text-base flex items-center justify-center gap-2">
@@ -559,6 +621,24 @@
 </div>
 
 <script>
+  // ===== ПРОВЕРКА ЗАПУСКА В TELEGRAM =====
+  (function checkTelegram() {
+    const isTelegram = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData;
+    const browserBlock = document.getElementById('browser-block');
+
+    if (!isTelegram) {
+      // Показываем блок для браузера, скрываем всё остальное
+      browserBlock.classList.add('visible');
+      // Скрываем оверлей оферты и основной интерфейс
+      document.getElementById('offerOverlay').style.display = 'none';
+      document.querySelector('.app-wrapper').style.display = 'none';
+      return;
+    }
+
+    // Если всё в порядке – скрываем блок для браузера (на всякий случай)
+    browserBlock.classList.remove('visible');
+  })();
+
   // ===== ГЛОБАЛЬНЫЕ ДАННЫЕ =====
   let telegramUser = null;
   let feedLoaded = false;
