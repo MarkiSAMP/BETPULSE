@@ -3,7 +3,6 @@ import asyncio
 import asyncpg
 import random
 import httpx
-import re
 from datetime import datetime, timedelta, timezone
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import CommandStart
@@ -37,6 +36,7 @@ if not DATABASE_URL:
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
+# ===== БАЗА ДАННЫХ =====
 def get_clean_db_url(url: str) -> str:
     if not url:
         return ""
@@ -78,6 +78,7 @@ async def safe_delete_message(chat_id: int, message_id: int):
 def get_expires_at(days: int = 30) -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=days)
 
+# ===== DONATION ALERTS =====
 user_amounts = {}
 
 def generate_unique_amount(user_id: int) -> float:
@@ -88,12 +89,10 @@ def generate_unique_amount(user_id: int) -> float:
 
 async def check_recent_donation(user_id: int) -> bool:
     if not DONATIONALERTS_ACCESS_TOKEN:
-        print("[DonationAlerts] Access token not set")
         return False
 
     expected_amount = user_amounts.get(user_id)
     if not expected_amount:
-        print("[DonationAlerts] No amount stored for user")
         return False
 
     headers = {"Authorization": f"Bearer {DONATIONALERTS_ACCESS_TOKEN}"}
@@ -107,13 +106,12 @@ async def check_recent_donation(user_id: int) -> bool:
                 params=params
             )
             if res.status_code != 200:
-                print(f"[DonationAlerts] API error: {res.status_code}")
                 return False
 
             data = res.json()
             donations = data.get("data", [])
             now = datetime.now(timezone.utc)
-            threshold = now - timedelta(seconds=60)  # увеличен до 60 секунд
+            threshold = now - timedelta(seconds=60)  # 60 секунд
 
             for donation in donations:
                 created_at = donation.get("created_at")
@@ -129,18 +127,16 @@ async def check_recent_donation(user_id: int) -> bool:
 
                 amount = float(donation.get("amount", 0))
                 if abs(amount - expected_amount) < 0.01:
-                    print(f"[DonationAlerts] Найден донат {amount} для пользователя {user_id}")
                     if user_id in user_amounts:
                         del user_amounts[user_id]
                     return True
 
-            print(f"[DonationAlerts] Донат на сумму {expected_amount} для пользователя {user_id} не найден")
             return False
 
-    except Exception as e:
-        print(f"[DonationAlerts] Ошибка: {e}")
+    except Exception:
         return False
 
+# ===== ОБРАБОТЧИКИ =====
 @dp.message(CommandStart())
 async def cmd_start(message: Message):
     user_id = message.from_user.id
@@ -330,7 +326,6 @@ async def check_donationalerts(callback: CallbackQuery):
                 )
                 await conn.close()
             except Exception as e:
-                print(f"[DB Update Error]: {e}")
                 await callback.message.answer("❌ Ошибка активации подписки. Обратитесь в поддержку.")
                 return
 
