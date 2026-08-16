@@ -273,9 +273,9 @@ async def get_today_matches(
     league_id: str = Query("all"),
     x_telegram_init_data: str = Header(None, alias="X-Telegram-Init-Data")
 ):
-    # ВРЕМЕННО ОТКЛЮЧАЕМ ПРОВЕРКУ ПОДПИСКИ
-    # if x_telegram_init_data:
-    #     await check_user_access(x_telegram_init_data)
+    # ВКЛЮЧАЕМ ПРОВЕРКУ ПОДПИСКИ
+    if x_telegram_init_data:
+        await check_user_access(x_telegram_init_data)
 
     cache_key = get_cache_key(league_id)
     cached_data = get_from_cache(cache_key)
@@ -464,9 +464,9 @@ async def compare_teams(
     elapsed: int = 0,
     x_telegram_init_data: str = Header(None, alias="X-Telegram-Init-Data")
 ):
-    # ВРЕМЕННО ОТКЛЮЧАЕМ ПРОВЕРКУ
-    # if x_telegram_init_data:
-    #     await check_user_access(x_telegram_init_data)
+    # ВКЛЮЧАЕМ ПРОВЕРКУ ПОДПИСКИ
+    if x_telegram_init_data:
+        await check_user_access(x_telegram_init_data)
 
     home_badge = home_badge or f"https://ui-avatars.com/api/?name={urllib.parse.quote(home[:3])}&background=00288e&color=fff"
     away_badge = away_badge or f"https://ui-avatars.com/api/?name={urllib.parse.quote(away[:3])}&background=00288e&color=fff"
