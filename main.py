@@ -280,7 +280,7 @@ async def get_today_matches(
 
     headers = {"Authorization": f"Bearer {FOOTBALL_DATA_API_KEY}"}
     url = f"{FOOTBALL_DATA_URL}/fixtures/upcoming"
-    params = {"page": 1, "limit": 300}  # Увеличили до 300
+    params = {"page": 1, "limit": 300}
 
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
@@ -300,7 +300,6 @@ async def get_today_matches(
 
                     print(f"[Footballdata.io] Получено матчей (всего): {len(matches)}")
 
-                    # Фильтр по дате: сегодня, завтра, послезавтра
                     msk_now = datetime.now(timezone.utc) + timedelta(hours=3)
                     max_date = (msk_now + timedelta(days=2)).date()
 
@@ -332,7 +331,6 @@ async def get_today_matches(
                     else:
                         print(f"[Footballdata.io] Показываем все матчи (без фильтрации)")
 
-                    # Убираем завершённые и отменённые
                     filtered = []
                     for m in matches:
                         status = m.get("status") or m.get("status_localized") or ""
@@ -476,6 +474,7 @@ async def compare_teams(
     goals_home: int = 0,
     goals_away: int = 0,
     elapsed: int = 0,
+    event_id: str = "",  # <-- НОВЫЙ ПАРАМЕТР
     x_telegram_init_data: str = Header(None, alias="X-Telegram-Init-Data")
 ):
     if x_telegram_init_data:
@@ -484,8 +483,11 @@ async def compare_teams(
     home_badge = home_badge or f"https://ui-avatars.com/api/?name={urllib.parse.quote(home[:3])}&background=00288e&color=fff"
     away_badge = away_badge or f"https://ui-avatars.com/api/?name={urllib.parse.quote(away[:3])}&background=00288e&color=fff"
 
+    # Используем переданный event_id, иначе формируем из названий
+    id_event = event_id if event_id else f"{home}_{away}"
+
     bet_market = generate_bet_market_for_match(
-        home, away, f"{home}_{away}",
+        home, away, id_event,
         is_live=is_live, goals_home=goals_home, goals_away=goals_away, elapsed=elapsed
     )
 
