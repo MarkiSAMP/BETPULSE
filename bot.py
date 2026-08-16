@@ -211,6 +211,7 @@ async def cmd_start(message: Message):
             f"• ⚽ Покрытие топ-лиг\n"
             f"• 🛡 Математический алгоритм\n\n"
             f"Нажмите кнопку ниже, чтобы оформить доступ."
+            f"📞 По вопросам поддержки пишите: @swet25on"
         )
         sent_msg = await message.answer(text, reply_markup=kb, parse_mode=ParseMode.HTML)
 
