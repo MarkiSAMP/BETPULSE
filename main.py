@@ -285,6 +285,8 @@ async def get_today_matches(
     api_error = None
 
     headers = {"Authorization": f"Bearer {FOOTBALL_DATA_API_KEY}"}
+    
+    # Запрашиваем все предстоящие матчи (без фильтрации по дате)
     url = f"{FOOTBALL_DATA_URL}/fixtures/upcoming"
     params = {"page": 1, "limit": 200}
 
@@ -306,6 +308,29 @@ async def get_today_matches(
 
                     print(f"[Footballdata.io] Получено матчей (всего): {len(matches)}")
 
+                    # --- ФИЛЬТР ПО ДАТЕ: оставляем только матчи на сегодня, завтра, послезавтра ---
+                    msk_now = datetime.now(timezone.utc) + timedelta(hours=3)
+                    max_date = (msk_now + timedelta(days=2)).date()  # послезавтра включительно
+
+                    filtered_by_date = []
+                    for m in matches:
+                        match_date = m.get("match_date") or m.get("date")
+                        if match_date:
+                            try:
+                                dt = datetime.strptime(match_date, "%Y-%m-%d %H:%M:%S")
+                                dt_msk = dt + timedelta(hours=3)
+                                if dt_msk.date() <= max_date:
+                                    filtered_by_date.append(m)
+                            except:
+                                # Если дата не парсится, оставляем матч (на всякий случай)
+                                filtered_by_date.append(m)
+                        else:
+                            # Если дата отсутствует, оставляем (но такого быть не должно)
+                            filtered_by_date.append(m)
+
+                    matches = filtered_by_date
+                    print(f"[Footballdata.io] После фильтрации по дате (до {max_date}): {len(matches)}")
+
                     if league_id != "all":
                         filtered_matches = []
                         for m in matches:
@@ -317,6 +342,7 @@ async def get_today_matches(
                     else:
                         print(f"[Footballdata.io] Показываем все матчи (без фильтрации)")
 
+                    # Убираем завершённые и отменённые
                     filtered = []
                     for m in matches:
                         status = m.get("status") or m.get("status_localized") or ""
