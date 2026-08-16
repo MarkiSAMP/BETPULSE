@@ -212,11 +212,12 @@
     }
     .app-header .logo { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; color: #00288e; text-transform: uppercase; }
 
+    /* ===== КОНТЕЙНЕР С МАТЧАМИ ===== */
     .app-content {
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 8px 16px 16px 16px; /* убрали большой padding-bottom, теперь за него отвечает фиксированное меню */
+      padding: 8px 16px 80px 16px; /* <-- ИСПРАВЛЕННЫЙ ОТСТУП */
       -webkit-overflow-scrolling: touch;
     }
 
