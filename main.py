@@ -10,11 +10,10 @@ from typing import List, Dict, Any, Optional
 from urllib.parse import parse_qs
 from contextlib import asynccontextmanager
 from time import time
-import re
 import httpx
-from fastapi import FastAPI, HTTPException, Header, Query, Request
+from fastapi import FastAPI, HTTPException, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
 
 from bot import bot, dp, init_db, get_db
 
@@ -273,7 +272,6 @@ async def get_today_matches(
     league_id: str = Query("all"),
     x_telegram_init_data: str = Header(None, alias="X-Telegram-Init-Data")
 ):
-    # ВКЛЮЧАЕМ ПРОВЕРКУ ПОДПИСКИ
     if x_telegram_init_data:
         await check_user_access(x_telegram_init_data)
 
@@ -464,7 +462,6 @@ async def compare_teams(
     elapsed: int = 0,
     x_telegram_init_data: str = Header(None, alias="X-Telegram-Init-Data")
 ):
-    # ВКЛЮЧАЕМ ПРОВЕРКУ ПОДПИСКИ
     if x_telegram_init_data:
         await check_user_access(x_telegram_init_data)
 
