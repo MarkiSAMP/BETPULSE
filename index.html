@@ -19,7 +19,6 @@
       overflow: hidden;
     }
 
-    /* ===== ОВЕРЛЕЙ ОФЕРТЫ ===== */
     #offerOverlay {
       position: fixed;
       top: 0;
@@ -36,10 +35,7 @@
       box-sizing: border-box;
       transition: opacity 0.4s ease;
     }
-    #offerOverlay.hidden {
-      display: none;
-      opacity: 0;
-    }
+    #offerOverlay.hidden { display: none; opacity: 0; }
     .offer-modal {
       background: #ffffff;
       border-radius: 28px;
@@ -185,7 +181,6 @@
     .confirmation-screen .back-link { font-size: 14px; color: #00288e; background: none; border: none; cursor: pointer; text-decoration: underline; transition: color 0.2s; }
     .confirmation-screen .back-link:hover { color: #001f6b; }
 
-    /* ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== */
     .app-wrapper {
       display: flex;
       flex-direction: column;
@@ -212,16 +207,14 @@
     }
     .app-header .logo { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; color: #00288e; text-transform: uppercase; }
 
-    /* ===== КОНТЕЙНЕР С МАТЧАМИ ===== */
     .app-content {
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 8px 16px 80px 16px; /* <-- ИСПРАВЛЕННЫЙ ОТСТУП */
+      padding: 8px 16px 80px 16px;
       -webkit-overflow-scrolling: touch;
     }
 
-    /* ===== ФИКСИРОВАННОЕ НИЖНЕЕ МЕНЮ ===== */
     .app-nav {
       position: fixed;
       bottom: 0;
@@ -299,7 +292,6 @@
 </head>
 <body>
 
-<!-- ===== ОВЕРЛЕЙ ОФЕРТЫ ===== -->
 <div id="offerOverlay">
   <div class="offer-modal" id="offerModal">
     <div id="offerContent">
@@ -352,7 +344,6 @@
   </div>
 </div>
 
-<!-- ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== -->
 <div class="app-wrapper">
 
   <header class="app-header">
@@ -361,7 +352,6 @@
 
   <main class="app-content" id="appContent">
 
-    <!-- Вкладка 1: Главная -->
     <div id="tab-home" class="tab-content space-y-4">
       <section class="bg-surface-container-low rounded-xl p-6 shadow-sm flex flex-col items-center text-center space-y-4 border border-outline-variant/20">
         <h1 class="text-xl font-bold text-on-surface">Ваш надежный партнер в футбольной аналитике</h1>
@@ -394,7 +384,6 @@
       </section>
     </div>
 
-    <!-- Вкладка 2: Feed -->
     <div id="tab-feed" class="tab-content hidden space-y-4">
       <div class="bg-gradient-to-r from-primary to-primary-container rounded-lg p-4 text-white flex items-center justify-between shadow-sm">
         <div>
@@ -411,7 +400,6 @@
       </div>
     </div>
 
-    <!-- Вкладка 3: Stats -->
     <div id="tab-stats" class="tab-content hidden space-y-4">
       <div id="statsDefaultView" class="bg-card-bg rounded-2xl p-8 text-center border border-outline-variant/20 shadow-sm space-y-3 mt-1">
         <span class="material-symbols-outlined text-primary text-5xl">query_stats</span>
@@ -424,7 +412,6 @@
       <div id="statsMatchView" class="space-y-4 hidden"></div>
     </div>
 
-    <!-- Вкладка 4: Профиль -->
     <div id="tab-subscribe" class="tab-content hidden space-y-4">
       <section class="bg-card-bg rounded-2xl shadow-sm p-4 flex flex-col gap-4 border border-outline-variant/20">
         <div class="flex items-center gap-4">
@@ -454,7 +441,6 @@
 
   </main>
 
-  <!-- ===== ФИКСИРОВАННОЕ МЕНЮ ===== -->
   <nav class="app-nav">
     <button id="nav-home" onclick="switchTab('home')" class="nav-item active">
       <span class="material-symbols-outlined">home</span>
@@ -477,11 +463,9 @@
 </div>
 
 <script>
-  // ===== ГЛОБАЛЬНЫЕ ДАННЫЕ =====
   let telegramUser = null;
   let feedLoaded = false;
 
-  // ===== ИНИЦИАЛИЗАЦИЯ TELEGRAM =====
   function initTelegram() {
     if (window.Telegram && window.Telegram.WebApp) {
       const webApp = window.Telegram.WebApp;
@@ -489,16 +473,11 @@
       const user = webApp.initDataUnsafe?.user;
       if (user) {
         telegramUser = user;
-      } else {
-        console.warn('⚠️ No user data in Telegram WebApp');
       }
-    } else {
-      console.warn('⚠️ Telegram WebApp not available');
     }
   }
   initTelegram();
 
-  // ===== ОТОБРАЖЕНИЕ ПРОФИЛЯ =====
   function renderProfile() {
     const avatar = document.getElementById('userAvatar');
     const nameEl = document.getElementById('userName');
@@ -531,7 +510,6 @@
     }
   }
 
-  // ===== ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК =====
   function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
     const targetTab = document.getElementById('tab-' + tabName);
@@ -550,7 +528,6 @@
     document.getElementById('appContent').scrollTop = 0;
   }
 
-  // ===== FEED (ЗАГРУЗКА МАТЧЕЙ) =====
   function getTelegramInitData() {
     return window.Telegram?.WebApp?.initData || '';
   }
@@ -613,7 +590,7 @@
               ${post.step_2.forecast} — ${post.step_2.coefficient}
             </button>
             <div class="text-xs text-on-surface-variant italic mb-2">${post.step_2.explanation}</div>
-            <button onclick="openStatsForTeams('${homeTeam}', '${awayTeam}', '${post.home_badge}', '${post.away_badge}', ${post.is_live}, ${post.goals_home || 0}, ${post.goals_away || 0}, ${post.elapsed || 0})" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0 border border-primary/20">
+            <button onclick="openStatsForTeams('${homeTeam}', '${awayTeam}', '${post.home_badge}', '${post.away_badge}', ${post.is_live}, ${post.goals_home || 0}, ${post.goals_away || 0}, ${post.elapsed || 0}, '${post.event_id}')" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0 border border-primary/20">
               <span class="material-symbols-outlined text-[16px]">query_stats</span>
               Статистика
             </button>
@@ -626,8 +603,7 @@
     }
   }
 
-  // ===== СТАТИСТИКА =====
-  async function openStatsForTeams(homeTeam, awayTeam, homeBadge, awayBadge, isLive, goalsHome, goalsAway, elapsed) {
+  async function openStatsForTeams(homeTeam, awayTeam, homeBadge, awayBadge, isLive, goalsHome, goalsAway, elapsed, eventId) {
     switchTab('stats');
     const defaultView = document.getElementById('statsDefaultView');
     const matchView = document.getElementById('statsMatchView');
@@ -643,12 +619,13 @@
       </div>`;
     const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
     try {
-      const url = `${API_BASE}/stats/compare?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&home_badge=${encodeURIComponent(homeBadge)}&away_badge=${encodeURIComponent(awayBadge)}&is_live=${isLive}&goals_home=${goalsHome}&goals_away=${goalsAway}&elapsed=${elapsed}`;
+      const url = `${API_BASE}/stats/compare?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&home_badge=${encodeURIComponent(homeBadge)}&away_badge=${encodeURIComponent(awayBadge)}&is_live=${isLive}&goals_home=${goalsHome}&goals_away=${goalsAway}&elapsed=${elapsed}&event_id=${encodeURIComponent(eventId)}`;
       const res = await fetch(url, {
         headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
       });
       const data = await res.json();
       const analysis = data.analysis_5_points;
+
       matchView.innerHTML = `
         <div class="space-y-4">
           <button onclick="showStatsDefault()" class="bg-surface-container hover:bg-surface-variant/30 text-primary px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all border border-outline-variant/20">
@@ -767,7 +744,6 @@
     document.getElementById('statsDefaultView').classList.remove('hidden');
   }
 
-  // ===== ОФЕРТА =====
   document.addEventListener('DOMContentLoaded', function() {
     const offerSections = [
       {
