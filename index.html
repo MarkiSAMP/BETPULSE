@@ -216,12 +216,18 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 8px 16px 80px 16px;
+      padding: 8px 16px 16px 16px; /* убрали большой padding-bottom, теперь за него отвечает фиксированное меню */
       -webkit-overflow-scrolling: touch;
     }
 
+    /* ===== ФИКСИРОВАННОЕ НИЖНЕЕ МЕНЮ ===== */
     .app-nav {
-      flex-shrink: 0;
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
       height: 72px;
       background: #ffffff;
       border-top: 1px solid #e5edf5;
@@ -229,9 +235,9 @@
       align-items: center;
       justify-content: space-around;
       padding: 0 8px;
-      position: relative;
-      z-index: 10;
+      z-index: 30;
       box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
+      flex-shrink: 0;
     }
 
     .nav-item {
@@ -246,6 +252,9 @@
       cursor: pointer;
       min-width: 56px;
       text-decoration: none;
+      background: transparent;
+      border: none;
+      font-family: inherit;
     }
     .nav-item:hover { color: #00288e; }
     .nav-item.active { color: #00288e; background: rgba(0, 40, 142, 0.08); }
@@ -384,7 +393,7 @@
       </section>
     </div>
 
-    <!-- Вкладка 2: Feed (без фильтра лиг) -->
+    <!-- Вкладка 2: Feed -->
     <div id="tab-feed" class="tab-content hidden space-y-4">
       <div class="bg-gradient-to-r from-primary to-primary-container rounded-lg p-4 text-white flex items-center justify-between shadow-sm">
         <div>
@@ -444,6 +453,7 @@
 
   </main>
 
+  <!-- ===== ФИКСИРОВАННОЕ МЕНЮ ===== -->
   <nav class="app-nav">
     <button id="nav-home" onclick="switchTab('home')" class="nav-item active">
       <span class="material-symbols-outlined">home</span>
