@@ -49,13 +49,10 @@ def get_from_cache(key: str) -> Optional[Dict]:
 def set_to_cache(key: str, data: Dict):
     cache[key] = (data, time())
 
-# ===== ФУНКЦИЯ ДЛЯ ИСПРАВЛЕНИЯ КОДИРОВКИ =====
 def fix_encoding(text: str) -> str:
-    """Исправляет двойную кодировку UTF-8 -> Latin-1 -> UTF-8."""
     if not text or not isinstance(text, str):
         return text
     try:
-        # Пробуем исправить типичную проблему: символы Ã± и т.п.
         return text.encode('latin-1').decode('utf-8')
     except (UnicodeEncodeError, UnicodeDecodeError):
         return text
@@ -145,20 +142,30 @@ async def check_user_access(init_data: str) -> int:
     try:
         clean_url = DATABASE_URL.split("?")[0] if "?" in DATABASE_URL else DATABASE_URL
         conn = await get_db()
-        row = await conn.fetchrow("SELECT is_paid, expires_at FROM users WHERE user_id = $1;", user_id)
+        row = await conn.fetchrow(
+            "SELECT is_paid, expires_at, trial_expires_at FROM users WHERE user_id = $1;",
+            user_id
+        )
         await conn.close()
     except Exception as e:
         print(f"[DB Auth Error]: {e}")
         raise HTTPException(status_code=500, detail="Ошибка проверки доступа к БД.")
 
-    if not row or not row["is_paid"]:
+    if not row:
         raise HTTPException(status_code=403, detail="Доступ ограничен: требуется оформление подписки.")
 
     now = datetime.now(timezone.utc).replace(tzinfo=None)
-    if row["expires_at"] and row["expires_at"] < now:
-        raise HTTPException(status_code=403, detail="Срок действия вашей подписки истек.")
 
-    return user_id
+    # Если подписка активна
+    if row["is_paid"] and row["expires_at"] and row["expires_at"] > now:
+        return user_id
+
+    # Если есть пробный период
+    if row["trial_expires_at"] and row["trial_expires_at"] > now:
+        return user_id
+
+    # Доступ запрещён
+    raise HTTPException(status_code=403, detail="Доступ ограничен: пробный период истёк. Оформите подписку.")
 
 def generate_bet_market_for_match(
     home_team: str,
@@ -367,17 +374,12 @@ async def get_today_matches(
         match_id = str(match.get("match_id") or match.get("id") or "")
 
         league = match.get("league", {})
-        competition = league.get("name") or "Турнир"
-        # Исправляем кодировку названия турнира
-        competition = fix_encoding(competition)
+        competition = fix_encoding(league.get("name") or "Турнир")
 
         home_team = match.get("home_team", {})
         away_team = match.get("away_team", {})
-        home_name = home_team.get("team_name") or "Команда 1"
-        away_name = away_team.get("team_name") or "Команда 2"
-        # Исправляем кодировку названий команд
-        home_name = fix_encoding(home_name)
-        away_name = fix_encoding(away_name)
+        home_name = fix_encoding(home_team.get("team_name") or "Команда 1")
+        away_name = fix_encoding(away_team.get("team_name") or "Команда 2")
 
         home_logo = home_team.get("team_logo")
         away_logo = away_team.get("team_logo")
@@ -422,9 +424,7 @@ async def get_today_matches(
             info_date = f"Ближайший матч, {time_str}"
 
         venue = match.get("venue", {})
-        venue_name = venue.get("stadium_name") or "Стадион"
-        # Исправляем кодировку названия стадиона
-        venue_name = fix_encoding(venue_name)
+        venue_name = fix_encoding(venue.get("stadium_name") or "Стадион")
 
         bet_data = generate_bet_market_for_match(
             home_name, away_name, match_id, is_live=is_live,
@@ -498,12 +498,11 @@ async def compare_teams(
     if x_telegram_init_data:
         await check_user_access(x_telegram_init_data)
 
-    home_badge = home_badge or f"https://ui-avatars.com/api/?name={urllib.parse.quote(home[:3])}&background=00288e&color=fff"
-    away_badge = away_badge or f"https://ui-avatars.com/api/?name={urllib.parse.quote(away[:3])}&background=00288e&color=fff"
-
-    # Исправляем кодировку названий (на случай, если они пришли с ошибкой)
     home = fix_encoding(home)
     away = fix_encoding(away)
+
+    home_badge = home_badge or f"https://ui-avatars.com/api/?name={urllib.parse.quote(home[:3])}&background=00288e&color=fff"
+    away_badge = away_badge or f"https://ui-avatars.com/api/?name={urllib.parse.quote(away[:3])}&background=00288e&color=fff"
 
     id_event = event_id if event_id else f"{home}_{away}"
 
@@ -511,6 +510,15 @@ async def compare_teams(
         home, away, id_event,
         is_live=is_live, goals_home=goals_home, goals_away=goals_away, elapsed=elapsed
     )
+
+    # Генерируем причины (они будут совпадать с карточкой, т.к. используется тот же event_id)
+    hash_seed = zlib.crc32(f"{home}_{away}_{id_event}".encode('utf-8'))
+    # Для единообразия в статистике показываем те же причины, что и в карточке
+    reasons = [
+        f"1. Мотивация: {home} нацелена на победу на домашнем стадионе.",
+        f"2. Форма: {away} демонстрирует высокую результативность в атаке.",
+        bet_market["reason_3"]
+    ]
 
     if is_live:
         h2h_summary = f"Матч идет прямо сейчас ({elapsed} мин, счет {goals_home}:{goals_away}). Преимущество у {home}."
