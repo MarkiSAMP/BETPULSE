@@ -632,7 +632,13 @@
                 '${post.step_2.explanation}',
                 '${post.step_3[0]}',
                 '${post.step_3[1]}',
-                '${post.step_3[2]}'
+                '${post.step_3[2]}',
+                ${post.odds_home || 1.95},
+                ${post.odds_draw || 3.40},
+                ${post.odds_away || 3.10},
+                ${post.prob_home || 45},
+                ${post.prob_draw || 28},
+                ${post.prob_away || 27}
               )" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0 border border-primary/20">
                 <span class="material-symbols-outlined text-[16px]">query_stats</span>
                 Статистика
@@ -650,7 +656,12 @@
   }
 
   // ===== СТАТИСТИКА =====
-  async function openStatsForTeams(homeTeam, awayTeam, homeBadge, awayBadge, isLive, goalsHome, goalsAway, elapsed, eventId, forecast, coefficient, explanation, reason1, reason2, reason3) {
+  async function openStatsForTeams(
+    homeTeam, awayTeam, homeBadge, awayBadge, isLive, goalsHome, goalsAway, elapsed, eventId,
+    forecast, coefficient, explanation, reason1, reason2, reason3,
+    odds_home = 1.95, odds_draw = 3.40, odds_away = 3.10,
+    prob_home = 45, prob_draw = 28, prob_away = 27
+  ) {
     switchTab('stats');
     const defaultView = document.getElementById('statsDefaultView');
     const matchView = document.getElementById('statsMatchView');
@@ -666,7 +677,7 @@
       </div>`;
     const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
     try {
-      const url = `${API_BASE}/stats/compare?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&home_badge=${encodeURIComponent(homeBadge)}&away_badge=${encodeURIComponent(awayBadge)}&is_live=${isLive}&goals_home=${goalsHome}&goals_away=${goalsAway}&elapsed=${elapsed}&event_id=${encodeURIComponent(eventId)}&forecast=${encodeURIComponent(forecast)}&coefficient=${coefficient}&explanation=${encodeURIComponent(explanation)}&reason_1=${encodeURIComponent(reason1)}&reason_2=${encodeURIComponent(reason2)}&reason_3=${encodeURIComponent(reason3)}`;
+      const url = `${API_BASE}/stats/compare?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&home_badge=${encodeURIComponent(homeBadge)}&away_badge=${encodeURIComponent(awayBadge)}&is_live=${isLive}&goals_home=${goalsHome}&goals_away=${goalsAway}&elapsed=${elapsed}&event_id=${encodeURIComponent(eventId)}&forecast=${encodeURIComponent(forecast)}&coefficient=${coefficient}&explanation=${encodeURIComponent(explanation)}&reason_1=${encodeURIComponent(reason1)}&reason_2=${encodeURIComponent(reason2)}&reason_3=${encodeURIComponent(reason3)}&odds_home=${odds_home}&odds_draw=${odds_draw}&odds_away=${odds_away}&prob_home=${prob_home}&prob_draw=${prob_draw}&prob_away=${prob_away}`;
       const res = await fetch(url, {
         headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
       });
