@@ -579,6 +579,27 @@
           </div>
         ` : '';
 
+        // Блок статистики (если есть)
+        let statsHTML = '';
+        if (post.statistics && post.statistics.home && post.statistics.away) {
+          statsHTML = `
+            <div class="grid grid-cols-3 gap-1 text-xs text-center mt-3 pt-2 border-t border-outline-variant/20">
+              <div class="bg-surface-container-low p-1.5 rounded">
+                <span class="block text-outline text-[10px]">Владение</span>
+                <span class="font-semibold text-sm">${post.statistics.home.possession || 0}% / ${post.statistics.away.possession || 0}%</span>
+              </div>
+              <div class="bg-surface-container-low p-1.5 rounded">
+                <span class="block text-outline text-[10px]">Удары</span>
+                <span class="font-semibold text-sm">${post.statistics.home.totalShots || 0} / ${post.statistics.away.totalShots || 0}</span>
+              </div>
+              <div class="bg-surface-container-low p-1.5 rounded">
+                <span class="block text-outline text-[10px]">Угловые</span>
+                <span class="font-semibold text-sm">${post.statistics.home.corners || 0} / ${post.statistics.away.corners || 0}</span>
+              </div>
+            </div>
+          `;
+        }
+
         card.innerHTML = `
           <div class="relative">
             ${liveBadgeHTML}
@@ -595,26 +616,30 @@
               ${post.step_2.forecast} — ${post.step_2.coefficient}
             </button>
             <div class="text-xs text-on-surface-variant italic mb-2">${post.step_2.explanation}</div>
-            <button onclick="openStatsForTeams(
-              '${homeTeam}', 
-              '${awayTeam}', 
-              '${post.home_badge}', 
-              '${post.away_badge}', 
-              ${post.is_live}, 
-              ${post.goals_home || 0}, 
-              ${post.goals_away || 0}, 
-              ${post.elapsed || 0}, 
-              '${post.event_id}',
-              '${post.step_2.forecast}',
-              ${post.step_2.coefficient},
-              '${post.step_2.explanation}',
-              '${post.step_3[0]}',
-              '${post.step_3[1]}',
-              '${post.step_3[2]}'
-            )" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0 border border-primary/20">
-              <span class="material-symbols-outlined text-[16px]">query_stats</span>
-              Статистика
-            </button>
+            <div class="flex items-center gap-2">
+              <button onclick="openStatsForTeams(
+                '${homeTeam}', 
+                '${awayTeam}', 
+                '${post.home_badge}', 
+                '${post.away_badge}', 
+                ${post.is_live}, 
+                ${post.goals_home || 0}, 
+                ${post.goals_away || 0}, 
+                ${post.elapsed || 0}, 
+                '${post.event_id}',
+                '${post.step_2.forecast}',
+                ${post.step_2.coefficient},
+                '${post.step_2.explanation}',
+                '${post.step_3[0]}',
+                '${post.step_3[1]}',
+                '${post.step_3[2]}'
+              )" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0 border border-primary/20">
+                <span class="material-symbols-outlined text-[16px]">query_stats</span>
+                Статистика
+              </button>
+              ${post.is_live ? `<span class="text-xs text-red-600 font-semibold ml-auto">Обновляется</span>` : ''}
+            </div>
+            ${statsHTML}
           </div>
         `;
         container.appendChild(card);
