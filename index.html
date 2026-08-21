@@ -293,43 +293,36 @@
 <body>
 
 <div id="offerOverlay">
+  <!-- содержимое оферты без изменений -->
   <div class="offer-modal" id="offerModal">
     <div id="offerContent">
       <h1 class="header-title">Договор-оферта об оказании услуг</h1>
       <p class="header-sub">Внимательно ознакомьтесь с условиями оферты перед её акцептом. Нажимая кнопку «Принять оферту», вы соглашаетесь со всеми изложенными условиями.</p>
-
       <div class="flex items-center justify-between mb-2">
         <span class="text-xs text-blue-400 uppercase tracking-wider font-medium">Содержание оферты</span>
         <button class="expand-all-btn" id="expandAllBtn">Развернуть все</button>
       </div>
-
       <div class="border border-blue-100 rounded-xl overflow-hidden bg-white mb-8">
         <div class="px-6" id="accordionContainer"></div>
       </div>
-
       <div class="bg-blue-50 rounded-2xl p-6">
         <p class="text-sm font-semibold text-blue-900 mb-4">Подтверждение</p>
-
         <label class="checkbox-custom">
           <input type="checkbox" id="agreeCheckbox" />
           <span class="box"></span>
           <span class="label-text">Я ознакомился(-ась) с текстом оферты и согласен(-на) с её условиями</span>
         </label>
-
         <label class="checkbox-custom">
           <input type="checkbox" id="consentCheckbox" />
           <span class="box"></span>
           <span class="label-text">Я даю согласие на обработку персональных данных в соответствии с Политикой конфиденциальности</span>
         </label>
-
         <button class="accept-btn" id="acceptBtn" disabled>
           <span class="sparkle">✨</span> Принять оферту
         </button>
-
         <p class="text-center text-xs text-blue-400 mt-3" id="hintText">Отметьте оба пункта, чтобы продолжить</p>
       </div>
     </div>
-
     <div id="confirmationScreen" class="confirmation-screen" style="display:none;">
       <div class="icon">
         <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -361,7 +354,6 @@
           <span>Смотреть матчи и аналитику</span>
         </button>
       </section>
-
       <section class="grid grid-cols-1 gap-4">
         <div class="bg-card-bg rounded-xl p-5 shadow-sm border border-outline-variant/20 flex gap-4 items-start">
           <div class="bg-surface-container-high p-3 rounded-lg flex-shrink-0 text-primary">
@@ -394,7 +386,6 @@
           <span class="material-symbols-outlined text-3xl">verified_user</span>
         </div>
       </div>
-
       <div id="dynamicForecastsContainer" class="space-y-4">
         <div class="text-center text-outline py-8 text-sm animate-pulse">Загрузка футбольных матчей...</div>
       </div>
@@ -632,13 +623,7 @@
                 '${post.step_2.explanation}',
                 '${post.step_3[0]}',
                 '${post.step_3[1]}',
-                '${post.step_3[2]}',
-                ${post.odds_home || 1.95},
-                ${post.odds_draw || 3.40},
-                ${post.odds_away || 3.10},
-                ${post.prob_home || 45},
-                ${post.prob_draw || 28},
-                ${post.prob_away || 27}
+                '${post.step_3[2]}'
               )" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shrink-0 border border-primary/20">
                 <span class="material-symbols-outlined text-[16px]">query_stats</span>
                 Статистика
@@ -658,9 +643,7 @@
   // ===== СТАТИСТИКА =====
   async function openStatsForTeams(
     homeTeam, awayTeam, homeBadge, awayBadge, isLive, goalsHome, goalsAway, elapsed, eventId,
-    forecast, coefficient, explanation, reason1, reason2, reason3,
-    odds_home = 1.95, odds_draw = 3.40, odds_away = 3.10,
-    prob_home = 45, prob_draw = 28, prob_away = 27
+    forecast, coefficient, explanation, reason1, reason2, reason3
   ) {
     switchTab('stats');
     const defaultView = document.getElementById('statsDefaultView');
@@ -677,7 +660,7 @@
       </div>`;
     const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://127.0.0.1:8000/api';
     try {
-      const url = `${API_BASE}/stats/compare?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&home_badge=${encodeURIComponent(homeBadge)}&away_badge=${encodeURIComponent(awayBadge)}&is_live=${isLive}&goals_home=${goalsHome}&goals_away=${goalsAway}&elapsed=${elapsed}&event_id=${encodeURIComponent(eventId)}&forecast=${encodeURIComponent(forecast)}&coefficient=${coefficient}&explanation=${encodeURIComponent(explanation)}&reason_1=${encodeURIComponent(reason1)}&reason_2=${encodeURIComponent(reason2)}&reason_3=${encodeURIComponent(reason3)}&odds_home=${odds_home}&odds_draw=${odds_draw}&odds_away=${odds_away}&prob_home=${prob_home}&prob_draw=${prob_draw}&prob_away=${prob_away}`;
+      const url = `${API_BASE}/stats/compare?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&home_badge=${encodeURIComponent(homeBadge)}&away_badge=${encodeURIComponent(awayBadge)}&is_live=${isLive}&goals_home=${goalsHome}&goals_away=${goalsAway}&elapsed=${elapsed}&event_id=${encodeURIComponent(eventId)}&forecast=${encodeURIComponent(forecast)}&coefficient=${coefficient}&explanation=${encodeURIComponent(explanation)}&reason_1=${encodeURIComponent(reason1)}&reason_2=${encodeURIComponent(reason2)}&reason_3=${encodeURIComponent(reason3)}`;
       const res = await fetch(url, {
         headers: { 'X-Telegram-Init-Data': getTelegramInitData() }
       });
@@ -768,20 +751,6 @@
               <span class="font-semibold text-base text-primary block">${analysis.point_5_recommendation.recommended_bet}</span>
               <span class="text-[11px] text-on-surface-variant italic mt-1 block">💡 ${analysis.point_5_recommendation.explanation}</span>
             </div>
-            <div class="grid grid-cols-3 gap-1.5 text-center text-xs font-semibold">
-              <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
-                <span class="text-outline block text-[10px]">П1</span>
-                <span>${analysis.point_5_recommendation.all_odds.П1}</span>
-              </div>
-              <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
-                <span class="text-outline block text-[10px]">Ничья</span>
-                <span>${analysis.point_5_recommendation.all_odds["Ничья"]}</span>
-              </div>
-              <div class="bg-card-bg p-2 rounded-lg border border-outline-variant/20">
-                <span class="text-outline block text-[10px]">П2</span>
-                <span>${analysis.point_5_recommendation.all_odds.П2}</span>
-              </div>
-            </div>
             <div class="text-xs font-medium text-primary">
               💼 ${analysis.point_5_recommendation.bank_management}
             </div>
@@ -802,7 +771,7 @@
     document.getElementById('statsDefaultView').classList.remove('hidden');
   }
 
-  // ===== ОФЕРТА =====
+  // ===== ОФЕРТА (без изменений) =====
   document.addEventListener('DOMContentLoaded', function() {
     const offerSections = [
       {
