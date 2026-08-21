@@ -156,32 +156,67 @@ async def check_user_access(init_data: str) -> int:
 
     now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-    # Если подписка активна
     if row["is_paid"] and row["expires_at"] and row["expires_at"] > now:
         return user_id
 
-    # Если есть пробный период
     if row["trial_expires_at"] and row["trial_expires_at"] > now:
         return user_id
 
-    # Доступ запрещён
     raise HTTPException(status_code=403, detail="Доступ ограничен: пробный период истёк. Оформите подписку.")
 
-def generate_bet_market_for_match(
-    home_team: str,
-    away_team: str,
-    id_event: str,
-    is_live: bool = False,
-    goals_home: int = 0,
-    goals_away: int = 0,
-    elapsed: int = 0
-) -> Dict[str, Any]:
-    hash_seed = zlib.crc32(f"{home_team}_{away_team}_{id_event}".encode('utf-8'))
+def generate_bet_market_from_odds(home_team: str, away_team: str, odds: Dict, probabilities: Dict) -> Dict[str, Any]:
+    """
+    Генерирует прогноз на основе реальных коэффициентов и вероятностей из API.
+    Если коэффициентов нет – возвращает None, чтобы использовать fallback.
+    """
+    if not odds or not probabilities:
+        return None
 
+    # Получаем вероятности
+    home_prob = float(probabilities.get("home_win", 0))
+    draw_prob = float(probabilities.get("draw", 0))
+    away_prob = float(probabilities.get("away_win", 0))
+
+    # Получаем коэффициенты
+    home_odd = float(odds.get("home_win", 0))
+    draw_odd = float(odds.get("draw", 0))
+    away_odd = float(odds.get("away_win", 0))
+
+    # Определяем наиболее вероятный исход
+    if home_prob >= draw_prob and home_prob >= away_prob:
+        forecast_type = f"Победа 1 (П1)"
+        coef = home_odd if home_odd > 0 else 1.85
+        explanation = f"Победа команды {home_team} в основное время."
+        risk = f"Команда {away_team} опасна в контратаках."
+        reason_3 = f"3. {home_team} имеет высокие шансы на победу ({home_prob:.1f}%)."
+    elif draw_prob >= home_prob and draw_prob >= away_prob:
+        forecast_type = "Ничья (X)"
+        coef = draw_odd if draw_odd > 0 else 3.20
+        explanation = "Ожидается ничейный результат."
+        risk = "Обе команды могут играть осторожно."
+        reason_3 = f"3. Вероятность ничьи составляет {draw_prob:.1f}%."
+    else:
+        forecast_type = f"Победа 2 (П2)"
+        coef = away_odd if away_odd > 0 else 2.80
+        explanation = f"Победа команды {away_team} в основное время."
+        risk = f"Команда {home_team} может пропустить быструю контратаку."
+        reason_3 = f"3. {away_team} имеет высокие шансы на победу ({away_prob:.1f}%)."
+
+    return {
+        "type": forecast_type,
+        "coef": round(coef, 2),
+        "exp": explanation,
+        "bank": "3%",
+        "risk": risk,
+        "reason_3": reason_3
+    }
+
+def generate_bet_market_fallback(home_team: str, away_team: str, id_event: str, is_live: bool, goals_home: int, goals_away: int, elapsed: int) -> Dict[str, Any]:
+    """Fallback генерация прогноза на основе хэша (без реальных коэффициентов)."""
+    hash_seed = zlib.crc32(f"{home_team}_{away_team}_{id_event}".encode('utf-8'))
     if is_live:
         diff = goals_home - goals_away
         total_goals = goals_home + goals_away
-
         if diff == 0:
             if elapsed < 40:
                 return {
@@ -426,10 +461,18 @@ async def get_today_matches(
         venue = match.get("venue", {})
         venue_name = fix_encoding(venue.get("stadium_name") or "Стадион")
 
-        bet_data = generate_bet_market_for_match(
-            home_name, away_name, match_id, is_live=is_live,
-            goals_home=goals_home, goals_away=goals_away, elapsed=0
-        )
+        # Извлекаем коэффициенты и вероятности
+        odds = match.get("odds", {})
+        probabilities = match.get("probabilities", {})
+
+        # Генерируем прогноз
+        bet_data = generate_bet_market_from_odds(home_name, away_name, odds, probabilities)
+        if bet_data is None:
+            # Fallback на старый метод
+            bet_data = generate_bet_market_fallback(
+                home_name, away_name, match_id, is_live,
+                goals_home, goals_away, 0
+            )
 
         match_display = f"{home_name} {goals_home} : {goals_away} {away_name}" if is_live else f"{home_name} — {away_name}"
         info_prefix = "LIVE" if is_live else ""
@@ -493,6 +536,12 @@ async def compare_teams(
     goals_away: int = 0,
     elapsed: int = 0,
     event_id: str = "",
+    forecast: str = "",
+    coefficient: float = 0.0,
+    explanation: str = "",
+    reason_1: str = "",
+    reason_2: str = "",
+    reason_3: str = "",
     x_telegram_init_data: str = Header(None, alias="X-Telegram-Init-Data")
 ):
     if x_telegram_init_data:
@@ -500,25 +549,22 @@ async def compare_teams(
 
     home = fix_encoding(home)
     away = fix_encoding(away)
-
     home_badge = home_badge or f"https://ui-avatars.com/api/?name={urllib.parse.quote(home[:3])}&background=00288e&color=fff"
     away_badge = away_badge or f"https://ui-avatars.com/api/?name={urllib.parse.quote(away[:3])}&background=00288e&color=fff"
 
-    id_event = event_id if event_id else f"{home}_{away}"
-
-    bet_market = generate_bet_market_for_match(
-        home, away, id_event,
-        is_live=is_live, goals_home=goals_home, goals_away=goals_away, elapsed=elapsed
-    )
-
-    # Генерируем причины (они будут совпадать с карточкой, т.к. используется тот же event_id)
-    hash_seed = zlib.crc32(f"{home}_{away}_{id_event}".encode('utf-8'))
-    # Для единообразия в статистике показываем те же причины, что и в карточке
-    reasons = [
-        f"1. Мотивация: {home} нацелена на победу на домашнем стадионе.",
-        f"2. Форма: {away} демонстрирует высокую результативность в атаке.",
-        bet_market["reason_3"]
-    ]
+    # Если прогноз не передан – генерируем заново (для совместимости)
+    if not forecast or coefficient == 0.0:
+        # Пытаемся взять реальные коэффициенты (но их нет в этом запросе, поэтому fallback)
+        bet_market = generate_bet_market_fallback(
+            home, away, event_id or f"{home}_{away}",
+            is_live, goals_home, goals_away, elapsed
+        )
+        forecast = bet_market["type"]
+        coefficient = bet_market["coef"]
+        explanation = bet_market["exp"]
+        reason_3 = bet_market.get("reason_3", "")
+    else:
+        reason_3 = reason_3
 
     if is_live:
         h2h_summary = f"Матч идет прямо сейчас ({elapsed} мин, счет {goals_home}:{goals_away}). Преимущество у {home}."
@@ -545,12 +591,12 @@ async def compare_teams(
             "point_4_squad": {"title": "4. Корректировки и замены", "home_news": squad_home_news, "away_news": squad_away_news},
             "point_5_recommendation": {
                 "title": "5. Live-вердикт" if is_live else "5. Итоговый вердикт и рекомендация",
-                "recommended_bet": bet_market["type"],
-                "coefficient": bet_market["coef"],
-                "explanation": bet_market["exp"],
+                "recommended_bet": forecast,
+                "coefficient": coefficient,
+                "explanation": explanation,
                 "all_odds": {"П1": 1.95, "Ничья": 3.40, "П2": 3.10},
-                "bank_management": f"Рекомендуемый размер подрасчета: {bet_market['bank']} от банка.",
-                "final_conclusion": f"Позиция «{bet_market['type']}» актуализирована для текущего состояния матча."
+                "bank_management": f"Рекомендуемый размер подрасчета: 3% от банка.",
+                "final_conclusion": f"Позиция «{forecast}» актуализирована для текущего состояния матча."
             }
         }
     }
