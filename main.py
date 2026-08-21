@@ -33,6 +33,23 @@ FOOTBALL_DATA_URL = "https://footballdata.io/api/v1"
 CACHE_TTL = int(os.getenv("CACHE_TTL", 300))
 cache = {}
 
+# Кеш для статистики (отдельный, с собственным TTL)
+stats_cache = {}
+STATS_CACHE_TTL_LIVE = 300      # 5 минут для LIVE
+STATS_CACHE_TTL_FT = 86400      # 24 часа для завершённых
+
+def get_stats_cache(key: str) -> Optional[Dict]:
+    if key in stats_cache:
+        data, expiry = stats_cache[key]
+        if time() < expiry:
+            return data
+        else:
+            del stats_cache[key]
+    return None
+
+def set_stats_cache(key: str, data: Dict, ttl_seconds: int):
+    stats_cache[key] = (data, time() + ttl_seconds)
+
 def get_cache_key(league_id: str) -> str:
     today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     return f"matches_{league_id}_{today_str}"
@@ -164,6 +181,66 @@ async def check_user_access(init_data: str) -> int:
 
     raise HTTPException(status_code=403, detail="Доступ ограничен: пробный период истёк. Оформите подписку.")
 
+# ===== ФУНКЦИЯ ДЛЯ ПОЛУЧЕНИЯ СТАТИСТИКИ МАТЧА =====
+async def fetch_match_statistics(match_id: str, status: str) -> Optional[Dict]:
+    """
+    Получает статистику матча с кешированием.
+    status: 'LIVE' (TTL 5 мин) или 'FT' (TTL 24 часа)
+    """
+    cache_key_stats = f"stats_{match_id}"
+    cached = get_stats_cache(cache_key_stats)
+    if cached is not None:
+        return cached
+
+    headers = {"Authorization": f"Bearer {FOOTBALL_DATA_API_KEY}"}
+    url = f"{FOOTBALL_DATA_URL}/matches/{match_id}/stats"
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            res = await client.get(url, headers=headers)
+            if res.status_code == 200:
+                data = res.json()
+                if data.get("success"):
+                    stats_data = data.get("data", {})
+                    home_stats = stats_data.get("home", {})
+                    away_stats = stats_data.get("away", {})
+                    transformed = {
+                        "home": {
+                            "possession": home_stats.get("possession", 0),
+                            "shotsOnGoal": home_stats.get("shotsOnGoal", 0),
+                            "totalShots": home_stats.get("totalShots", 0),
+                            "fouls": home_stats.get("fouls", 0),
+                            "corners": home_stats.get("corners", 0),
+                            "yellowCards": home_stats.get("yellowCards", 0),
+                            "redCards": home_stats.get("redCards", 0),
+                            "passesAccuracy": home_stats.get("passesAccuracy", 0),
+                        },
+                        "away": {
+                            "possession": away_stats.get("possession", 0),
+                            "shotsOnGoal": away_stats.get("shotsOnGoal", 0),
+                            "totalShots": away_stats.get("totalShots", 0),
+                            "fouls": away_stats.get("fouls", 0),
+                            "corners": away_stats.get("corners", 0),
+                            "yellowCards": away_stats.get("yellowCards", 0),
+                            "redCards": away_stats.get("redCards", 0),
+                            "passesAccuracy": away_stats.get("passesAccuracy", 0),
+                        }
+                    }
+                    # Кешируем
+                    ttl = STATS_CACHE_TTL_LIVE if status.upper() == "LIVE" else STATS_CACHE_TTL_FT
+                    set_stats_cache(cache_key_stats, transformed, ttl)
+                    return transformed
+                else:
+                    print(f"[Footballdata.io] Ошибка получения статистики: {data}")
+                    return None
+            else:
+                print(f"[Footballdata.io] HTTP {res.status_code} при получении статистики для матча {match_id}")
+                return None
+    except Exception as e:
+        print(f"[Footballdata.io] Исключение при получении статистики: {e}")
+        return None
+
+# ===== ГЕНЕРАЦИЯ ПРОГНОЗОВ =====
 def generate_bet_market_from_odds(home_team: str, away_team: str, odds: Dict, probabilities: Dict) -> Dict[str, Any]:
     """
     Генерирует прогноз на основе реальных коэффициентов и вероятностей из API.
@@ -305,6 +382,8 @@ async def fetch_leagues_from_api() -> List[Dict]:
         print(f"[Footballdata.io] Исключение при получении лиг: {e}")
         return LEAGUES_DATA
 
+# ===== ЭНДПОИНТЫ =====
+
 @app.get("/")
 async def serve_frontend():
     return FileResponse("index.html")
@@ -426,6 +505,7 @@ async def get_today_matches(
         status = match.get("status") or match.get("status_localized") or "SCHEDULED"
         live_statuses = ["LIVE", "In Play", "1H", "2H", "HT", "ET", "BT", "P"]
         is_live = status in live_statuses
+        is_finished = status in ["FT", "FINISHED"]
 
         score = match.get("score", {})
         goals_home = score.get("home") or 0
@@ -508,6 +588,14 @@ async def get_today_matches(
             "step_5": f"Рекомендуемый размер подрасчета: {bet_data['bank']} от банка.",
             "disclaimer": "Аналитика сформирована на основе математической модели вероятностей."
         }
+
+        # ===== ДОБАВЛЕНИЕ РЕАЛЬНОЙ СТАТИСТИКИ =====
+        if is_live or is_finished:
+            stats = await fetch_match_statistics(match_id, "LIVE" if is_live else "FT")
+            post["statistics"] = stats  # может быть None
+        else:
+            post["statistics"] = None
+
         posts.append(post)
 
     posts.sort(key=lambda x: x["step_1"]["info"])
@@ -554,7 +642,6 @@ async def compare_teams(
 
     # Если прогноз не передан – генерируем заново (для совместимости)
     if not forecast or coefficient == 0.0:
-        # Пытаемся взять реальные коэффициенты (но их нет в этом запросе, поэтому fallback)
         bet_market = generate_bet_market_fallback(
             home, away, event_id or f"{home}_{away}",
             is_live, goals_home, goals_away, elapsed
@@ -566,17 +653,46 @@ async def compare_teams(
     else:
         reason_3 = reason_3
 
+    # ===== ПОЛУЧАЕМ РЕАЛЬНУЮ СТАТИСТИКУ =====
+    stats = None
+    if event_id:
+        status = "LIVE" if is_live else "FT"
+        stats = await fetch_match_statistics(event_id, status)
+
+    # Формируем данные для пункта 2 (форма и показатели) с использованием статистики
+    if stats:
+        home_stats = stats.get("home", {})
+        away_stats = stats.get("away", {})
+        home_pos = home_stats.get("possession", 0)
+        away_pos = away_stats.get("possession", 0)
+        home_shots = home_stats.get("totalShots", 0)
+        away_shots = away_stats.get("totalShots", 0)
+        home_corners = home_stats.get("corners", 0)
+        away_corners = away_stats.get("corners", 0)
+        home_yellow = home_stats.get("yellowCards", 0)
+        away_yellow = away_stats.get("yellowCards", 0)
+
+        form_home_stats = (f"{home}: владение {home_pos}%, удары {home_shots} (в створ {home_stats.get('shotsOnGoal', 0)}), "
+                           f"угловые {home_corners}, ж/к {home_yellow}")
+        form_away_stats = (f"{away}: владение {away_pos}%, удары {away_shots} (в створ {away_stats.get('shotsOnGoal', 0)}), "
+                           f"угловые {away_corners}, ж/к {away_yellow}")
+    else:
+        # fallback заглушки
+        if is_live:
+            form_home_stats = f"{home}: нанесла {max(3, goals_home * 2 + 2)} ударов в створ."
+            form_away_stats = f"{away}: совершила {max(2, goals_away * 2 + 1)} опасных контратак."
+        else:
+            form_home_stats = f"{home}: забивает в среднем 2.1 гола за матч."
+            form_away_stats = f"{away}: забивает 1.6 гола за матч на выезде."
+
+    # Остальные пункты остаются с заглушками (можно позже дополнить)
     if is_live:
         h2h_summary = f"Матч идет прямо сейчас ({elapsed} мин, счет {goals_home}:{goals_away}). Преимущество у {home}."
-        form_home_stats = f"{home}: нанесла {max(3, goals_home * 2 + 2)} ударов в створ."
-        form_away_stats = f"{away}: совершила {max(2, goals_away * 2 + 1)} опасных контратак."
         morale_text = f"Команда {home} активнее проводит данный отрезок игры."
         squad_home_news = f"У {home} вышли свежие игроки линии атаки."
         squad_away_news = f"У {away} наблюдается утомление в линии защиты."
     else:
         h2h_summary = f"В последних 5 очных матчах преимущество у {home}: 3 победы, 1 ничья и 1 поражение."
-        form_home_stats = f"{home}: забивает в среднем 2.1 гола за матч."
-        form_away_stats = f"{away}: забивает 1.6 гола за матч на выезде."
         morale_text = f"Команда {home} сфокусирована на результат перед родными трибунами."
         squad_home_news = f"У {home} вернулся ключевой полузащитник."
         squad_away_news = f"У {away} дисквалифицирован защитник основы."
