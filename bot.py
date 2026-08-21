@@ -3,6 +3,7 @@ import asyncio
 import asyncpg
 import random
 import httpx
+import re
 from datetime import datetime, timedelta, timezone
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import CommandStart
@@ -58,10 +59,12 @@ async def init_db():
                 first_name TEXT,
                 is_paid BOOLEAN DEFAULT FALSE,
                 expires_at TIMESTAMP,
-                last_message_id BIGINT
+                last_message_id BIGINT,
+                trial_expires_at TIMESTAMP
             );
         """)
         await conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_message_id BIGINT;")
+        await conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_expires_at TIMESTAMP;")
         await conn.close()
         print("[DB]: Таблица users синхронизирована.")
     except Exception as e:
@@ -78,7 +81,10 @@ async def safe_delete_message(chat_id: int, message_id: int):
 def get_expires_at(days: int = 30) -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=days)
 
-# ===== DONATION ALERTS =====
+def get_trial_expires_at() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=24)
+
+# ===== DONATION ALERTS (без изменений) =====
 user_amounts = {}
 
 def generate_unique_amount(user_id: int) -> float:
@@ -111,7 +117,7 @@ async def check_recent_donation(user_id: int) -> bool:
             data = res.json()
             donations = data.get("data", [])
             now = datetime.now(timezone.utc)
-            threshold = now - timedelta(seconds=60)  # 60 секунд
+            threshold = now - timedelta(seconds=60)
 
             for donation in donations:
                 created_at = donation.get("created_at")
@@ -136,48 +142,55 @@ async def check_recent_donation(user_id: int) -> bool:
     except Exception:
         return False
 
-# ===== ОБРАБОТЧИКИ =====
-@dp.message(CommandStart())
-async def cmd_start(message: Message):
-    user_id = message.from_user.id
-    username = message.from_user.username or ""
-    first_name = message.from_user.first_name or ""
+# ===== ОСНОВНАЯ ЛОГИКА =====
+async def send_welcome(chat_id: int, user_id: int, first_name: str, username: str):
+    """Отправляет приветственное сообщение и обновляет last_message_id в БД."""
     now = datetime.now(timezone.utc).replace(tzinfo=None)
-
-    await safe_delete_message(message.chat.id, message.message_id)
 
     is_paid = False
     expires_at = None
-    last_msg_id = None
+    trial_expires_at = None
 
     if DATABASE_URL:
         try:
             conn = await get_db()
             row = await conn.fetchrow(
-                "SELECT is_paid, expires_at, last_message_id FROM users WHERE user_id = $1;",
+                "SELECT is_paid, expires_at, trial_expires_at FROM users WHERE user_id = $1;",
                 user_id
             )
             if row:
                 is_paid = row["is_paid"]
                 expires_at = row["expires_at"]
-                last_msg_id = row["last_message_id"]
-                await conn.execute(
-                    "UPDATE users SET username = $1, first_name = $2 WHERE user_id = $3;",
-                    username, first_name, user_id
-                )
+                trial_expires_at = row["trial_expires_at"]
             else:
+                # Новый пользователь – даём триал на 24 часа
+                trial_expires_at = get_trial_expires_at()
                 await conn.execute(
-                    "INSERT INTO users (user_id, username, first_name, is_paid) VALUES ($1, $2, $3, FALSE);",
-                    user_id, username, first_name
+                    "INSERT INTO users (user_id, username, first_name, is_paid, trial_expires_at) VALUES ($1, $2, $3, FALSE, $4);",
+                    user_id, username, first_name, trial_expires_at
                 )
             await conn.close()
         except Exception as e:
-            print(f"[DB Error in /start]: {e}")
+            print(f"[DB Error in send_welcome]: {e}")
 
-    if last_msg_id:
-        await safe_delete_message(message.chat.id, last_msg_id)
+    # Определяем доступ
+    has_access = False
+    access_message = ""
 
     if is_paid and expires_at and expires_at > now:
+        has_access = True
+        access_message = f"✅ Ваша подписка активна до: <b>{expires_at.strftime('%d.%m.%Y %H:%M')} (МСК)</b>"
+    elif trial_expires_at and trial_expires_at > now:
+        has_access = True
+        remaining = trial_expires_at - now
+        hours = remaining.seconds // 3600
+        minutes = (remaining.seconds % 3600) // 60
+        access_message = f"⏳ Ваш пробный доступ активен ещё <b>{hours} ч {minutes} мин</b>"
+    else:
+        has_access = False
+        access_message = "⛔ Ваш пробный доступ истёк. Оформите подписку для продолжения."
+
+    if has_access:
         await bot.set_chat_menu_button(
             chat_id=user_id,
             menu_button=MenuButtonWebApp(
@@ -188,9 +201,11 @@ async def cmd_start(message: Message):
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🚀 Открыть BETPULSE App", web_app=WebAppInfo(url=WEBAPP_URL))]
         ])
-        sent_msg = await message.answer(
+        sent_msg = await bot.send_message(
+            chat_id,
             f"Добро пожаловать обратно, <b>{first_name}</b>!\n\n"
-            f"✅ Ваша подписка активна до: <b>{expires_at.strftime('%d.%m.%Y %H:%M')} (МСК)</b>",
+            f"{access_message}\n\n"
+            "Нажмите кнопку ниже, чтобы запустить приложение:",
             reply_markup=kb,
             parse_mode=ParseMode.HTML
         )
@@ -205,16 +220,17 @@ async def cmd_start(message: Message):
         text = (
             f"👋 <b>Добро пожаловать в BETPULSE!</b>\n\n"
             f"<b>BETPULSE</b> — инновационная платформа для анализа футбольной статистики.\n\n"
-            f"🧠 <b>Что вы получаете:</b>\n"
+            f"{access_message}\n\n"
+            f"🧠 <b>Что вы получаете с подпиской:</b>\n"
             f"• 📊 Live-аналитика матчей\n"
             f"• 🔍 Глубокий разбор в 5 шагов\n"
             f"• ⚽ Покрытие топ-лиг\n"
             f"• 🛡 Математический алгоритм\n\n"
             f"Нажмите кнопку ниже, чтобы оформить доступ."
-            f"📞 По вопросам поддержки пишите: @swet25on"
         )
-        sent_msg = await message.answer(text, reply_markup=kb, parse_mode=ParseMode.HTML)
+        sent_msg = await bot.send_message(chat_id, text, reply_markup=kb, parse_mode=ParseMode.HTML)
 
+    # Сохраняем ID отправленного сообщения
     if DATABASE_URL and sent_msg:
         try:
             conn = await get_db()
@@ -226,6 +242,53 @@ async def cmd_start(message: Message):
         except Exception as e:
             print(f"[DB Save Msg ID Error]: {e}")
 
+@dp.message(CommandStart())
+async def cmd_start(message: Message):
+    user_id = message.from_user.id
+    username = message.from_user.username or ""
+    first_name = message.from_user.first_name or ""
+
+    # Удаляем сообщение пользователя (саму команду /start)
+    await safe_delete_message(message.chat.id, message.message_id)
+
+    # Удаляем предыдущее сообщение бота
+    if DATABASE_URL:
+        try:
+            conn = await get_db()
+            row = await conn.fetchrow("SELECT last_message_id FROM users WHERE user_id = $1;", user_id)
+            if row and row["last_message_id"]:
+                await safe_delete_message(message.chat.id, row["last_message_id"])
+            await conn.close()
+        except Exception as e:
+            print(f"[DB Error in /start]: {e}")
+
+    # Отправляем приветствие
+    await send_welcome(message.chat.id, user_id, first_name, username)
+
+# ===== ОБРАБОТЧИК ЛЮБЫХ СООБЩЕНИЙ (кроме /start) – ДЛЯ ОЧИСТКИ =====
+@dp.message(F.text & ~F.text.startswith('/start'))
+async def handle_any_message(message: Message):
+    user_id = message.from_user.id
+    # Удаляем сообщение пользователя
+    await safe_delete_message(message.chat.id, message.message_id)
+
+    # Удаляем предыдущее сообщение бота
+    if DATABASE_URL:
+        try:
+            conn = await get_db()
+            row = await conn.fetchrow("SELECT last_message_id FROM users WHERE user_id = $1;", user_id)
+            if row and row["last_message_id"]:
+                await safe_delete_message(message.chat.id, row["last_message_id"])
+            await conn.close()
+        except Exception as e:
+            print(f"[DB Error in any message]: {e}")
+
+    # Отправляем приветствие
+    first_name = message.from_user.first_name or "Пользователь"
+    username = message.from_user.username or ""
+    await send_welcome(message.chat.id, user_id, first_name, username)
+
+# ===== ОБРАБОТЧИКИ КНОПОК =====
 @dp.callback_query(F.data == "show_subscription")
 async def process_show_subscription(callback: CallbackQuery):
     await callback.answer()
@@ -255,7 +318,7 @@ async def process_back_to_main(callback: CallbackQuery):
     text = (
         f"👋 <b>Добро пожаловать в BETPULSE!</b>\n\n"
         f"<b>BETPULSE</b> — инновационная платформа для анализа футбольной статистики.\n\n"
-        f"🧠 <b>Что вы получаете:</b>\n"
+        f"🧠 <b>Что вы получаете с подпиской:</b>\n"
         f"• 📊 Live-аналитика матчей\n"
         f"• 🔍 Глубокий разбор в 5 шагов\n"
         f"• ⚽ Покрытие топ-лиг\n"
@@ -322,7 +385,7 @@ async def check_donationalerts(callback: CallbackQuery):
             try:
                 conn = await get_db()
                 await conn.execute(
-                    "UPDATE users SET is_paid = TRUE, expires_at = $1 WHERE user_id = $2;",
+                    "UPDATE users SET is_paid = TRUE, expires_at = $1, trial_expires_at = NULL WHERE user_id = $2;",
                     expires_at, user_id
                 )
                 await conn.close()
@@ -354,7 +417,7 @@ async def check_donationalerts(callback: CallbackQuery):
         sent_msg = await callback.message.answer(
             "🎉 <b>Оплата успешно подтверждена!</b>\n\n"
             f"Вам открыт полный доступ на 30 дней (до {expires_at.strftime('%d.%m.%Y')}).\n\n"
-            "Нажмите кнопку ниже, чтобы запустить приложение:",
+            "Нажмите кнопку ниже, чтобы запустить приложение.",
             reply_markup=kb,
             parse_mode=ParseMode.HTML
         )
@@ -376,7 +439,7 @@ async def check_donationalerts(callback: CallbackQuery):
             f"Убедитесь, что вы перевели ровно <b>{amount_str} ₽</b>.\n"
             "Донат должен быть совершён в течение последних 60 секунд.\n\n"
             "Если вы всё сделали правильно, попробуйте подождать 1 минуту и нажать кнопку снова.\n"
-            "Если проблема повторяется – отправьте скриншот чека в поддержку.",
+            "Если проблема повторяется – отправьте скриншот чека в поддержку (@swet25on).",
             parse_mode=ParseMode.HTML,
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="🔄 Проверить снова", callback_data="check_donationalerts")],
@@ -440,7 +503,7 @@ async def successful_payment_handler(message: Message):
             if row and row["last_message_id"]:
                 await safe_delete_message(message.chat.id, row["last_message_id"])
             await conn.execute(
-                "UPDATE users SET is_paid = TRUE, expires_at = $1 WHERE user_id = $2;",
+                "UPDATE users SET is_paid = TRUE, expires_at = $1, trial_expires_at = NULL WHERE user_id = $2;",
                 expires_at, user_id
             )
             await conn.close()
@@ -461,7 +524,7 @@ async def successful_payment_handler(message: Message):
     sent_msg = await message.answer(
         "🎉 <b>Оплата успешно завершена!</b>\n\n"
         f"Вам открыт полный доступ на 30 дней (до {expires_at.strftime('%d.%m.%Y')}).\n\n"
-        "Нажмите кнопку ниже, чтобы запустить приложение:",
+        "Нажмите кнопку ниже, чтобы запустить приложение.",
         reply_markup=kb,
         parse_mode=ParseMode.HTML
     )
